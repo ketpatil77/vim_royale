@@ -1,35 +1,16 @@
-package db
+package database
 
 import (
 	"time"
 
-	"github.com/google/uuid"
+	"vim_royale/backend/models"
+
 	"gorm.io/gorm"
 )
 
-type User struct {
-	UserID      uuid.UUID
-	Provider    string
-	ProviderID  string
-	DisplayName string
-	Email       string
-	AvatarURL   string
-	GithubID    string
-	DiscordID   string
-	TwitterID   string
-	Username    string
-	Matches     int
-	Won         int
-	Lost        int
-	CreatedAt   time.Time
-	LastActive  time.Time
-}
-
-func CreateUser(db *gorm.DB, username string) (*User, error) {
-	user := &User{
-		UserID:     uuid.New(),
+func CreateUser(db *gorm.DB, username string) (*models.User, error) {
+	user := &models.User{
 		Username:   username,
-		CreatedAt:  time.Now(),
 		LastActive: time.Now(),
 	}
 	if err := db.Create(user).Error; err != nil {
@@ -38,7 +19,7 @@ func CreateUser(db *gorm.DB, username string) (*User, error) {
 	return user, nil
 }
 
-func UpdateUser(db *gorm.DB, user *User, won bool) error {
+func UpdateUser(db *gorm.DB, user *models.User, won bool) error {
 	user.LastActive = time.Now()
 	if won {
 		user.Won++

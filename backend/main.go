@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"vim_royale/backend/config"
+	"vim_royale/backend/services"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -27,7 +28,7 @@ func main() {
 
 	config.Load()
 
-	hub := NewHub()
+	hub := services.NewHub()
 	go hub.Run()
 
 	r := gin.Default()

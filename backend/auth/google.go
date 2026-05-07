@@ -84,10 +84,10 @@ func GoogleCallback(c *gin.Context) {
 }
 
 type GoogleUserInfo struct {
-	ID            string `json:"id"`
-	Email         string `json:"email"`
-	Name          string `json:"name"`
-	Picture       string `json:"picture"`
+	ID      string `json:"id"`
+	Email   string `json:"email"`
+	Name    string `json:"name"`
+	Picture string `json:"picture"`
 }
 
 func getGoogleUserInfo(accessToken string) (map[string]interface{}, error) {
@@ -106,7 +106,7 @@ func getGoogleUserInfo(accessToken string) (map[string]interface{}, error) {
 }
 
 func findOrCreateUser(provider, providerID, email, displayName, avatarURL string) (*models.User, error) {
-	database, err := db.GetPostgresConnection()
+	database, err := database.GetPostgresConnection()
 	if err != nil {
 		return nil, err
 	}
@@ -119,13 +119,11 @@ func findOrCreateUser(provider, providerID, email, displayName, avatarURL string
 	}
 
 	user = models.User{
-		Provider:     provider,
-		ProviderID:   providerID,
-		Email:        email,
-		DisplayName:  displayName,
-		AvatarURL:     avatarURL,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		Provider:    provider,
+		ProviderID:  providerID,
+		Email:       email,
+		DisplayName: displayName,
+		AvatarURL:   avatarURL,
 	}
 
 	if err := database.Create(&user).Error; err != nil {

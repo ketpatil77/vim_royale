@@ -1,4 +1,4 @@
-package db
+package database
 
 import (
 	"fmt"
@@ -35,7 +35,7 @@ func GetPostgresConnection() (*gorm.DB, error) {
 
 		log.Println("Database connection established")
 
-		if err := db.AutoMigrate(&models.User{}); err != nil {
+		if err := db.AutoMigrate(&models.User{}, &models.Match{}); err != nil {
 			log.Printf("AutoMigrate error: %v", err)
 		} else {
 			log.Println("Database migration complete")

@@ -1,34 +1,60 @@
-package db
+package database
 
 import (
 	"time"
+
+	"vim_royale/backend/models"
+	"vim_royale/backend/utils"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
-type Match struct {
-	MatchID    uuid.UUID
-	PlayerA    uuid.UUID
-	PlayerB    uuid.UUID
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-	FinishedAt time.Time
-	Winner     uuid.UUID
-}
+func CreateMatch(db *gorm.DB, winnerID, loserID string) error {
+	winner, err := findUserByPlayerID(db, winnerID)
+	if err != nil {
+		return err
+	}
+	loser, err := findUserByPlayerID(db, loserID)
+	if err != nil {
+		return err
+	}
 
-func CreateMatchUpdatePlayer(db *gorm.DB, playerA, playerB uuid.UUID) (*Match, error) {
-	match := &Match{
+	match := &models.Match{
 		MatchID:    uuid.New(),
-		PlayerA:    playerA,
-		PlayerB:    playerB,
+		PlayerAID:  winner.ID,
+		PlayerBID:  loser.ID,
+		PlayerA:    *winner,
+		PlayerB:    *loser,
+		WinnerID:   winner.ID,
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 		FinishedAt: time.Now(),
-		Winner:     uuid.New(),
 	}
 	if err := db.Create(match).Error; err != nil {
-		return nil, err
+		return err
 	}
-	return match, nil
+
+	winnerRating, loserRating := utils.CalculateElo(winner.Rating, loser.Rating, true)
+
+	winner.Rating = winnerRating
+	loser.Rating = loserRating
+
+	if err := UpdateUser(db, winner, true); err != nil {
+		return err
+	}
+	if err := UpdateUser(db, loser, false); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func findUserByPlayerID(db *gorm.DB, playerID string) (*models.User, error) {
+	var user models.User
+	result := db.Where("CONCAT(provider, ':', provider_id) = ?", playerID).First(&user)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &user, nil
 }

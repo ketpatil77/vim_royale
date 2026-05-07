@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"math/rand"
@@ -95,14 +95,14 @@ var eqWhitespacePattern = regexp.MustCompile(`\s*=\s*`)
 var allWhitespacePattern = regexp.MustCompile(`\s+`)
 var expandExpressionPattern = regexp.MustCompile(`(\w+)\s*\+=\s*(\d+)`)
 
-func pickTargetCode() string {
+func PickTargetCode() string {
 	if len(sampleTargetCodes) == 0 {
 		return ""
 	}
 	return sampleTargetCodes[rand.Intn(len(sampleTargetCodes))]
 }
 
-func polluteCode(originalCode string) string {
+func PolluteCode(originalCode string) string {
 	lines := strings.Split(originalCode, "\n")
 	mutated := make([]string, len(lines))
 

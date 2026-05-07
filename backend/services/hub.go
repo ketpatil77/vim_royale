@@ -1,4 +1,4 @@
-package main
+package services
 
 import (
 	"encoding/json"
@@ -6,6 +6,9 @@ import (
 	"log"
 	"sync"
 	"time"
+
+	database "vim_royale/backend/db"
+	"vim_royale/backend/utils"
 )
 
 type Hub struct {
@@ -16,8 +19,8 @@ type Hub struct {
 	matches     map[string]*Match
 	waitingQ    []*Client
 
-	register   chan *Client
-	unregister chan *Client
+	Register   chan *Client
+	Unregister chan *Client
 	incoming   chan InboundMessage
 }
 
@@ -27,8 +30,8 @@ func NewHub() *Hub {
 		clientsByID: make(map[string]*Client),
 		matches:     make(map[string]*Match),
 		waitingQ:    make([]*Client, 0),
-		register:    make(chan *Client),
-		unregister:  make(chan *Client),
+		Register:    make(chan *Client),
+		Unregister:  make(chan *Client),
 		incoming:    make(chan InboundMessage, 256),
 	}
 }
@@ -36,9 +39,9 @@ func NewHub() *Hub {
 func (h *Hub) Run() {
 	for {
 		select {
-		case client := <-h.register:
+		case client := <-h.Register:
 			h.handleRegister(client)
-		case client := <-h.unregister:
+		case client := <-h.Unregister:
 			h.handleUnregister(client)
 		case inbound := <-h.incoming:
 			h.handleIncoming(inbound)
@@ -140,7 +143,8 @@ func (h *Hub) enqueueForMatch(client *Client) {
 	}
 
 	for _, queued := range h.waitingQ {
-		if queued == client {
+		if queued.ID == client.ID {
+			h.sendErrorLocked(client, "already_queued", "player already in queue")
 			return
 		}
 	}
@@ -158,8 +162,8 @@ func (h *Hub) enqueueForMatch(client *Client) {
 
 		matchID := newMatchID()
 		now := time.Now().UTC()
-		targetCode := pickTargetCode()
-		pollutedCode := polluteCode(targetCode)
+		targetCode := utils.PickTargetCode()
+		pollutedCode := utils.PolluteCode(targetCode)
 		match := &Match{
 			ID:           matchID,
 			PlayerA:      pA,
@@ -264,6 +268,15 @@ func (h *Hub) finishMatch(client *Client) {
 		FinishedAt: now.Unix(),
 	}
 
+	dbConn, err := database.GetPostgresConnection()
+	if err != nil {
+		log.Printf("failed to get postgres connection: %v", err)
+	} else {
+		if err := database.CreateMatch(dbConn, client.ID, loserID); err != nil {
+			log.Printf("failed to create match: %v", err)
+		}
+	}
+
 	h.sendLocked(client, MsgGameOver, match.ID, client.ID, 0, result)
 	if opponent != nil {
 		h.sendLocked(opponent, MsgGameOver, match.ID, opponent.ID, 0, result)
@@ -306,7 +319,6 @@ func (h *Hub) sendEnvelopeLocked(client *Client, envelope Envelope) {
 	select {
 	case client.send <- mustMarshalEnvelope(envelope):
 	default:
-		// Slow connection, close it to protect the hub.
 		go client.close()
 	}
 }

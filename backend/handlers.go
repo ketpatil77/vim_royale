@@ -5,6 +5,7 @@ import (
 
 	"vim_royale/backend/auth"
 	"vim_royale/backend/middleware"
+	"vim_royale/backend/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,7 +14,7 @@ func healthzHandler(c *gin.Context) {
 	c.String(200, "ok")
 }
 
-func wsHandler(hub *Hub) gin.HandlerFunc {
+func wsHandler(hub *services.Hub) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
@@ -21,11 +22,11 @@ func wsHandler(hub *Hub) gin.HandlerFunc {
 			return
 		}
 
-		client := NewClient(conn, hub)
-		hub.register <- client
+		client := services.NewClient(conn, hub)
+		hub.Register <- client
 
-		go client.writePump()
-		client.readPump()
+		go client.WritePump()
+		client.ReadPump()
 	}
 }
 
@@ -48,12 +49,14 @@ func authGitHubCallbackHandler(c *gin.Context) {
 func authMeHandler(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	provider, _ := c.Get("provider")
+	providerID, _ := c.Get("providerID")
 	email, _ := c.Get("email")
 
 	c.JSON(200, gin.H{
-		"id":       userID,
-		"provider": provider,
-		"email":    email,
+		"id":         userID,
+		"provider":   provider,
+		"providerId": providerID,
+		"email":      email,
 	})
 }
 
@@ -65,4 +68,3 @@ func authLogoutHandler(c *gin.Context) {
 func authMiddleware() gin.HandlerFunc {
 	return middleware.AuthRequired()
 }
-

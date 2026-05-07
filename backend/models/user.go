@@ -2,17 +2,26 @@ package models
 
 import (
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type User struct {
-	ID           uint      `gorm:"primaryKey" json:"id"`
-	Provider     string    `gorm:"size:20;not null" json:"provider"`
-	ProviderID   string    `gorm:"size:255;not null;uniqueIndex:idx_provider_providerid" json:"providerId"`
-	Email        string    `gorm:"size:255" json:"email"`
-	DisplayName string    `gorm:"size:255" json:"displayName"`
-	AvatarURL    string    `gorm:"size:512" json:"avatarUrl"`
-	CreatedAt    time.Time `json:"createdAt"`
-	UpdatedAt    time.Time `json:"updatedAt"`
+	gorm.Model
+	Provider    string    `json:"provider"`
+	ProviderID  string    `json:"provider_id"`
+	DisplayName string    `json:"display_name"`
+	Email       string    `json:"email"`
+	AvatarURL   string    `json:"avatar_url"`
+	GithubID    string    `json:"github_id"`
+	DiscordID   string    `json:"discord_id"`
+	TwitterID   string    `json:"twitter_id"`
+	Username    string    `json:"username"`
+	Matches     int       `json:"matches"      gorm:"default:0"`
+	Won         int       `json:"won"          gorm:"default:0"`
+	Lost        int       `json:"lost"         gorm:"default:0"`
+	LastActive  time.Time `json:"last_active"`
+	Rating      float64   `json:"rating"       gorm:"default:1500"`
 }
 
 func (User) TableName() string {

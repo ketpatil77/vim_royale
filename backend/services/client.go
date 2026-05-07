@@ -1,4 +1,4 @@
-package main
+package services
 
 import (
 	"encoding/json"
@@ -21,6 +21,7 @@ const (
 )
 
 var uuidV4Like = regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$`)
+var providerIDLike = regexp.MustCompile(`^[a-z]+:.+$`)
 
 type Client struct {
 	ID      string
@@ -38,9 +39,9 @@ func NewClient(conn *websocket.Conn, hub *Hub) *Client {
 	}
 }
 
-func (c *Client) readPump() {
+func (c *Client) ReadPump() {
 	defer func() {
-		c.Hub.unregister <- c
+		c.Hub.Unregister <- c
 		_ = c.Conn.Close()
 	}()
 
@@ -118,8 +119,8 @@ func (c *Client) expectHello() error {
 
 		playerID = claims.Provider + ":" + claims.ProviderID
 	} else if hello.PlayerID != "" {
-		if !uuidV4Like.MatchString(hello.PlayerID) {
-			c.Hub.sendError(c, "invalid_player_id", "playerId must be a valid UUID")
+		if !uuidV4Like.MatchString(hello.PlayerID) && !providerIDLike.MatchString(hello.PlayerID) {
+			c.Hub.sendError(c, "invalid_player_id", "playerId must be a valid UUID or provider:id")
 			return errProtocol
 		}
 		playerID = hello.PlayerID
@@ -140,7 +141,7 @@ func (c *Client) expectHello() error {
 	return nil
 }
 
-func (c *Client) writePump() {
+func (c *Client) WritePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -168,6 +169,6 @@ func (c *Client) writePump() {
 }
 
 func (c *Client) close() {
-	c.Hub.unregister <- c
+	c.Hub.Unregister <- c
 	_ = c.Conn.Close()
 }
