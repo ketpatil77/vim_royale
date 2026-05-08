@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	database "vim_royale/backend/db"
+	"net/url"
+	"strings"
 	"vim_royale/backend/config"
+	database "vim_royale/backend/db"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,29 +30,39 @@ type oauth2Config struct {
 }
 
 func (c *oauth2Config) AuthCodeURL(state string) string {
-	scopes := ""
-	for i, s := range c.Scopes {
-		if i > 0 {
-			scopes += "+"
-		}
-		scopes += s
-	}
+	scopes := strings.Join(c.Scopes, "+")
 	return c.AuthURL + "?client_id=" + c.ClientID + "&scope=" + scopes + "&state=" + state
 }
 
+func getOAuthConfig() *oauth2Config {
+	if config.GitHubClientID != "" {
+		return &oauth2Config{
+			ClientID:     config.GitHubClientID,
+			ClientSecret: config.GitHubClientSecret,
+			Scopes:       []string{"user:email"},
+			AuthURL:      "https://github.com/login/oauth/authorize",
+			TokenURL:     "https://github.com/login/oauth/access_token",
+		}
+	}
+	return gitHubOAuthConfig
+}
+
 func GitHubLogin(c *gin.Context) {
-	url := gitHubOAuthConfig.AuthCodeURL("state")
+	cfg := getOAuthConfig()
+	url := cfg.AuthCodeURL("state")
 	c.Redirect(http.StatusFound, url)
 }
 
 func GitHubCallback(c *gin.Context) {
+	cfg := getOAuthConfig()
+
 	code := c.Query("code")
 	if code == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing code"})
 		return
 	}
 
-	token, err := exchangeGitHubToken(code)
+	token, err := exchangeGitHubToken(cfg, code)
 	if err != nil {
 		log.Printf("GitHub token exchange error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to exchange code"})
@@ -64,12 +76,29 @@ func GitHubCallback(c *gin.Context) {
 		return
 	}
 
-	email := userInfo["email"].(string)
+	email, _ := userInfo["email"].(string)
+	login, _ := userInfo["login"].(string)
+	name, _ := userInfo["name"].(string)
+	avatarURL, _ := userInfo["avatar_url"].(string)
+
 	if email == "" {
-		email = userInfo["login"].(string) + "@github.local"
+		email = login + "@github.local"
 	}
 
-	user, err := database.FindOrCreateUser("github", userInfo["id"].(string), email, userInfo["name"].(string), userInfo["avatar_url"].(string))
+	// GitHub returns numeric IDs; handle both float64 and string
+	var providerID string
+	switch v := userInfo["id"].(type) {
+	case float64:
+		providerID = fmt.Sprintf("%.0f", v)
+	case string:
+		providerID = v
+	default:
+		log.Printf("Unexpected GitHub ID type: %T", userInfo["id"])
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "invalid user ID from GitHub"})
+		return
+	}
+
+	user, err := database.FindOrCreateUser("github", providerID, email, name, avatarURL)
 	if err != nil {
 		log.Printf("User creation error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
@@ -83,68 +112,100 @@ func GitHubCallback(c *gin.Context) {
 		return
 	}
 
-	c.Header("Set-Cookie", fmt.Sprintf("token=%s; Path=/; HttpOnly; SameSite=Lax; Max-Age=%d", jwtToken, 86400*30))
+	c.Header(
+		"Set-Cookie",
+		fmt.Sprintf("token=%s; Path=/; HttpOnly; SameSite=Lax; Max-Age=%d", jwtToken, 86400*30),
+	)
 	c.Redirect(http.StatusFound, config.FrontendURL)
 }
 
-func exchangeGitHubToken(code string) (string, error) {
-	resp, err := http.PostForm(gitHubOAuthConfig.TokenURL, map[string][]string{
-		"client_id":     {gitHubOAuthConfig.ClientID},
-		"client_secret": {gitHubOAuthConfig.ClientSecret},
+func exchangeGitHubToken(cfg *oauth2Config, code string) (string, error) {
+	params := url.Values{
+		"client_id":     {cfg.ClientID},
+		"client_secret": {cfg.ClientSecret},
 		"code":          {code},
-	})
+	}
+
+	req, err := http.NewRequest("POST", cfg.TokenURL, strings.NewReader(params.Encode()))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to create token request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "application/json") // Tell GitHub to respond with JSON
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("token request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	var result struct {
-		AccessToken string `json:"access_token"`
+		AccessToken      string `json:"access_token"`
+		Error            string `json:"error"`
+		ErrorDescription string `json:"error_description"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to decode token response: %w", err)
+	}
+
+	if result.Error != "" {
+		return "", fmt.Errorf("github oauth error: %s - %s", result.Error, result.ErrorDescription)
+	}
+
+	if result.AccessToken == "" {
+		return "", fmt.Errorf("received empty access token from GitHub")
 	}
 
 	return result.AccessToken, nil
 }
 
 func getGitHubUserInfo(accessToken string) (map[string]interface{}, error) {
-	req, _ := http.NewRequest("GET", "https://api.github.com/user", nil)
+	req, err := http.NewRequest("GET", "https://api.github.com/user", nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create user info request: %w", err)
+	}
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
+	req.Header.Set("User-Agent", "vim-royale")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("user info request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	var userInfo map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to decode user info: %w", err)
 	}
 
-	emailResp, err := http.NewRequest("GET", "https://api.github.com/user/emails", nil)
-	if err == nil {
-		emailResp.Header.Set("Authorization", "Bearer "+accessToken)
-		emailResp.Header.Set("Accept", "application/vnd.github.v3+json")
-		emailResp.Header.Set("User-Agent", "vim-royale")
+	// Fetch primary email separately (may not be on the public profile)
+	emailReq, err := http.NewRequest("GET", "https://api.github.com/user/emails", nil)
+	if err != nil {
+		return userInfo, nil // Non-fatal: fall back to profile email
+	}
+	emailReq.Header.Set("Authorization", "Bearer "+accessToken)
+	emailReq.Header.Set("Accept", "application/vnd.github.v3+json")
+	emailReq.Header.Set("User-Agent", "vim-royale")
 
-		emailResult, err := http.DefaultClient.Do(emailResp)
-		if err == nil {
-			defer emailResult.Body.Close()
-			var emails []struct {
-				Email   string `json:"email"`
-				Primary bool   `json:"primary"`
-			}
-			if json.NewDecoder(emailResult.Body).Decode(&emails) == nil {
-				for _, e := range emails {
-					if e.Primary && e.Email != "" {
-						userInfo["email"] = e.Email
-						break
-					}
-				}
-			}
+	emailResp, err := http.DefaultClient.Do(emailReq)
+	if err != nil {
+		return userInfo, nil // Non-fatal: fall back to profile email
+	}
+	defer emailResp.Body.Close()
+
+	var emails []struct {
+		Email   string `json:"email"`
+		Primary bool   `json:"primary"`
+	}
+	if err := json.NewDecoder(emailResp.Body).Decode(&emails); err != nil {
+		return userInfo, nil // Non-fatal: fall back to profile email
+	}
+
+	for _, e := range emails {
+		if e.Primary && e.Email != "" {
+			userInfo["email"] = e.Email
+			break
 		}
 	}
 
