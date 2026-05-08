@@ -21,7 +21,16 @@ type User struct {
 	Won         int       `json:"won"          gorm:"default:0"`
 	Lost        int       `json:"lost"         gorm:"default:0"`
 	LastActive  time.Time `json:"last_active"`
-	Rating      float64   `json:"rating"       gorm:"default:1500"`
+	// add index on rating
+	Rating      float64   `json:"rating"       gorm:"default:1500;index:idx_rating;"`
+}
+
+type UpdateUserRequest struct {
+	DisplayName *string `json:"displayName,omitempty"`
+	AvatarURL   *string `json:"avatarUrl,omitempty"`
+	GitHubID    *string `json:"githubId,omitempty"`
+	TwitterID   *string `json:"twitterId,omitempty"`
+	DiscordID   *string `json:"discordId,omitempty"`
 }
 
 func (User) TableName() string {

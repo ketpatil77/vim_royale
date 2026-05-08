@@ -40,10 +40,10 @@ func CreateMatch(db *gorm.DB, winnerID, loserID string) error {
 	winner.Rating = winnerRating
 	loser.Rating = loserRating
 
-	if err := UpdateUser(db, winner, true); err != nil {
+	if err := UpdateUserStats(db, winner, true); err != nil {
 		return err
 	}
-	if err := UpdateUser(db, loser, false); err != nil {
+	if err := UpdateUserStats(db, loser, false); err != nil {
 		return err
 	}
 

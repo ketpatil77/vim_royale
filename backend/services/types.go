@@ -96,3 +96,13 @@ type InboundMessage struct {
 	Client  *Client
 	Message Envelope
 }
+
+func (m *Match) opponentOf(client *Client) *Client {
+	if m.PlayerA == client {
+		return m.PlayerB
+	}
+	if m.PlayerB == client {
+		return m.PlayerA
+	}
+	return nil
+}

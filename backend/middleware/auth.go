@@ -38,9 +38,9 @@ func AuthRequired() gin.HandlerFunc {
 		}
 
 		c.Set("userID", claims.UserID)
+		c.Set("email", claims.Email)
 		c.Set("provider", claims.Provider)
 		c.Set("providerID", claims.ProviderID)
-		c.Set("email", claims.Email)
 		c.Next()
 	}
 }

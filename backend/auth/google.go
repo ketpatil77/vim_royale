@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"vim_royale/backend/config"
-	"vim_royale/backend/db"
+	database "vim_royale/backend/db"
 	"vim_royale/backend/middleware"
 	"vim_royale/backend/models"
 
@@ -65,7 +65,7 @@ func GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	user, err := findOrCreateUser("google", userInfo["id"].(string), userInfo["email"].(string), userInfo["name"].(string), userInfo["picture"].(string))
+	user, err := database.FindOrCreateUser("google", userInfo["id"].(string), userInfo["email"].(string), userInfo["name"].(string), userInfo["picture"].(string))
 	if err != nil {
 		log.Printf("User creation error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
@@ -103,34 +103,6 @@ func getGoogleUserInfo(accessToken string) (map[string]interface{}, error) {
 	}
 
 	return userInfo, nil
-}
-
-func findOrCreateUser(provider, providerID, email, displayName, avatarURL string) (*models.User, error) {
-	database, err := database.GetPostgresConnection()
-	if err != nil {
-		return nil, err
-	}
-
-	var user models.User
-	result := database.Where("provider = ? AND provider_id = ?", provider, providerID).First(&user)
-
-	if result.Error == nil {
-		return &user, nil
-	}
-
-	user = models.User{
-		Provider:    provider,
-		ProviderID:  providerID,
-		Email:       email,
-		DisplayName: displayName,
-		AvatarURL:   avatarURL,
-	}
-
-	if err := database.Create(&user).Error; err != nil {
-		return nil, err
-	}
-
-	return &user, nil
 }
 
 func generateJWT(user *models.User) (string, error) {

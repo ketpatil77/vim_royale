@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-
+	database "vim_royale/backend/db"
 	"vim_royale/backend/config"
 
 	"github.com/gin-gonic/gin"
@@ -69,7 +69,7 @@ func GitHubCallback(c *gin.Context) {
 		email = userInfo["login"].(string) + "@github.local"
 	}
 
-	user, err := findOrCreateUser("github", userInfo["id"].(string), email, userInfo["name"].(string), userInfo["avatar_url"].(string))
+	user, err := database.FindOrCreateUser("github", userInfo["id"].(string), email, userInfo["name"].(string), userInfo["avatar_url"].(string))
 	if err != nil {
 		log.Printf("User creation error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
@@ -134,8 +134,8 @@ func getGitHubUserInfo(accessToken string) (map[string]interface{}, error) {
 		if err == nil {
 			defer emailResult.Body.Close()
 			var emails []struct {
-				Email    string `json:"email"`
-				Primary  bool   `json:"primary"`
+				Email   string `json:"email"`
+				Primary bool   `json:"primary"`
 			}
 			if json.NewDecoder(emailResult.Body).Decode(&emails) == nil {
 				for _, e := range emails {

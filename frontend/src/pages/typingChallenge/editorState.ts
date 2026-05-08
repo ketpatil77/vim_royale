@@ -49,7 +49,7 @@ const editorTheme = EditorView.theme({
 type CreateEditorStateArgs = {
   content: string
   readOnly: boolean
-  onDocChanged?: () => void
+  onDocChanged?: (content: string) => void
 }
 
 export function createEditorState({
@@ -81,7 +81,7 @@ export function createEditorState({
   if (onDocChanged) {
     extensions.push(
       EditorView.updateListener.of((update) => {
-        if (update.docChanged) onDocChanged()
+        if (update.docChanged) onDocChanged(update.state.doc.toString())
       })
     )
   }

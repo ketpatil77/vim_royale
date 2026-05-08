@@ -24,11 +24,13 @@ var uuidV4Like = regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F
 var providerIDLike = regexp.MustCompile(`^[a-z]+:.+$`)
 
 type Client struct {
-	ID      string
-	Conn    *websocket.Conn
-	Hub     *Hub
-	send    chan []byte
-	MatchID string
+	ID          string
+	Rating      int
+	EnqueuedAt  time.Time
+	Conn        *websocket.Conn
+	Hub         *Hub
+	send        chan []byte
+	MatchID     string
 }
 
 func NewClient(conn *websocket.Conn, hub *Hub) *Client {

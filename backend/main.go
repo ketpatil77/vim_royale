@@ -3,25 +3,16 @@ package main
 import (
 	"log"
 	"math/rand"
-	"net/http"
 	"os"
 	"time"
 
 	"vim_royale/backend/config"
+	"vim_royale/backend/handlers"
 	"vim_royale/backend/services"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 )
-
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
@@ -34,22 +25,24 @@ func main() {
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},
-		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
+		AllowMethods:     []string{"GET", "POST", "OPTIONS", "PUT", "PATCH"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r.GET("/healthz", healthzHandler)
-	r.GET("/ws", wsHandler(hub))
+	r.GET("/healthz", handlers.HealthzHandler)
+	r.GET("/ws", handlers.WsHandler(hub))
 
-	r.GET("/auth/google", authGoogleHandler)
-	r.GET("/auth/google/callback", authGoogleCallbackHandler)
-	r.GET("/auth/github", authGitHubHandler)
-	r.GET("/auth/github/callback", authGitHubCallbackHandler)
-	r.GET("/auth/me", authMiddleware(), authMeHandler)
-	r.POST("/auth/logout", authLogoutHandler)
+	r.GET("/auth/google", handlers.AuthGoogleHandler)
+	r.GET("/auth/google/callback", handlers.AuthGoogleCallbackHandler)
+	r.GET("/auth/github", handlers.AuthGitHubHandler)
+	r.GET("/auth/github/callback", handlers.AuthGitHubCallbackHandler)
+	r.GET("/auth/me", handlers.AuthMiddleware(), handlers.AuthMeHandler)
+	r.POST("/auth/logout", handlers.AuthLogoutHandler)
+	r.PATCH("/auth/me", handlers.AuthMiddleware(), handlers.UpdateUserProfile)
+	r.GET("/leaderboard", handlers.GetLeaderboard)
 
 	addr := os.Getenv("ADDR")
 	if addr == "" {
@@ -61,5 +54,3 @@ func main() {
 		log.Fatalf("server error: %v", err)
 	}
 }
-
-
