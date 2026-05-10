@@ -16,12 +16,11 @@ type User struct {
 	GithubID    string    `json:"github_id"`
 	DiscordID   string    `json:"discord_id"`
 	TwitterID   string    `json:"twitter_id"`
-	Username    string    `json:"username"`
+	Username    string    `json:"username" gorm:"unique"`
 	Matches     int       `json:"matches"      gorm:"default:0"`
 	Won         int       `json:"won"          gorm:"default:0"`
 	Lost        int       `json:"lost"         gorm:"default:0"`
 	LastActive  time.Time `json:"last_active"`
-	// add index on rating
 	Rating      float64   `json:"rating"       gorm:"default:1500;index:idx_rating;"`
 }
 

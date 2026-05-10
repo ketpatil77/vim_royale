@@ -2,7 +2,6 @@ package database
 
 import (
 	"time"
-
 	"vim_royale/backend/models"
 	"vim_royale/backend/utils"
 

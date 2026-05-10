@@ -21,7 +21,13 @@ func FindOrCreateUser(provider, providerID, email, displayName, avatarURL string
 		return &user, nil
 	}
 
+	username, err := CreateUniqueUsername(database)
+	if err != nil {
+		return nil, err
+	}
+
 	user = models.User{
+		Username:    username,
 		Provider:    provider,
 		ProviderID:  providerID,
 		Email:       email,
@@ -50,6 +56,14 @@ func UpdateUserStats(db *gorm.DB, user *models.User, won bool) error {
 func GetUserFromProvider(db *gorm.DB, provider, providerID string) (*models.User, error) {
 	var user models.User
 	if err := db.Where("provider = ? AND provider_id = ?", provider, providerID).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func GetUserFromUsername(db *gorm.DB, username string) (*models.User, error) {
+	var user models.User
+	if err := db.Where("username = ?", username).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil

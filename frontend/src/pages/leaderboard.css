@@ -15,11 +15,17 @@
     padding: 32px 20px;
 }
 
+.pfp {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+}
+
 .leaderboard-header {
     margin-bottom: 32px;
     padding: 24px;
     background: var(--bg-card);
-    border: 1px solid var(--border);
+    border: 1px solid var(--green);
 }
 
 .leaderboard-header h1 {
@@ -51,7 +57,7 @@
     width: 100%;
     border-collapse: collapse;
     background: var(--bg-card);
-    border: 1px solid var(--border);
+    border: 1px solid var(--green);
 }
 
 .leaderboard-table th {
@@ -63,13 +69,13 @@
     text-transform: uppercase;
     padding: 14px 16px;
     text-align: left;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--green);
     background: var(--bg-raised);
 }
 
 .leaderboard-table td {
     padding: 14px 16px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--green);
 }
 
 .leaderboard-table tr:last-child td {
@@ -82,9 +88,14 @@
 }
 
 .col-player {
-    display: flex;
     align-items: center;
     gap: 12px;
+}
+
+.col-player-inner {
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 .col-rating {

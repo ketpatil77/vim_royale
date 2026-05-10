@@ -1,0 +1,39 @@
+.authcallback-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--bg);
+  font-family: var(--mono);
+  color: var(--green);
+}
+
+.authcallback-message {
+  font-size: 14px;
+  color: var(--green-dim);
+  margin-bottom: 16px;
+}
+
+.authcallback-error {
+  color: var(--red);
+  margin-bottom: 1rem;
+  font-size: 14px;
+}
+
+.authcallback-button {
+  padding: 10px 20px;
+  font-family: var(--mono);
+  font-size: 12px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--green);
+  border: 1px solid var(--green);
+  letter-spacing: 0.5px;
+  transition: background 0s;
+}
+
+.authcallback-button:hover {
+  background: var(--green);
+  color: var(--bg);
+}

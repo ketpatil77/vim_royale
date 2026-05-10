@@ -44,6 +44,7 @@ func main() {
 	r.PATCH("/auth/me", handlers.AuthMiddleware(), handlers.UpdateUserProfile)
 	r.GET("/leaderboard", handlers.GetLeaderboard)
 
+	r.GET("/users/:username", handlers.GetUserFromUsername)
 	addr := os.Getenv("ADDR")
 	if addr == "" {
 		addr = ":8080"

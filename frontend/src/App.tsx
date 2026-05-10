@@ -1,10 +1,15 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import CRTEffect from 'vault66-crt-effect'
+import "vault66-crt-effect/dist/vault66-crt-effect.css"
 import { AuthProvider, useAuth } from './contexts/AuthContext'
-import TypingChallenge from './pages/TypingChallenge'
+import { CRTProvider, useCRT } from './contexts/CRTContext'
+import Game from './pages/Game'
+import EditProfile from './pages/EditProfile'
+import Landing from './pages/Landing'
+import Leaderboard from './pages/Leaderboard'
 import AuthCallback from './pages/login/AuthCallback'
 import Login from './pages/login/Login'
-import UserProfile from './pages/userProfile'
-import Leaderboard from './pages/leaderboard'
+import UserProfile from './pages/UserProfile'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()
@@ -34,27 +39,30 @@ function AppRoutes() {
         element={user ? <Navigate to="/" replace /> : <Login />}
       />
       <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/" element={<Landing />} />
       <Route
-        path="/"
+        path="/play"
         element={
           <ProtectedRoute>
-            <TypingChallenge />
+            <Game />
           </ProtectedRoute>
         }
       />
       <Route
         path="/leaderboard"
         element={
-          <ProtectedRoute>
             <Leaderboard />
-          </ProtectedRoute>
         }
       />
       <Route
-        path="/userProfile"
+        path="/users/:username"
+        element={<UserProfile />}
+      />
+      <Route
+        path="/editProfile"
         element={
           <ProtectedRoute>
-            <UserProfile />
+            <EditProfile />
           </ProtectedRoute>
         }
       />
@@ -62,11 +70,27 @@ function AppRoutes() {
   )
 }
 
+function AppContent() {
+  const { crtEnabled } = useCRT()
+
+  return (
+    crtEnabled ? (
+      <CRTEffect theme='green' enableScanlines={true} scanlineOpacity={0.15} scanlineThickness={2} scanlineGap={3} enableSweep={true} sweepDuration={12} sweepThickness={8} sweepStyle='classic' enableGlow={false} enableEdgeGlow={true} edgeGlowColor='rgba(91, 179, 135, 0.25)' edgeGlowSize={25} enableFlicker={true} flickerIntensity={0.03} flickerSpeed={2} enableVignette={true} vignetteIntensity={0.2} enableGlitch={false}>
+        <AppRoutes />
+      </CRTEffect>
+    ) : (
+      <AppRoutes />
+    )
+  )
+}
+
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <CRTProvider>
+          <AppContent />
+        </CRTProvider>
       </AuthProvider>
     </BrowserRouter>
   )

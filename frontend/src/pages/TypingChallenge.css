@@ -3,7 +3,6 @@
    Terminal / hacker aesthetic: black bg, green accents, monospace
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap');
 
 /* ---------- CSS Variables ---------- */
 :root {
@@ -25,7 +24,6 @@
     --text-dim: #666666;
     --text-bright: #ffffff;
     --mono: 'Share Tech Mono', 'Courier New', monospace;
-    --display: 'Orbitron', 'Share Tech Mono', monospace;
 }
 
 /* ---------- Reset & Base ---------- */

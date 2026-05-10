@@ -1,4 +1,24 @@
-/* Basic reset - add your own styling */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --green: #39ff14;
+  --green-dim: #1a8a00;
+  --green-faint: #0f5200;
+  --amber: #ffb000;
+  --red: #ff3131;
+  --bg: #0d0d0d;
+  --bg-card: #080808;
+  --bg-panel: #080808;
+  --bg-raised: #111111;
+  --border: #1f1f1f;
+  --border-green: rgba(57, 255, 20, 0.25);
+  --text-bright: #ffffff;
+  --text-dim: #888888;
+  --mono: 'IBM Plex Mono', 'Fira Code', monospace;
+  --display: 'Cormorant Garamond', Georgia, serif;
+  --glow: 0 0 8px #39ff14;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -6,7 +26,20 @@
 }
 
 body {
-  font-family: monospace;
-  background: #000;
-  color: #fff;
+  font-family: var(--mono);
+  background: var(--bg);
+  color: var(--text-bright);
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--green-faint);
 }

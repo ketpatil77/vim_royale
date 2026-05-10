@@ -7,6 +7,36 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func GetUserFromUsername(c *gin.Context) {
+	username := c.Param("username")
+	db, err := database.GetPostgresConnection()
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to get database connection"})
+		return
+	}
+
+	user, err := database.GetUserFromUsername(db, username)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to get user"})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"id":           user.ID,
+		"email":       user.Email,
+		"displayName": user.DisplayName,
+		"avatarUrl":   user.AvatarURL,
+		"githubId":    user.GithubID,
+		"twitterId":   user.TwitterID,
+		"discordId":   user.DiscordID,
+		"matches":     user.Matches,
+		"won":         user.Won,
+		"lost":        user.Lost,
+		"rating":      user.Rating,
+		"lastActive":  user.LastActive,
+	})
+}
+
 func UpdateUserProfile(c *gin.Context) {
 	provider, _ := c.Get("provider")
 	providerID, _ := c.Get("providerID")
@@ -75,9 +105,13 @@ func GetLeaderboard(c *gin.Context) {
 	for _, user := range leaderboard {
 		response = append(response, map[string]interface{}{
 			"user_id":     user.ID,
+			"username":    user.Username,
 			"displayName": user.DisplayName,
 			"rating":      user.Rating,
 			"avatarUrl":   user.AvatarURL,
+			"githubId":    user.GithubID,
+			"twitterId":   user.TwitterID,
+			"discordId":   user.DiscordID,
 		})
 	}
 

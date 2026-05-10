@@ -1,0 +1,305 @@
+.hero-editors {
+  background: #0d0d0d;
+  border-radius: 10px;
+  padding: 14px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.hero-editors-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.hero-editors-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.hero-editors-dot.red { background: #ff5f57; }
+.hero-editors-dot.yellow { background: #febc2e; }
+.hero-editors-dot.green { background: #28c840; }
+
+.hero-editors-title {
+  font-size: 10px;
+  color: #333;
+  margin-left: 8px;
+}
+
+.hero-editors-arena {
+  display: flex;
+  align-items: stretch;
+}
+
+.hero-editors-player {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}
+
+.hero-editors-vs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  gap: 4px;
+}
+
+.hero-editors-vs-label {
+  color: #444;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.hero-editors-vs-phase {
+  font-size: 9px;
+  color: #2a2a2a;
+  letter-spacing: 1;
+}
+
+/* ---------- Vim Buffer ---------- */
+
+.vim-buffer {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 6px;
+  overflow: hidden;
+  min-width: 0;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 11px;
+  position: relative;
+}
+
+.vim-buffer.glitching {
+  animation: vrd-glitch 0.12s steps(2) infinite;
+}
+
+.vim-buffer-header {
+  padding: 5px 10px;
+  border-bottom: 1px solid #1e1e1e;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 28px;
+}
+
+.vim-buffer-label {
+  font-weight: normal;
+}
+
+.vim-buffer-mode {
+  font-size: 9px;
+  color: #444;
+  letter-spacing: 1;
+}
+
+.vim-buffer-code {
+  padding: 6px 0;
+  min-height: 130px;
+}
+
+.vim-buffer-line {
+  display: flex;
+  padding: 0 8px;
+  line-height: 1.75;
+}
+
+.vim-buffer-line.active {
+  background: rgba(82, 139, 255, 0.07);
+}
+
+.vim-buffer-line-number {
+  color: #333;
+  min-width: 18px;
+  text-align: right;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.vim-buffer-line-content {
+  flex: 1;
+  white-space: pre;
+}
+
+.vim-buffer-keyword {
+  color: #c678dd;
+}
+
+.vim-buffer-bug {
+  color: #e06c75;
+}
+
+.vim-buffer-normal {
+  color: #abb2bf;
+}
+
+.vim-buffer-cursor {
+  display: inline-block;
+  width: 7px;
+  height: 12px;
+  vertical-align: middle;
+  margin-left: 1px;
+  animation: vrd-blink 1s step-end infinite;
+}
+
+.vim-buffer-status {
+  padding: 2px 10px;
+  border-top: 1px solid #1a1a1a;
+  min-height: 20px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+}
+
+.vim-buffer-status-cmd {
+  color: #444;
+}
+
+.vim-buffer-status-cmd.insert {
+  color: var(--green);
+}
+
+.vim-buffer-status-filename {
+  color: #333;
+}
+
+.vim-buffer-stamp {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 6px 14px;
+  border: 2px solid;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 13px;
+  letter-spacing: 2;
+  white-space: nowrap;
+  z-index: 10;
+  animation: vrd-stamp 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.vim-buffer-stamp.win {
+  color: #4ec94e;
+  background: #4ec94e18;
+  border-color: #4ec94e;
+}
+
+.vim-buffer-stamp.eliminated {
+  color: #e06c75;
+  background: #e06c7518;
+  border-color: #e06c75;
+}
+
+/* ---------- Countdown Overlay ---------- */
+
+.countdown-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 6px;
+  z-index: 20;
+}
+
+.countdown-value {
+  font-size: 42px;
+  font-weight: bold;
+  color: #528bff;
+  font-family: monospace;
+  line-height: 1;
+  animation: vrd-pop 0.3s ease;
+}
+
+.countdown-label {
+  font-size: 10px;
+  color: #333;
+  letter-spacing: 3;
+}
+
+/* ---------- Keyframes ---------- */
+
+@keyframes vrd-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes vrd-glitch {
+  0% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes vrd-stamp {
+  from {
+    transform: translate(-50%, -50%) scale(0.3) rotate(-6deg);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes vrd-pop {
+  0% { transform: scale(1.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ---------- Responsive: Mobile (<= 800px) ---------- */
+
+@media (max-width: 800px) {
+  .hero-editors {
+    padding: 8px;
+  }
+
+  .hero-editors-titlebar {
+    margin-bottom: 8px;
+  }
+
+  .hero-editors-arena {
+    flex-direction: column;
+  }
+
+  .hero-editors-vs {
+    padding: 8px 0;
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .hero-editors-vs-label {
+    font-size: 11px;
+  }
+
+  .hero-editors-vs-phase {
+    font-size: 8px;
+  }
+
+  .vim-buffer {
+    font-size: 9px;
+  }
+
+  .vim-buffer-code {
+    min-height: 100px;
+  }
+
+  .countdown-value {
+    font-size: 32px;
+  }
+
+  .countdown-label {
+    font-size: 9px;
+  }
+}
