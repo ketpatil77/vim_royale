@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
+import { TerminalLayout } from "../components/TerminalLayout/TerminalLayout";
 import type { User } from "../contexts/AuthContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useCRT } from "../contexts/CRTContext";
-import { TerminalLayout } from "../components/TerminalLayout";
 import type { EditableProfileFields } from "../types";
 import "./userProfile.css";
 

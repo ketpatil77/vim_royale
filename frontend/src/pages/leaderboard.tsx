@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { TerminalLayout } from "../components/TerminalLayout/TerminalLayout"
 import { API_URL } from "../config"
-import { TerminalLayout } from "../components/TerminalLayout"
-import "./leaderboard.css"
 import { useCRT } from "../contexts/CRTContext"
+import "./leaderboard.css"
 
 type LeaderboardEntry = {
     user_id: number
@@ -57,7 +57,7 @@ export default function Leaderboard() {
                                     </td>
                                     <td className="col-player">
                                         <span className="col-player-inner">
-                                            <img src={entry.avatarUrl || ''} alt="pfp" className="pfp" />
+                                            <img referrerPolicy="no-referrer" src={entry.avatarUrl || ''} alt="pfp" className="pfp" />
                                             <span
                                                 className="player-name"
                                                 onClick={() => navigate(`/users/${entry.username}`)}

@@ -127,3 +127,33 @@
     padding: 4px 10px;
   }
 }
+
+/* ---------- Command Bar ---------- */
+.terminal-cmdbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 24px;
+  background: #0d0d0d;
+  border-top: 1px solid #1e1e1e;
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--green);
+  z-index: 60;
+}
+
+.terminal-cmdbar-error {
+  color: #e06c75;
+}
+
+.terminal-cmdbar-cursor {
+  animation: vrd-cmdbar-blink 1s step-end infinite;
+  color: var(--green);
+}
+
+@keyframes vrd-cmdbar-blink {
+  50% {
+    opacity: 0;
+  }
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { TerminalLayout } from "../components/TerminalLayout";
+import { TerminalLayout } from "../components/TerminalLayout/TerminalLayout";
 import { API_URL } from "../config";
 import { useCRT } from "../contexts/CRTContext";
 import "./userProfile.css";

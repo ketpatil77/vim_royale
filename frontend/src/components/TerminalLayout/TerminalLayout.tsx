@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { useTerminalCommands } from "./useTerminalCommands";
 import "./TerminalLayout.css";
 
 interface TerminalLayoutProps {
@@ -21,6 +22,13 @@ export function TerminalLayout({
     await logout();
     navigate("/login");
   };
+
+  const { command, cmdFeedback } = useTerminalCommands({
+    navigate,
+    user,
+    onLogout: handleLogout,
+    onCrtToggle,
+  });
 
   return (
     <div className="terminal-shell">
@@ -82,6 +90,19 @@ export function TerminalLayout({
       </header>
 
       <main className="terminal-main">{children}</main>
+
+      {command && (
+        <div className="terminal-cmdbar">
+          {cmdFeedback ? (
+            <span className="terminal-cmdbar-error">{cmdFeedback}</span>
+          ) : (
+            <span>
+              {command}
+              <span className="terminal-cmdbar-cursor">█</span>
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import VimRoyaleDuel from '../components/HeroEditors'
-import { TerminalLayout } from '../components/TerminalLayout'
+import { TerminalLayout } from '../components/TerminalLayout/TerminalLayout'
 import { useCRT } from '../contexts/CRTContext'
 import './Landing.css'
 
@@ -39,7 +39,7 @@ export default function Landing() {
           <VimRoyaleDuel/>
         </section>
 
-        <footer className="vr-footer">
+        {/* <footer className="vr-footer">
           <nav className="vr-footer-links">
             <span onClick={() => navigate('/leaderboard')}>Leaderboard</span>
             <span className="vr-footer-sep">·</span>
@@ -47,7 +47,7 @@ export default function Landing() {
             <span className="vr-footer-sep">·</span>
             <span>Docs</span>
           </nav>
-        </footer>
+        </footer> */}
 
       </main>
     </TerminalLayout>

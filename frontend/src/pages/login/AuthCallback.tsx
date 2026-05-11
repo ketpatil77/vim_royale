@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { TerminalLayout } from '../../components/TerminalLayout/TerminalLayout'
 import { useAuth } from '../../contexts/AuthContext'
-import { TerminalLayout } from '../../components/TerminalLayout'
 import './AuthCallback.css'
 
 function getCookie(name: string): string | null {
