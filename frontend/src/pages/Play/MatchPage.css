@@ -1,0 +1,137 @@
+@import '../TypingChallenge.css';
+
+.match-page {
+  min-height: 100vh;
+  width: 100%;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.matchmaking-screen {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.matchmaking-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+}
+
+.matchmaking-title {
+  font-family: var(--mono);
+  font-size: 24px;
+  color: var(--green);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.matchmaking-anim {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pulse-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    text-shadow: 0 0 8px var(--green-glow);
+  }
+  50% {
+    text-shadow: 0 0 20px var(--green), 0 0 40px var(--green-glow);
+  }
+}
+
+.matchmaking-status {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+
+.editor-grid {
+  gap: 24px;
+}
+
+.editor-panel {
+  overflow: hidden;
+  display: flex;          
+  flex-direction: column; 
+}
+
+.editor-topbar {
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 14px;
+
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+
+  background: rgba(255,255,255,0.02);
+}
+
+.traffic-lights {
+  display: flex;
+  gap: 8px;
+}
+
+.dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+
+.red {
+  background: #ff5f57;
+}
+
+.yellow {
+  background: #febc2e;
+}
+
+.green {
+  background: #28c840;
+}
+
+.filename {
+  margin-left: 16px;
+
+  color: #6b7280;
+
+  font-size: 12px;
+  font-family: var(--mono);
+}
+
+@media (max-width: 768px) {
+  .editor-grid {
+    grid-template-columns: 1fr;
+  }
+}

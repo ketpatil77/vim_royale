@@ -3,13 +3,15 @@ import CRTEffect from 'vault66-crt-effect'
 import "vault66-crt-effect/dist/vault66-crt-effect.css"
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { CRTProvider, useCRT } from './contexts/CRTContext'
-import Game from './pages/Game'
-import EditProfile from './pages/EditProfile'
+import { VimTutor } from './pages/docs/vimTutor'
+import EditProfile from './pages/editProfile'
+import Play from './pages/Play/Play'
+import MatchPage from './pages/Play/MatchPage'
 import Landing from './pages/Landing'
-import Leaderboard from './pages/Leaderboard'
+import Leaderboard from './pages/leaderboard'
 import AuthCallback from './pages/login/AuthCallback'
 import Login from './pages/login/Login'
-import UserProfile from './pages/UserProfile'
+import UserProfile from './pages/userProfile'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()
@@ -44,9 +46,21 @@ function AppRoutes() {
         path="/play"
         element={
           <ProtectedRoute>
-            <Game />
+            <Play />
           </ProtectedRoute>
         }
+      />
+      <Route
+        path="/match/multiplayer"
+        element={
+          <ProtectedRoute>
+            <MatchPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route 
+        path="/docs/vimtutor"
+        element={<VimTutor/>}
       />
       <Route
         path="/leaderboard"

@@ -1,0 +1,118 @@
+.result-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.result-modal {
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 15, 18, 0.96),
+    rgba(8, 8, 10, 0.98)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.02),
+    0 20px 50px rgba(0,0,0,0.6);
+  backdrop-filter: blur(12px);
+  width: 400px;
+  min-width: 320px;
+}
+
+.result-modal-header {
+  background: var(--bg-raised);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.result-modal-filename {
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.result-modal-body {
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.result-modal-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 12px;
+}
+
+.result-modal-title.victory {
+  color: green;
+}
+
+.result-modal-title.defeat {
+  color: red;
+}
+
+.result-modal-description {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+.result-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.result-modal-new {
+  background: green;
+  color: white;
+}
+
+.result-modal-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 20px;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+.result-modal-btn:hover {
+  background: var(--bg-raised);
+  color: var(--accent-green);
+  border-color: var(--accent-green);
+}
+
+.result-modal-btn.primary {
+  border-color: rgba(57, 255, 20, 0.3);
+}
+
+.result-modal-btn.primary:hover {
+  border-color: var(--accent-green);
+  box-shadow: 0 0 12px rgba(57, 255, 20, 0.15);
+}
+
+.result-modal-key {
+  color: var(--accent-green);
+  font-size: 11px;
+  opacity: 0.8;
+}

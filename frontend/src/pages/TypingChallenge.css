@@ -71,7 +71,7 @@ body {
     color: var(--green);
     font-family: var(--mono);
     font-weight: bold;
-    font-size: 13px;
+    font-size: 16px;
     letter-spacing: 0.05em;
 }
 
@@ -99,23 +99,6 @@ body {
     }
 }
 
-.cli-nav {
-    display: flex;
-    flex-direction: row;
-    gap: 24px;
-}
-
-.cli-nav span {
-    color: var(--text-dim);
-    font-family: var(--mono);
-    font-size: 12px;
-    cursor: pointer;
-    transition: color 0.15s;
-}
-
-.cli-nav span:hover {
-    color: var(--green);
-}
 
 /* ---------- Landing Shell ---------- */
 .landing-shell {
@@ -720,11 +703,19 @@ body {
 }
 
 .editor-panel {
-    display: flex;
-    flex-direction: column;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
+    position: relative;
+    background: linear-gradient(to bottom,
+            rgba(15, 15, 18, 0.96),
+            rgba(8, 8, 10, 0.98));
+    max-height: 600px;
+    min-height: 600px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
     overflow: hidden;
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.02),
+        0 20px 50px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
 }
 
 .panel-title {
@@ -741,16 +732,25 @@ body {
 
 .editor-mount {
     flex: 1;
-    min-height: 300px;
+    min-height: 500px;
+    max-height: 500px;
+    overflow: scroll;
+    flex: 1;
 }
 
 .vim-mode-badge {
-    background: var(--bg-raised);
-    color: var(--text-dim);
-    font-size: 11px;
-    padding: 4px 10px;
-    border-top: 1px solid var(--border);
-    letter-spacing: 0.06em;
+    .vim-mode-badge {
+        background: #1e1e2e;
+        color: var(--green);
+        font-size: 11px;
+        font-family: var(--mono);
+        padding: 3px 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        letter-spacing: 0.06em;
+        width: 100%;
+        flex-shrink: 0;
+        margin-top: 0;
+    }
 }
 
 .result-banner {

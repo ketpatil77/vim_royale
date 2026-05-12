@@ -4,50 +4,30 @@ import { getCM } from '@replit/codemirror-vim'
 import { createEditorState } from './editorState'
 import { formatVimMode } from './vimMode'
 
-type UseEditorsOptions = {
-  targetCode: string
-  pollutedCode: string
-  onContentChange?: (content: string) => void
-}
-
 export function useEditors() {
-  const targetRef = useRef<HTMLDivElement>(null)
   const leftRef = useRef<HTMLDivElement>(null)
   const rightRef = useRef<HTMLDivElement>(null)
 
-  const targetViewRef = useRef<EditorView | null>(null)
   const leftViewRef = useRef<EditorView | null>(null)
   const rightViewRef = useRef<EditorView | null>(null)
 
   const cleanup = useCallback(() => {
-    targetViewRef.current?.destroy()
     leftViewRef.current?.destroy()
     rightViewRef.current?.destroy()
-    targetViewRef.current = null
     leftViewRef.current = null
     rightViewRef.current = null
   }, [])
 
   const setEditors = useCallback(
     (
-      options: UseEditorsOptions,
+      options: { pollutedCode: string; onContentChange?: (content: string) => void },
       onVimModeChange: (mode: string) => void
     ) => {
-      if (!targetRef.current || !leftRef.current || !rightRef.current) return cleanup()
+      if (!leftRef.current || !rightRef.current) return cleanup()
 
       cleanup()
 
-      const { targetCode, pollutedCode, onContentChange } = options
-
-      const targetState = createEditorState({
-        content: targetCode,
-        readOnly: true,
-      })
-      const targetView = new EditorView({
-        state: targetState,
-        parent: targetRef.current,
-      })
-      targetViewRef.current = targetView
+      const { pollutedCode, onContentChange } = options
 
       const leftState = createEditorState({
         content: pollutedCode,
@@ -106,7 +86,6 @@ export function useEditors() {
   }, [])
 
   return {
-    targetRef,
     leftRef,
     rightRef,
     cleanup,

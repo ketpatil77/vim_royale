@@ -31,8 +31,12 @@ export function useTerminalCommands({
       navigate("/leaderboard");
       clearCommand();
     },
-    match: () => {
+    home: () => {
       navigate("/");
+      clearCommand();
+    },
+    root: () => {
+      navigate("/")
       clearCommand();
     },
     docs: () => {

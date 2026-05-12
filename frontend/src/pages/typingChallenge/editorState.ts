@@ -8,7 +8,7 @@ import {
 import { javascript } from '@codemirror/lang-javascript'
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { EditorState, type Extension } from '@codemirror/state'
-import { oneDark } from '@codemirror/theme-one-dark'
+import { vscodeDark } from '@uiw/codemirror-theme-vscode'
 import { EditorView, drawSelection, keymap, lineNumbers } from '@codemirror/view'
 import { vim } from '@replit/codemirror-vim'
 
@@ -16,6 +16,9 @@ const editorTheme = EditorView.theme({
   '&': {
     height: '100%',
     fontSize: '15px',
+  },
+  '.cm-editor': {
+    backgroundColor: '#00000',
   },
   '.cm-scroller': {
     overflow: 'auto',
@@ -25,6 +28,8 @@ const editorTheme = EditorView.theme({
     fontFamily: "'JetBrains Mono', 'Fira Code', 'Menlo', monospace",
     padding: '8px 0',
     textAlign: 'left',
+    maxHeight: '500px',
+    minHeight: '500px',
   },
   '.cm-gutters': {
     backgroundColor: '#0d1117',
@@ -70,7 +75,7 @@ export function createEditorState({
     lineNumbers(),
     javascript({ jsx: true }),
     syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
-    oneDark,
+    vscodeDark,
     editorTheme,
     drawSelection(),
     EditorView.editable.of(!readOnly),

@@ -37,15 +37,12 @@ export function TerminalLayout({
       <header className="terminal-topbar">
         <span
           onClick={() => navigate("/")}
-          className="terminal-brand"
+          className="cli-brand"
           style={{ cursor: "pointer" }}
         >
           root@vim-royale:~#
         </span>
         <nav className="terminal-nav">
-          <span onClick={() => navigate("/")} className="terminal-nav-link">
-            :match
-          </span>
           <span
             onClick={() => navigate("/leaderboard")}
             className="terminal-nav-link"
