@@ -1,0 +1,30 @@
+.editor-panel-toast {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  background: rgba(255, 183, 77, 0.95);
+  color: #1a1a2e;
+
+  padding: 12px 24px;
+  border-radius: 8px;
+
+  font-size: 14px;
+  font-family: var(--mono);
+
+  z-index: 10;
+
+  opacity: 1;
+  transition: opacity 3s ease-out;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  pointer-events: none;
+}
+
+.editor-panel-toast.fade-out {
+  opacity: 0;
+}

@@ -48,7 +48,7 @@ export type ErrorPayload = {
   message: string
 }
 
-export type ViewState = 'idle' | 'matchmaking' | 'playing' | 'finished' | 'error'
+export type ViewState = 'idle' | 'matchmaking' | 'playing' | 'finished' | 'error' | 'countdown'
 
 export type MatchState = {
   playerId: string

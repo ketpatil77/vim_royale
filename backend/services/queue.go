@@ -150,12 +150,13 @@ func (h *Hub) expandStaleMatches() {
 		oldest := src.players[0]
 		wait := now.Sub(oldest.EnqueuedAt)
 
-		if wait < 30*time.Second {
+		// TODO: use 30 second wait
+		if wait < 5*time.Second {
 			src.mu.Unlock()
 			continue
 		}
 
-		spread := int(wait / (30 * time.Second))
+		spread := int(wait / (5 * time.Second))
 		if spread > 5 {
 			spread = 5
 		}

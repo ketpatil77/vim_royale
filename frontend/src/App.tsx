@@ -88,14 +88,10 @@ function AppContent() {
   const { crtEnabled } = useCRT()
 
   return (
-    crtEnabled ? (
-      <CRTEffect theme='green' enableScanlines={true} scanlineOpacity={0.15} scanlineThickness={2} scanlineGap={3} enableSweep={true} sweepDuration={12} sweepThickness={8} sweepStyle='classic' enableGlow={false} enableEdgeGlow={true} edgeGlowColor='rgba(91, 179, 135, 0.25)' edgeGlowSize={25} enableFlicker={true} flickerIntensity={0.03} flickerSpeed={2} enableVignette={true} vignetteIntensity={0.2} enableGlitch={false}>
+      <CRTEffect theme='green' enableScanlines={crtEnabled} scanlineOpacity={0.15} scanlineThickness={2} scanlineGap={3} enableSweep={crtEnabled} sweepDuration={12} sweepThickness={8} sweepStyle='classic' enableGlow={false} enableEdgeGlow={true} edgeGlowColor='rgba(91, 179, 135, 0.25)' edgeGlowSize={25} enableFlicker={crtEnabled} flickerIntensity={0.03} flickerSpeed={2} enableVignette={true} vignetteIntensity={0.2} enableGlitch={false}>
         <AppRoutes />
       </CRTEffect>
-    ) : (
-      <AppRoutes />
     )
-  )
 }
 
 function App() {

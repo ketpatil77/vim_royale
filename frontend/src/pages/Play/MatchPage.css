@@ -75,6 +75,11 @@
   letter-spacing: 0.05em;
 }
 
+.match-container {
+  position: relative;
+  flex: 1;
+}
+
 .editor-grid {
   gap: 24px;
 }
@@ -133,5 +138,41 @@
 @media (max-width: 768px) {
   .editor-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+.countdown-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.countdown-number {
+  font-family: var(--mono);
+  font-size: 120px;
+  font-weight: bold;
+  color: var(--green);
+  text-shadow: 0 0 20px var(--green), 0 0 40px var(--green-glow);
+  animation: countdown-pulse 1s ease-in-out;
+}
+
+@keyframes countdown-pulse {
+  0% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
 }

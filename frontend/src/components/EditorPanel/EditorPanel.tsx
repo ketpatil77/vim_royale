@@ -1,15 +1,52 @@
-import { forwardRef } from 'react'
+import { forwardRef, useRef, useState, useEffect } from 'react'
 import './EditorPanel.css'
+import './EditorPanelToast.css'
 
 interface EditorPanelProps {
   filename: string
   panelTitle: string
   vimMode?: string
   className?: string
+  scrollWarningMessage?: string
 }
 
 export const EditorPanel = forwardRef<HTMLDivElement, EditorPanelProps>(
-  ({ filename, panelTitle, vimMode, className }, ref) => {
+  ({ filename, panelTitle, vimMode, className, scrollWarningMessage }, ref) => {
+    const [toastVisible, setToastVisible] = useState(false)
+    const toastShownRef = useRef(false)
+    const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    useEffect(() => {
+      const element = ref as React.RefObject<HTMLDivElement>
+      if (!element.current || !scrollWarningMessage) return
+
+      const handleWheel = (e: WheelEvent) => {
+        e.preventDefault()
+        
+        if (!toastShownRef.current) {
+          toastShownRef.current = true
+          setToastVisible(true)
+
+          if (toastTimeoutRef.current) {
+            clearTimeout(toastTimeoutRef.current)
+          }
+
+          toastTimeoutRef.current = setTimeout(() => {
+            setToastVisible(false)
+          }, 3000)
+        }
+      }
+
+      element.current.addEventListener('wheel', handleWheel, { passive: false })
+
+      return () => {
+        element.current?.removeEventListener('wheel', handleWheel)
+        if (toastTimeoutRef.current) {
+          clearTimeout(toastTimeoutRef.current)
+        }
+      }
+    }, [ref, scrollWarningMessage])
+
     return (
       <section className={`editor-panel ${className || ''}`}>
         <div className="editor-topbar">
@@ -23,6 +60,11 @@ export const EditorPanel = forwardRef<HTMLDivElement, EditorPanelProps>(
         <div className="panel-title">{panelTitle}</div>
         <div ref={ref} className="editor-mount" />
         {vimMode && <div className="vim-mode-badge">-- {vimMode} --</div>}
+        {toastVisible && (
+          <div className={`editor-panel-toast ${toastVisible ? '' : 'fade-out'}`}>
+            {scrollWarningMessage}
+          </div>
+        )}
       </section>
     )
   }

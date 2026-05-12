@@ -46,3 +46,8 @@
   font-size: 12px;
   font-family: var(--mono);
 }
+
+.editor-mount {
+  overflow: hidden;
+  overscroll-behavior: none;
+}

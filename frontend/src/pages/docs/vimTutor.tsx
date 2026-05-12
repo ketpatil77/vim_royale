@@ -26,6 +26,8 @@ export function VimTutor() {
       parent: editorRef.current,
     });
 
+    view.focus();
+
     const cm = getCM(view);
     cm?.on("vim-mode-change", (e: { mode?: string; subMode?: string }) => {
       console.log(e.mode);
@@ -44,6 +46,7 @@ export function VimTutor() {
           filename="vimtutor.txt"
           panelTitle="VIM TUTOR"
           vimMode={vimMode}
+          scrollWarningMessage="Use keyboard to navigate, scroll wheel is disabled"
           ref={editorRef}
         />
       </div>

@@ -87,7 +87,7 @@ export function createEditorState({
     extensions.push(
       EditorView.updateListener.of((update) => {
         if (update.docChanged) onDocChanged(update.state.doc.toString())
-      })
+      }),
     )
   }
 

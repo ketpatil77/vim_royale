@@ -13,6 +13,8 @@ type LeaderboardEntry = {
     avatarUrl: string | null
 }
 
+const MEDALS = ['◈', '◇', '△']
+
 export default function Leaderboard() {
     const { crtEnabled, toggleCrt } = useCRT()
     const navigate = useNavigate()
@@ -27,53 +29,64 @@ export default function Leaderboard() {
     }, [])
 
     return (
-        <TerminalLayout
-            crtEnabled={crtEnabled}
-            onCrtToggle={toggleCrt}>
-            <main className="leaderboard-main">
-                <section className="leaderboard-header">
-                    <h1>&gt;&gt; TOP_PLAYERS</h1>
-                    <p className="subtitle">ranked by ELO rating</p>
-                </section>
+        <TerminalLayout crtEnabled={crtEnabled} onCrtToggle={toggleCrt}>
+            <main className="lb-main">
+
+                <header className="lb-header">
+                    <h1 className="lb-title">TOP_PLAYERS</h1>
+                    <div className="lb-header-line" />
+                </header>
 
                 {isLoading ? (
-                    <div className="loading">Loading leaderboard...</div>
+                    <div className="lb-loading">
+                        <span className="lb-loading-cursor" />
+                        fetching leaderboard data...
+                    </div>
                 ) : entries.length === 0 ? (
-                    <div className="empty-state">no players yet - start a match!</div>
+                    <div className="lb-empty">
+                        <span className="lb-empty-icon">⌀</span>
+                        <span>no players yet — start a match!</span>
+                    </div>
                 ) : (
-                    <table className="leaderboard-table">
-                        <thead>
-                            <tr>
-                                <th className="col-rank">rank</th>
-                                <th className="col-player"><span>player</span></th>
-                                <th className="col-rating">ELO</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {entries.map((entry, idx) => (
-                                <tr key={entry.user_id} className={idx < 3 ? `rank-${idx + 1}` : ''}>
-                                    <td className="col-rank">
-                                        <span className="rank-number">{idx + 1}</span>
-                                    </td>
-                                    <td className="col-player">
-                                        <span className="col-player-inner">
-                                            <img referrerPolicy="no-referrer" src={entry.avatarUrl || ''} alt="pfp" className="pfp" />
-                                            <span
-                                                className="player-name"
-                                                onClick={() => navigate(`/users/${entry.username}`)}
-                                                style={{ cursor: 'pointer' }}
-                                            >
+                    <div className="lb-table-wrap">
+                        <div className="lb-table-header">
+                            <span className="lb-th lb-th--rank">rank</span>
+                            <span className="lb-th lb-th--player">player</span>
+                            <span className="lb-th lb-th--elo">elo</span>
+                        </div>
+                        <div className="lb-table-body">
+                            {entries.map((entry, i) => {
+                                const rank = i + 1
+                                const isTop3 = rank <= 3
+                                return (
+                                    <div
+                                        key={entry.user_id}
+                                        className={`lb-row ${isTop3 ? `lb-row--${rank}` : ''}`}
+                                        style={{ animationDelay: `${i * 0.06}s` }}
+                                        onClick={() => navigate(`/users/${entry.username}`)}
+                                    >
+                                        <span className={`lb-row-rank ${isTop3 ? `lb-row-rank--${rank}` : ''}`}>
+                                            {isTop3 ? MEDALS[rank - 1] : `#${rank}`}
+                                        </span>
+                                        <span className="lb-row-player">
+                                            <img
+                                                referrerPolicy="no-referrer"
+                                                src={entry.avatarUrl || ''}
+                                                alt="pfp"
+                                                className={`lb-row-avatar ${isTop3 ? `lb-row-avatar--${rank}` : ''}`}
+                                            />
+                                            <span className={`lb-row-name ${isTop3 ? `lb-row-name--${rank}` : ''}`}>
                                                 {entry.displayName || 'Anonymous'}
                                             </span>
                                         </span>
-                                    </td>
-                                    <td className="col-rating">
-                                        <span className="rating-value">{Math.round(entry.rating)}</span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                        <span className={`lb-row-elo ${isTop3 ? `lb-row-elo--${rank}` : ''}`}>
+                                            {Math.round(entry.rating)}
+                                        </span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
                 )}
             </main>
         </TerminalLayout>

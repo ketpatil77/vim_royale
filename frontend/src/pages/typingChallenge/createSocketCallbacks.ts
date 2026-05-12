@@ -6,7 +6,7 @@ import type {
 
 type Setters = {
   setMatchState: (state: MatchState | ((prev: MatchState) => MatchState)) => void
-  setViewState: (state: 'idle' | 'matchmaking' | 'playing' | 'finished' | 'error') => void
+  setViewState: (state: 'idle' | 'matchmaking' | 'playing' | 'finished' | 'error' | 'countdown') => void
   setStatusText: (text: string) => void
   setResultText: (text: string) => void
   setVimMode: (mode: string) => void
@@ -59,7 +59,7 @@ export function createSocketCallbacks(
       setVimMode('NORMAL')
       setResultText('')
       setStatusText('Match started')
-      setViewState('playing')
+      setViewState('countdown')
     },
 
     onBufferUpdate: (content: string) => {

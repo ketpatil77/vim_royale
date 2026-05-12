@@ -31,6 +31,10 @@ export function useTerminalCommands({
       navigate("/leaderboard");
       clearCommand();
     },
+    lb: () => {
+      navigate("/leaderboard");
+      clearCommand();
+    },
     home: () => {
       navigate("/");
       clearCommand();
@@ -41,6 +45,10 @@ export function useTerminalCommands({
     },
     docs: () => {
       navigate("/docs");
+      clearCommand();
+    },
+    vimtutor: () => {
+      navigate("/docs/vimtutor");
       clearCommand();
     },
     profile: () => {

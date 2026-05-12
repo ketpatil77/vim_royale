@@ -39,6 +39,7 @@ export function useEditors() {
         parent: leftRef.current,
       })
       leftViewRef.current = leftView
+      leftView.focus();
 
       const rightState = createEditorState({
         content: pollutedCode,

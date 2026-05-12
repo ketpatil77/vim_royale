@@ -30,6 +30,7 @@ export function TerminalLayout({
     onCrtToggle,
   });
 
+
   return (
     <div className="terminal-shell">
       {crtEnabled && <div className="terminal-scanlines" aria-hidden="true" />}

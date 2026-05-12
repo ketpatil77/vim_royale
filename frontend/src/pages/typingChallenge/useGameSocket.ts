@@ -25,7 +25,7 @@ export function useGameSocket() {
   const wsRef = useRef<WebSocket | null>(null)
   const seqRef = useRef(1)
   const shouldIgnoreCloseRef = useRef(false)
-  const viewStateRef = useRef<'idle' | 'matchmaking' | 'playing' | 'finished' | 'error'>('idle')
+  const viewStateRef = useRef<'idle' | 'matchmaking' | 'countdown' | 'playing' | 'finished' | 'error'>('idle')
   const matchStateRef = useRef<MatchState>({
     playerId: '',
     opponentId: '',
