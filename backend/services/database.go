@@ -8,18 +8,17 @@ import (
 )
 
 func (h *Hub) AttachIdentity(client *Client, playerID string) error {
-	bucketIdx := 0
+	var displayName, avatarURL string
+	var rating int
 	provider, providerID := splitProviderID(playerID)
 	if provider != "" && providerID != "" {
 		db, err := database.GetPostgresConnection()
 		if err == nil {
 			user, err := database.GetUserFromProvider(db, provider, providerID)
 			if err == nil {
-				b := int(user.Rating / 100)
-				if b > 40 {
-					b = 40
-				}
-				bucketIdx = b
+				displayName = user.DisplayName
+				avatarURL = user.AvatarURL
+				rating = int(user.Rating)
 			}
 		}
 	}
@@ -32,7 +31,9 @@ func (h *Hub) AttachIdentity(client *Client, playerID string) error {
 	}
 
 	client.ID = playerID
-	client.Rating = bucketIdx
+	client.DisplayName = displayName
+	client.AvatarURL = avatarURL
+	client.Rating = rating
 	h.clientsByID[playerID] = client
 	return nil
 }

@@ -7,6 +7,37 @@
   overflow-x: hidden;
 }
 
+.cli-brand {
+    color: var(--green);
+    font-family: var(--mono);
+    font-weight: bold;
+    font-size: 16px;
+    /* letter-spacing: 0.05em; */
+}
+
+.cli-brand::after {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 16px;
+    background: var(--green);
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: blink 1.1s step-end infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
+}
+
 
 /* ---------- CRT Scanlines ---------- */
 .terminal-scanlines {
@@ -52,6 +83,10 @@
   display: flex;
   align-items: center;
   gap: 20px;
+}
+
+.terminal-hamburger {
+  display: none;
 }
 
 .terminal-nav-link {
@@ -115,6 +150,86 @@
 
   .terminal-nav-link {
     font-size: 11px;
+  }
+
+  .terminal-hamburger {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    z-index: 60;
+  }
+
+  .hamburger-line {
+    width: 22px;
+    height: 2px;
+    background: var(--green);
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  .hamburger-line.open:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .hamburger-line.open:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger-line.open:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .terminal-nav {
+    position: fixed;
+    top: 52px;
+    left: 0;
+    right: 0;
+    background: var(--bg);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border-green);
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    z-index: 55;
+  }
+
+  .terminal-nav.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+    overflow-x: hidden;
+  }
+
+  .terminal-nav .terminal-nav-link {
+    font-size: 14px;
+    padding: 12px 0;
+    width: 100%;
+    border-bottom: 1px solid var(--border-green);
+  }
+
+  .terminal-nav .terminal-nav-link:last-child {
+    border-bottom: none;
+  }
+
+  .terminal-menu-backdrop {
+    position: fixed;
+    top: 52px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 54;
   }
 }
 

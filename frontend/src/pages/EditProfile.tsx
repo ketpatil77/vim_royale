@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { TerminalLayout } from "../components/TerminalLayout/TerminalLayout";
 import type { User } from "../contexts/AuthContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -7,8 +8,14 @@ import type { EditableProfileFields } from "../types";
 import "./userProfile.css";
 
 export default function EditProfile() {
-  const {crtEnabled, toggleCrt} = useCRT();
-  const { user, updateProfile } = useAuth();
+  const { crtEnabled, toggleCrt } = useCRT();
+  const { user, updateProfile, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
   const [profileForm, setProfileForm] = useState<EditableProfileFields>({
     displayName: user?.displayName || "",
     avatarUrl: user?.avatarUrl || "",
@@ -105,14 +112,22 @@ export default function EditProfile() {
         <section className="profile-edit-section">
           <div className="section-header">
             <h2>&gt;&gt; USER_CONFIG</h2>
-            <button
-              className="edit-toggle-btn"
-              onClick={() =>
-                isEditing ? handleUpdate() : setIsEditing(true)
-              }
-            >
-              {isEditing ? "./SAVE.sh" : "vi profile"}
-            </button>
+            <div className="section-actions">
+              <button
+                className="edit-toggle-btn edit-toggle-btn--logout"
+                onClick={handleLogout}
+              >
+                :logout
+              </button>
+              <button
+                className="edit-toggle-btn"
+                onClick={() =>
+                  isEditing ? handleUpdate() : setIsEditing(true)
+                }
+              >
+                {isEditing ? "./SAVE.sh" : "vi profile"}
+              </button>
+            </div>
           </div>
 
           <div className="config-form">

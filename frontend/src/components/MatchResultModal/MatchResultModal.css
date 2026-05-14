@@ -21,7 +21,7 @@
     0 0 0 1px rgba(255,255,255,0.02),
     0 20px 50px rgba(0,0,0,0.6);
   backdrop-filter: blur(12px);
-  width: 400px;
+  width: 520px;
   min-width: 320px;
 }
 
@@ -64,8 +64,83 @@
 .result-modal-description {
   color: var(--text-dim);
   font-size: 13px;
-  margin: 0;
+  margin: 0 0 24px;
   letter-spacing: 0.04em;
+}
+
+.result-modal-players {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.player-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  border-radius: 12px;
+  flex: 1;
+  max-width: 200px;
+}
+
+.player-card--winner {
+  border: 2px solid #39ff14;
+  background: rgba(57, 255, 20, 0.04);
+}
+
+.player-card--loser {
+  border: 2px solid #ff3b30;
+  background: rgba(255, 59, 48, 0.04);
+}
+
+.player-card-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.player-card-name {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-main);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.player-card-rating {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.player-card-rating-new {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-main);
+}
+
+.player-card-rating-delta {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.player-card-rating-delta.positive {
+  color: #39ff14;
+}
+
+.player-card-rating-delta.negative {
+  color: #ff3b30;
 }
 
 .result-modal-footer {
@@ -87,7 +162,7 @@
   border-radius: 8px;
   padding: 10px 20px;
   color: var(--text-dim);
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: var(--mono);
   font-size: 13px;
   cursor: pointer;
   display: flex;

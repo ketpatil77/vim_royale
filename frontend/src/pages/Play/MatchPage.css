@@ -135,6 +135,29 @@
   font-family: var(--mono);
 }
 
+.cancel-btn {
+  background: red;
+  color: white;
+  border: 2px solid red;
+  padding: 8px 16px;
+  border-radius: 2px;
+  font-weight: bold;
+  font-size: 24;
+  cursor: pointer;
+  font-family: var(--mono);
+
+}
+
+.cancel-btn:hover {
+  background: #000;
+  color: #ff5f57;
+  box-shadow: 0 0 12px rgba(255, 95, 87, 0.5);
+}
+
+.cancel-btn:active {
+  transform: scale(0.96);
+}
+
 @media (max-width: 768px) {
   .editor-grid {
     grid-template-columns: 1fr;

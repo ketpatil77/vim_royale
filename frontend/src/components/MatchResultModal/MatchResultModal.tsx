@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import type { GameOverPayload } from '../../pages/typingChallenge/types'
 import './MatchResultModal.css'
 
 interface MatchResultModalProps {
@@ -7,6 +8,7 @@ interface MatchResultModalProps {
   description: string
   onMainMenu: () => void
   onNewMatch: () => void
+  gameOverPayload: GameOverPayload
 }
 
 export default function MatchResultModal({
@@ -15,6 +17,7 @@ export default function MatchResultModal({
   description,
   onMainMenu,
   onNewMatch,
+  gameOverPayload,
 }: MatchResultModalProps) {
 
   useEffect(() => {
@@ -31,6 +34,8 @@ export default function MatchResultModal({
 
   if (!isOpen) return null
 
+  const { winnerName, winnerAvatar, winnerNewRating, winnerDelta, loserName, loserAvatar, loserNewRating, loserDelta } = gameOverPayload
+
   return (
     <div className="result-modal-overlay">
       <div className="result-modal">
@@ -43,6 +48,38 @@ export default function MatchResultModal({
             {title}
           </h2>
           <p className="result-modal-description">{description}</p>
+
+          <div className="result-modal-players">
+            <div className={`player-card player-card--winner`}>
+              <img
+                src={winnerAvatar || `https://github.com/identicons/github.png`}
+                alt={winnerName}
+                className="player-card-avatar"
+              />
+              <span className="player-card-name">{winnerName}</span>
+              <div className="player-card-rating">
+                <span className="player-card-rating-new">{Math.round(winnerNewRating)}</span>
+                <span className={`player-card-rating-delta ${winnerDelta >= 0 ? 'positive' : 'negative'}`}>
+                  ({winnerDelta >= 0 ? '+' : ''}{winnerDelta.toFixed(0)})
+                </span>
+              </div>
+            </div>
+
+            <div className={`player-card player-card--loser`}>
+              <img
+                src={loserAvatar || `https://github.com/identicons/github.png`}
+                alt={loserName}
+                className="player-card-avatar"
+              />
+              <span className="player-card-name">{loserName}</span>
+              <div className="player-card-rating">
+                <span className="player-card-rating-new">{Math.round(loserNewRating)}</span>
+                <span className={`player-card-rating-delta ${loserDelta >= 0 ? 'positive' : 'negative'}`}>
+                  ({loserDelta >= 0 ? '+' : ''}{loserDelta.toFixed(0)})
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="result-modal-footer">
@@ -60,14 +97,13 @@ export default function MatchResultModal({
   )
 }
 
-export function parseResult(resultText: string): { title: string; description: string, matchWinner: string } {
-  const matchWinner = resultText.split('. ')[0];
+export function parseResult(resultText: string, gameOverPayload: GameOverPayload): { title: string; description: string; gameOverPayload: GameOverPayload } {
   const [outcome, ...rest] = resultText.split('. ')
   const description = rest.join('. ')
 
   if (outcome === 'You won') {
-    return { title: 'VICTORY!', description, matchWinner }
+    return { title: 'VICTORY!', description, gameOverPayload }
   } else {
-    return { title: 'DEFEAT', description, matchWinner }
+    return { title: 'DEFEAT', description, gameOverPayload }
   }
 }

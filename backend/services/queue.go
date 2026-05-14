@@ -54,7 +54,7 @@ func (h *Hub) tryMatchBucket(bucket *ratingBucket) {
 		matchID := newMatchID()
 		now := time.Now().UTC()
 		targetCode := utils.PickTargetCode()
-		pollutedCode := utils.PolluteCode(targetCode)
+		pollutedCode := utils.PolluteCode(targetCode, pA.Rating)
 
 		match := &Match{
 			ID:           matchID,
@@ -74,20 +74,26 @@ func (h *Hub) tryMatchBucket(bucket *ratingBucket) {
 		pB.MatchID = matchID
 
 		startA := GameStartPayload{
-			MatchID:      matchID,
-			OpponentID:   pB.ID,
-			Role:         "A",
-			StartedAt:    now.Unix(),
-			TargetCode:   targetCode,
-			PollutedCode: pollutedCode,
+			MatchID:        matchID,
+			OpponentID:     pB.ID,
+			OpponentName:   pB.DisplayName,
+			OpponentAvatar: pB.AvatarURL,
+			OpponentRating: pB.Rating,
+			Role:           "A",
+			StartedAt:      now.Unix(),
+			TargetCode:     targetCode,
+			PollutedCode:   pollutedCode,
 		}
 		startB := GameStartPayload{
-			MatchID:      matchID,
-			OpponentID:   pA.ID,
-			Role:         "B",
-			StartedAt:    now.Unix(),
-			TargetCode:   targetCode,
-			PollutedCode: pollutedCode,
+			MatchID:        matchID,
+			OpponentID:     pA.ID,
+			OpponentName:   pA.DisplayName,
+			OpponentAvatar: pA.AvatarURL,
+			OpponentRating: pA.Rating,
+			Role:           "B",
+			StartedAt:      now.Unix(),
+			TargetCode:     targetCode,
+			PollutedCode:   pollutedCode,
 		}
 		h.sendLocked(pA, MsgGameStart, matchID, pA.ID, 0, startA)
 		h.sendLocked(pB, MsgGameStart, matchID, pB.ID, 0, startB)

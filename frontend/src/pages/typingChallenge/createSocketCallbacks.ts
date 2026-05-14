@@ -10,6 +10,8 @@ type Setters = {
   setStatusText: (text: string) => void
   setResultText: (text: string) => void
   setVimMode: (mode: string) => void
+  setGameOverPayload: (payload: GameOverPayload | null) => void
+  playSound: (type: 'win' | 'lose') => void
 }
 
 type Refs = {
@@ -32,6 +34,8 @@ export function createSocketCallbacks(
     setStatusText,
     setResultText,
     setVimMode,
+    setGameOverPayload,
+    playSound,
   } = setters
 
   const {
@@ -42,7 +46,7 @@ export function createSocketCallbacks(
 
   return {
     onHelloAck: (playerId: string) => {
-      setMatchState({ playerId, opponentId: '', matchId: '' })
+      setMatchState({ playerId, opponentId: '', opponentName: '', opponentAvatar: '', opponentRating: 0, matchId: '' })
       setStatusText('Finding an opponent...')
     },
 
@@ -54,6 +58,9 @@ export function createSocketCallbacks(
       setMatchState({
         playerId: matchState.playerId,
         opponentId: payload.opponentId,
+        opponentName: payload.opponentName,
+        opponentAvatar: payload.opponentAvatar,
+        opponentRating: payload.opponentRating,
         matchId: payload.matchId,
       })
       setVimMode('NORMAL')
@@ -75,6 +82,8 @@ export function createSocketCallbacks(
           : 'Opponent finished first'
 
       setResultText(youWon ? `You won. ${reason}.` : `You lost. ${reason}.`)
+      setGameOverPayload(payload)
+      playSound(youWon ? 'win' : 'lose')
       setStatusText('Match finished')
       setViewState('finished')
     },

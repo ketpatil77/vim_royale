@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTerminalCommands } from "./useTerminalCommands";
@@ -30,6 +31,10 @@ export function TerminalLayout({
     onCrtToggle,
   });
 
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const closeMenu = () => setIsMenuOpen(false);
+
 
   return (
     <div className="terminal-shell">
@@ -37,23 +42,38 @@ export function TerminalLayout({
 
       <header className="terminal-topbar">
         <span
-          onClick={() => navigate("/")}
+          onClick={() => { navigate("/"); closeMenu(); }}
           className="cli-brand"
           style={{ cursor: "pointer" }}
         >
           root@vim-royale:~#
         </span>
-        <nav className="terminal-nav">
+
+        <button
+          className="terminal-hamburger"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          <span className={`hamburger-line ${isMenuOpen ? "open" : ""}`} />
+          <span className={`hamburger-line ${isMenuOpen ? "open" : ""}`} />
+          <span className={`hamburger-line ${isMenuOpen ? "open" : ""}`} />
+        </button>
+
+        {isMenuOpen && (
+          <div className="terminal-menu-backdrop" onClick={closeMenu} />
+        )}
+
+        <nav className={`terminal-nav ${isMenuOpen ? "open" : ""}`}>
           <span
-            onClick={() => navigate("/leaderboard")}
+            onClick={() => { navigate("/leaderboard"); closeMenu(); }}
             className="terminal-nav-link"
           >
             :leaderboard
           </span>
-          <span className="terminal-nav-link">:docs</span>
+          <span onClick={closeMenu} className="terminal-nav-link">:docs</span>
 
           <span
-            onClick={onCrtToggle}
+            onClick={() => { onCrtToggle?.(); closeMenu(); }}
             className="terminal-nav-link"
             style={{ cursor: "pointer" }}
           >
@@ -61,24 +81,15 @@ export function TerminalLayout({
           </span>
 
           {user ? (
-            <>
-              <span
-                onClick={() => navigate("/editProfile")}
-                className="terminal-nav-link"
-              >
-                :profile
-              </span>
-              <span
-                onClick={handleLogout}
-                className="terminal-nav-link terminal-nav-link--logout"
-                style={{ cursor: "pointer" }}
-              >
-                :logout [{user.email}]
-              </span>
-            </>
+            <span
+              onClick={() => { navigate("/editprofile"); closeMenu(); }}
+              className="terminal-nav-link"
+            >
+              :profile
+            </span>
           ) : (
             <span
-              onClick={() => navigate("/login")}
+              onClick={() => { navigate("/login"); closeMenu(); }}
               className="terminal-nav-link"
             >
               :login

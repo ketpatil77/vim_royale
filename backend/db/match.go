@@ -9,15 +9,18 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateMatch(db *gorm.DB, winnerID, loserID string) error {
+func CreateMatchAndSendRatingDelta(db *gorm.DB, winnerID, loserID string) (winnerDelta, loserDelta, winnerNewRating, loserNewRating float64, err error) {
 	winner, err := findUserByPlayerID(db, winnerID)
 	if err != nil {
-		return err
+		return 0, 0, 0, 0, err
 	}
 	loser, err := findUserByPlayerID(db, loserID)
 	if err != nil {
-		return err
+		return 0, 0, 0, 0, err
 	}
+
+	oldWinnerRating := winner.Rating
+	oldLoserRating := loser.Rating
 
 	match := &models.Match{
 		MatchID:    uuid.New(),
@@ -31,22 +34,22 @@ func CreateMatch(db *gorm.DB, winnerID, loserID string) error {
 		FinishedAt: time.Now(),
 	}
 	if err := db.Create(match).Error; err != nil {
-		return err
+		return 0, 0, 0, 0, err
 	}
 
-	winnerRating, loserRating := utils.CalculateElo(winner.Rating, loser.Rating, true)
+	newWinnerRating, newLoserRating := utils.CalculateElo(winner.Rating, loser.Rating, true)
 
-	winner.Rating = winnerRating
-	loser.Rating = loserRating
+	winner.Rating = newWinnerRating
+	loser.Rating = newLoserRating
 
 	if err := UpdateUserStats(db, winner, true); err != nil {
-		return err
+		return 0, 0, 0, 0, err
 	}
 	if err := UpdateUserStats(db, loser, false); err != nil {
-		return err
+		return 0, 0, 0, 0, err
 	}
 
-	return nil
+	return winner.Rating - oldWinnerRating, loser.Rating - oldLoserRating, winner.Rating, loser.Rating, nil
 }
 
 func findUserByPlayerID(db *gorm.DB, playerID string) (*models.User, error) {

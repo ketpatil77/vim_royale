@@ -73,7 +73,7 @@ function AppRoutes() {
         element={<UserProfile />}
       />
       <Route
-        path="/editProfile"
+        path="/editprofile"
         element={
           <ProtectedRoute>
             <EditProfile />

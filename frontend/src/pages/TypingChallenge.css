@@ -23,7 +23,6 @@
     --text: #cccccc;
     --text-dim: #666666;
     --text-bright: #ffffff;
-    --mono: 'Share Tech Mono', 'Courier New', monospace;
 }
 
 /* ---------- Reset & Base ---------- */
@@ -67,37 +66,6 @@ body {
     z-index: 100;
 }
 
-.cli-brand {
-    color: var(--green);
-    font-family: var(--mono);
-    font-weight: bold;
-    font-size: 16px;
-    letter-spacing: 0.05em;
-}
-
-/* blinking cursor on brand */
-.cli-brand::after {
-    content: '';
-    display: inline-block;
-    width: 8px;
-    height: 13px;
-    background: var(--green);
-    margin-left: 2px;
-    vertical-align: text-bottom;
-    animation: blink 1.1s step-end infinite;
-}
-
-@keyframes blink {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0;
-    }
-}
 
 
 /* ---------- Landing Shell ---------- */

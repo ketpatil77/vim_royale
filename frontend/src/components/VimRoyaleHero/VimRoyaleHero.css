@@ -1,0 +1,25 @@
+.vr-ascii {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--green);
+  text-shadow: var(--glow);
+  white-space: pre;
+  text-align: center;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+@media screen and (max-width: 768px) {
+  .vr-ascii {
+    font-size: 0.6rem;
+  }
+}
+
+@media screen and (max-width: 450px) {
+  .vr-ascii {
+    font-size: 0.5rem;
+  }
+}
+

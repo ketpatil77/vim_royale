@@ -1,18 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useCRT } from '../../contexts/CRTContext'
+import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { EditorPanel } from '../../components/EditorPanel/EditorPanel'
 import { TerminalLayout } from '../../components/TerminalLayout/TerminalLayout'
 import MatchResultModal, { parseResult } from '../../components/MatchResultModal/MatchResultModal'
 import { createSocketCallbacks } from '../typingChallenge/createSocketCallbacks'
-import type { MatchState, ViewState } from '../typingChallenge/types'
+import type { MatchState, ViewState, GameOverPayload } from '../typingChallenge/types'
 import { useEditors } from '../typingChallenge/useEditors'
 import { useGameSocket } from '../typingChallenge/useGameSocket'
+import { sounds } from '../../utils/sound'
 import './MatchPage.css'
 
 const initialMatchState: MatchState = {
   playerId: '',
   opponentId: '',
+  opponentName: '',
+  opponentAvatar: '',
+  opponentRating: 0,
   matchId: '',
 }
 
@@ -23,7 +28,10 @@ export default function MatchPage() {
   const [vimMode, setVimMode] = useState('NORMAL')
   const [matchState, setMatchState] = useState<MatchState>(initialMatchState)
   const [resultText, setResultText] = useState('')
+  const [gameOverPayload, setGameOverPayload] = useState<GameOverPayload | null>(null)
   const navigate = useNavigate()
+  const { user } = useAuth()
+
 
   const targetCodeRef = useRef('')
   const pollutedCodeRef = useRef('')
@@ -116,6 +124,7 @@ export default function MatchPage() {
 
     setMatchState(initialMatchState)
     setResultText('')
+    setGameOverPayload(null)
     setStatusText('Connecting to matchmaking server...')
     setViewState('matchmaking')
 
@@ -126,13 +135,15 @@ export default function MatchPage() {
         setStatusText,
         setResultText,
         setVimMode,
+        setGameOverPayload,
+        playSound,
       },
       {
         targetCodeRef,
         pollutedCodeRef,
         finishSentRef,
       },
-      matchState,
+      { playerId: matchState.playerId },
       replaceOpponentContent,
       () => beginMatchmakingRef.current(),
       getViewState
@@ -163,6 +174,10 @@ export default function MatchPage() {
     beginMatchmaking()
   }
 
+  const playSound = useCallback((type: 'win' | 'lose') => {
+    sounds[type].play()
+  }, [])
+
   const {crtEnabled, toggleCrt} = useCRT()
 
   return (
@@ -177,7 +192,7 @@ export default function MatchPage() {
               <span className="pulse-dot" />
             </div>
             <p className="matchmaking-status">{statusText}</p>
-            <button className="secondary-btn" onClick={cancelMatchmaking}>
+            <button className="cancel-btn" onClick={cancelMatchmaking}>
               ./CANCEL.sh
             </button>
           </div>
@@ -190,6 +205,9 @@ export default function MatchPage() {
               panelTitle="LOCAL [YOU]"
               vimMode={vimMode}
               scrollWarningMessage="Use j/k for scrolling"
+              displayName={user?.displayName || 'You'}
+              avatarUrl={user?.avatarUrl || ''}
+              rating={Math.round(user?.rating || 0)}
               ref={leftRef}
             />
 
@@ -197,6 +215,9 @@ export default function MatchPage() {
               filename="opponent.ts"
               panelTitle="REMOTE [OPP]"
               scrollWarningMessage="Use j/k for scrolling"
+              displayName={matchState.opponentName || 'Opponent'}
+              avatarUrl={matchState.opponentAvatar || ''}
+              rating={matchState.opponentRating}
               ref={rightRef}
             />
           </div>
@@ -207,10 +228,10 @@ export default function MatchPage() {
             </div>
           )}
 
-          {viewState === 'finished' && resultText && (
+          {viewState === 'finished' && gameOverPayload && (
             <MatchResultModal
               isOpen={true}
-              {...parseResult(resultText)}
+              {...parseResult(resultText, gameOverPayload)}
               onMainMenu={handleMainMenu}
               onNewMatch={handleNewMatch}
             />

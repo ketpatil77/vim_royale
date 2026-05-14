@@ -1,49 +1,34 @@
+import { TerminalLayout } from '../../components/TerminalLayout/TerminalLayout'
+import { VimRoyaleHero } from '../../components/VimRoyaleHero/VimRoyaleHero'
 import { useAuth } from '../../contexts/AuthContext'
-import { useNavigate } from 'react-router-dom'
+import { useCRT } from '../../contexts/CRTContext'
 import './Login.css'
 
 export default function Login() {
-  const { login } = useAuth()
-  const navigate = useNavigate()
+  const { loginFunc: login } = useAuth()
+  const { crtEnabled, toggleCrt } = useCRT()
 
-  return (
-    <div className="login-shell">
-      <div className="login-scanlines" aria-hidden="true" />
-
-      <header className="login-nav">
-        <span onClick={() => navigate('/')} className="login-wordmark">root@vim_royale</span>
-      </header>
-
+return (
+    <TerminalLayout crtEnabled={crtEnabled} onCrtToggle={toggleCrt}>
       <main className="login-body">
+        <VimRoyaleHero />
         <div className="login-modal">
-
           <div className="login-titlebar">
             <span className="login-titlebar-colon">:</span>authenticate
-            <span className="login-titlebar-hint">ESC to cancel</span>
           </div>
-
           <div className="login-modal-body">
-
-            <button
-              className="login-oauth-btn"
-              onClick={() => login('github')}
-            >
+            <button className="login-oauth-btn" onClick={() => login('github')}>
               <GitHubIcon />
               [&nbsp;&nbsp;Continue with GitHub&nbsp;&nbsp;]
             </button>
-
-            <button
-              className="login-oauth-btn"
-              onClick={() => login('google')}
-            >
+            <button className="login-oauth-btn" onClick={() => login('google')}>
               <GoogleIcon />
               [&nbsp;&nbsp;Continue with Google&nbsp;&nbsp;]
             </button>
-
           </div>
         </div>
       </main>
-    </div>
+    </TerminalLayout>
   )
 }
 

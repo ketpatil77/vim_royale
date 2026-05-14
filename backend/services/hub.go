@@ -3,6 +3,8 @@ package services
 import (
 	"sync"
 	"time"
+
+	database "vim_royale/backend/db"
 )
 
 type ratingBucket struct {
@@ -16,8 +18,8 @@ type Hub struct {
 	mu sync.Mutex
 
 	clients        map[*Client]struct{}
-	clientsByID   map[string]*Client
-	matches       map[string]*Match
+	clientsByID    map[string]*Client
+	matches        map[string]*Match
 	waitingBuckets [numBuckets]*ratingBucket
 
 	Register   chan *Client
@@ -27,13 +29,13 @@ type Hub struct {
 
 func NewHub() *Hub {
 	h := &Hub{
-		clients:      make(map[*Client]struct{}),
-		clientsByID:  make(map[string]*Client),
-		matches:      make(map[string]*Match),
+		clients:        make(map[*Client]struct{}),
+		clientsByID:    make(map[string]*Client),
+		matches:        make(map[string]*Match),
 		waitingBuckets: [numBuckets]*ratingBucket{},
-		Register:     make(chan *Client),
-		Unregister:   make(chan *Client),
-		incoming:     make(chan InboundMessage, 256),
+		Register:       make(chan *Client),
+		Unregister:     make(chan *Client),
+		incoming:       make(chan InboundMessage, 256),
 	}
 	for i := range h.waitingBuckets {
 		h.waitingBuckets[i] = &ratingBucket{}
@@ -87,13 +89,41 @@ func (h *Hub) handleUnregister(client *Client) {
 			match.FinishedAt = &now
 			if opponent != nil {
 				match.WinnerID = opponent.ID
-				gameOver := GameOverPayload{
-					MatchID:    match.ID,
-					WinnerID:   opponent.ID,
-					LoserID:    client.ID,
-					Reason:     "opponent_disconnected",
-					FinishedAt: now.Unix(),
+				var winnerDelta, loserDelta, winnerNewRating, loserNewRating float64
+				var winnerName, winnerAvatar, loserName, loserAvatar string
+
+				winnerName = opponent.DisplayName
+				winnerAvatar = opponent.AvatarURL
+				loserName = client.DisplayName
+				loserAvatar = client.AvatarURL
+
+				dbConn, err := database.GetPostgresConnection()
+				if err == nil {
+					wd, ld, wnr, lnr, mErr := database.CreateMatchAndSendRatingDelta(dbConn, opponent.ID, client.ID)
+					if mErr == nil {
+						winnerDelta = wd
+						loserDelta = ld
+						winnerNewRating = wnr
+						loserNewRating = lnr
+					}
 				}
+
+				gameOver := GameOverPayload{
+					MatchID:         match.ID,
+					WinnerID:         opponent.ID,
+					LoserID:          client.ID,
+					WinnerName:      winnerName,
+					WinnerAvatar:    winnerAvatar,
+					WinnerNewRating: winnerNewRating,
+					WinnerDelta:     winnerDelta,
+					LoserName:       loserName,
+					LoserAvatar:     loserAvatar,
+					LoserNewRating:  loserNewRating,
+					LoserDelta:      loserDelta,
+					Reason:          "opponent_disconnected",
+					FinishedAt:      now.Unix(),
+				}
+
 				h.sendLocked(opponent, MsgGameOver, match.ID, opponent.ID, 0, gameOver)
 				opponent.MatchID = ""
 			}

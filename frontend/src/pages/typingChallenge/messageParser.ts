@@ -19,6 +19,9 @@ export function parseGameStartPayload(payload: unknown): GameStartPayload | null
   if (!isRecord(payload)) return null
   if (typeof payload.matchId !== 'string') return null
   if (typeof payload.opponentId !== 'string') return null
+  if (typeof payload.opponentName !== 'string') return null
+  if (typeof payload.opponentAvatar !== 'string') return null
+  if (typeof payload.opponentRating !== 'number') return null
   if (payload.role !== 'A' && payload.role !== 'B') return null
   if (typeof payload.startedAt !== 'number') return null
   if (typeof payload.targetCode !== 'string') return null
@@ -27,6 +30,9 @@ export function parseGameStartPayload(payload: unknown): GameStartPayload | null
   return {
     matchId: payload.matchId,
     opponentId: payload.opponentId,
+    opponentName: payload.opponentName,
+    opponentAvatar: payload.opponentAvatar,
+    opponentRating: payload.opponentRating,
     role: payload.role,
     startedAt: payload.startedAt,
     targetCode: payload.targetCode,
@@ -49,6 +55,14 @@ export function parseGameOverPayload(payload: unknown): GameOverPayload | null {
   if (typeof payload.matchId !== 'string') return null
   if (typeof payload.winnerId !== 'string') return null
   if (typeof payload.loserId !== 'string') return null
+  if (typeof payload.winnerName !== 'string') return null
+  if (typeof payload.winnerAvatar !== 'string') return null
+  if (typeof payload.winnerNewRating !== 'number') return null
+  if (typeof payload.winnerDelta !== 'number') return null
+  if (typeof payload.loserName !== 'string') return null
+  if (typeof payload.loserAvatar !== 'string') return null
+  if (typeof payload.loserNewRating !== 'number') return null
+  if (typeof payload.loserDelta !== 'number') return null
   if (typeof payload.reason !== 'string') return null
   if (typeof payload.finishedAt !== 'number') return null
 
@@ -56,6 +70,14 @@ export function parseGameOverPayload(payload: unknown): GameOverPayload | null {
     matchId: payload.matchId,
     winnerId: payload.winnerId,
     loserId: payload.loserId,
+    winnerName: payload.winnerName,
+    winnerAvatar: payload.winnerAvatar,
+    winnerNewRating: payload.winnerNewRating,
+    winnerDelta: payload.winnerDelta,
+    loserName: payload.loserName,
+    loserAvatar: payload.loserAvatar,
+    loserNewRating: payload.loserNewRating,
+    loserDelta: payload.loserDelta,
     reason: payload.reason,
     finishedAt: payload.finishedAt,
   }

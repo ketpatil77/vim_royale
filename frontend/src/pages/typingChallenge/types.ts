@@ -24,6 +24,9 @@ export type HelloAckPayload = {
 export type GameStartPayload = {
   matchId: string
   opponentId: string
+  opponentName: string
+  opponentAvatar: string
+  opponentRating: number
   role: 'A' | 'B'
   startedAt: number
   targetCode: string
@@ -39,6 +42,14 @@ export type GameOverPayload = {
   matchId: string
   winnerId: string
   loserId: string
+  winnerName: string
+  winnerAvatar: string
+  winnerNewRating: number
+  winnerDelta: number
+  loserName: string
+  loserAvatar: string
+  loserNewRating: number
+  loserDelta: number
   reason: string
   finishedAt: number
 }
@@ -53,5 +64,8 @@ export type ViewState = 'idle' | 'matchmaking' | 'playing' | 'finished' | 'error
 export type MatchState = {
   playerId: string
   opponentId: string
+  opponentName: string
+  opponentAvatar: string
+  opponentRating: number
   matchId: string
 }

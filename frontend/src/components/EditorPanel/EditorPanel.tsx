@@ -8,10 +8,13 @@ interface EditorPanelProps {
   vimMode?: string
   className?: string
   scrollWarningMessage?: string
+  displayName?: string
+  avatarUrl?: string
+  rating?: number
 }
 
 export const EditorPanel = forwardRef<HTMLDivElement, EditorPanelProps>(
-  ({ filename, panelTitle, vimMode, className, scrollWarningMessage }, ref) => {
+  ({ filename, vimMode, className, scrollWarningMessage, displayName, avatarUrl, rating }, ref) => {
     const [toastVisible, setToastVisible] = useState(false)
     const toastShownRef = useRef(false)
     const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -57,7 +60,15 @@ export const EditorPanel = forwardRef<HTMLDivElement, EditorPanelProps>(
           </div>
           <div className="filename">{filename}</div>
         </div>
-        <div className="panel-title">{panelTitle}</div>
+        <div className="player-info-bar">
+          <img
+            src={avatarUrl || `https://github.com/identicons/github.png`}
+            alt={displayName}
+            className="player-info-avatar"
+          />
+          <span className="player-info-name">{displayName}</span>
+          <span className="player-info-rating">{rating}</span>
+        </div>
         <div ref={ref} className="editor-mount" />
         {vimMode && <div className="vim-mode-badge">-- {vimMode} --</div>}
         {toastVisible && (

@@ -25,6 +25,8 @@ var providerIDLike = regexp.MustCompile(`^[a-z]+:.+$`)
 
 type Client struct {
 	ID          string
+	DisplayName string
+	AvatarURL   string
 	Rating      int
 	EnqueuedAt  time.Time
 	Conn        *websocket.Conn

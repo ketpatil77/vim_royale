@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface UseTerminalCommandsProps {
   navigate: (path: string) => void;
@@ -26,13 +27,47 @@ export function useTerminalCommands({
     setCmdFeedback(null);
   }, []);
 
+  const { loginFunc } = useAuth()
+
   const COMMANDS: Record<string, () => void> = {
+    play: () => {
+      navigate("/play");
+      clearCommand();
+    },
     leaderboard: () => {
       navigate("/leaderboard");
       clearCommand();
     },
     lb: () => {
       navigate("/leaderboard");
+      clearCommand();
+    },
+    login: () => {
+      navigate("/login");
+      clearCommand();
+    },
+    authenticate: () => {
+      navigate("/login");
+      clearCommand();
+    },
+    google: () => {
+      if (window.location.pathname == "/login") {
+        loginFunc("google");
+      }
+      clearCommand();
+    },
+    github: () => {
+      if (window.location.pathname == "/login") {
+        loginFunc("github");
+      }
+      clearCommand();
+    },
+    back: () => {
+      window.history.back();
+      clearCommand();
+    },
+    forward: () => {
+      window.history.forward();
       clearCommand();
     },
     home: () => {
@@ -59,10 +94,6 @@ export function useTerminalCommands({
         setTimeout(clearCommand, 1500);
         return;
       }
-      clearCommand();
-    },
-    login: () => {
-      navigate("/login");
       clearCommand();
     },
     logout: () => {

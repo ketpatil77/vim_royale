@@ -39,12 +39,15 @@ type HelloAckPayload struct {
 type QueueJoinPayload struct{}
 
 type GameStartPayload struct {
-	MatchID      string `json:"matchId"`
-	OpponentID   string `json:"opponentId"`
-	Role         string `json:"role"`
-	StartedAt    int64  `json:"startedAt"`
-	TargetCode   string `json:"targetCode"`
-	PollutedCode string `json:"pollutedCode"`
+	MatchID         string `json:"matchId"`
+	OpponentID      string `json:"opponentId"`
+	OpponentName    string `json:"opponentName"`
+	OpponentAvatar  string `json:"opponentAvatar"`
+	OpponentRating  int    `json:"opponentRating"`
+	Role            string `json:"role"`
+	StartedAt       int64  `json:"startedAt"`
+	TargetCode      string `json:"targetCode"`
+	PollutedCode    string `json:"pollutedCode"`
 }
 
 type BufferUpdatePayload struct {
@@ -59,11 +62,19 @@ type PlayerFinishedPayload struct {
 }
 
 type GameOverPayload struct {
-	MatchID    string `json:"matchId"`
-	WinnerID   string `json:"winnerId"`
-	LoserID    string `json:"loserId"`
-	Reason     string `json:"reason"`
-	FinishedAt int64  `json:"finishedAt"`
+	MatchID         string  `json:"matchId"`
+	WinnerID        string  `json:"winnerId"`
+	LoserID         string  `json:"loserId"`
+	WinnerName      string  `json:"winnerName"`
+	WinnerAvatar    string  `json:"winnerAvatar"`
+	WinnerNewRating float64 `json:"winnerNewRating"`
+	WinnerDelta     float64 `json:"winnerDelta"`
+	LoserName       string  `json:"loserName"`
+	LoserAvatar     string  `json:"loserAvatar"`
+	LoserNewRating  float64 `json:"loserNewRating"`
+	LoserDelta      float64 `json:"loserDelta"`
+	Reason          string  `json:"reason"`
+	FinishedAt      int64   `json:"finishedAt"`
 }
 
 type ErrorPayload struct {

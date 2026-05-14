@@ -61,25 +61,46 @@ func (h *Hub) finishMatch(client *Client) {
 	match.WinnerID = client.ID
 
 	loserID := ""
+	var winnerName, winnerAvatar, loserName, loserAvatar string
+	var winnerDelta, loserDelta, winnerNewRating, loserNewRating float64
+
 	if opponent != nil {
 		loserID = opponent.ID
-	}
-
-	result := GameOverPayload{
-		MatchID:    match.ID,
-		WinnerID:   client.ID,
-		LoserID:    loserID,
-		Reason:    "player_finished",
-		FinishedAt: now.Unix(),
+		winnerName = client.DisplayName
+		winnerAvatar = client.AvatarURL
+		loserName = opponent.DisplayName
+		loserAvatar = opponent.AvatarURL
 	}
 
 	dbConn, err := database.GetPostgresConnection()
 	if err != nil {
 		log.Printf("failed to get postgres connection: %v", err)
 	} else {
-		if err := database.CreateMatch(dbConn, client.ID, loserID); err != nil {
-			log.Printf("failed to create match: %v", err)
+		wd, ld, wnr, lnr, mErr := database.CreateMatchAndSendRatingDelta(dbConn, client.ID, loserID)
+		if mErr != nil {
+			log.Printf("failed to create match: %v", mErr)
+		} else {
+			winnerDelta = wd
+			loserDelta = ld
+			winnerNewRating = wnr
+			loserNewRating = lnr
 		}
+	}
+
+	result := GameOverPayload{
+		MatchID:         match.ID,
+		WinnerID:         client.ID,
+		LoserID:          loserID,
+		WinnerName:       winnerName,
+		WinnerAvatar:    winnerAvatar,
+		WinnerNewRating: winnerNewRating,
+		WinnerDelta:     winnerDelta,
+		LoserName:       loserName,
+		LoserAvatar:     loserAvatar,
+		LoserNewRating:  loserNewRating,
+		LoserDelta:      loserDelta,
+		Reason:          "player_finished",
+		FinishedAt:      now.Unix(),
 	}
 
 	h.sendLocked(client, MsgGameOver, match.ID, client.ID, 0, result)

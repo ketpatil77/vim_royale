@@ -1,9 +1,9 @@
 import {
   createContext,
-  useContext,
-  useState,
-  useEffect,
   useCallback,
+  useContext,
+  useEffect,
+  useState,
 } from "react";
 import { API_URL } from "../config";
 
@@ -27,7 +27,7 @@ export type User = {
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
-  login: (provider: "google" | "github") => void;
+  loginFunc: (provider: "google" | "github") => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<void>;
@@ -93,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, login, logout, checkAuth, updateProfile }}
+      value={{ user, isLoading, loginFunc: login, logout, checkAuth, updateProfile }}
     >
       {children}
     </AuthContext.Provider>
