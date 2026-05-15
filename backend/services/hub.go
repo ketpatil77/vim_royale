@@ -15,16 +15,14 @@ type ratingBucket struct {
 const numBuckets = 41
 
 type Hub struct {
-	mu sync.Mutex
-
+	mu             sync.Mutex
 	clients        map[*Client]struct{}
 	clientsByID    map[string]*Client
 	matches        map[string]*Match
 	waitingBuckets [numBuckets]*ratingBucket
-
-	Register   chan *Client
-	Unregister chan *Client
-	incoming   chan InboundMessage
+	Register       chan *Client
+	Unregister     chan *Client
+	incoming       chan InboundMessage
 }
 
 func NewHub() *Hub {
@@ -33,8 +31,8 @@ func NewHub() *Hub {
 		clientsByID:    make(map[string]*Client),
 		matches:        make(map[string]*Match),
 		waitingBuckets: [numBuckets]*ratingBucket{},
-		Register:       make(chan *Client),
-		Unregister:     make(chan *Client),
+		Register:       make(chan *Client, 256),
+		Unregister:     make(chan *Client, 256),
 		incoming:       make(chan InboundMessage, 256),
 	}
 	for i := range h.waitingBuckets {
@@ -65,9 +63,9 @@ func (h *Hub) handleRegister(client *Client) {
 
 func (h *Hub) handleUnregister(client *Client) {
 	h.mu.Lock()
-	defer h.mu.Unlock()
 
 	if _, ok := h.clients[client]; !ok {
+		h.mu.Unlock()
 		return
 	}
 
@@ -80,58 +78,68 @@ func (h *Hub) handleUnregister(client *Client) {
 		}
 	}
 
+	// Capture match state before releasing the lock
+	var opponent *Client
+	var match *Match
 	if client.MatchID != "" {
-		match, ok := h.matches[client.MatchID]
-		if ok {
-			opponent := match.opponentOf(client)
-			now := time.Now().UTC()
-			match.Status = MatchFinished
-			match.FinishedAt = &now
-			if opponent != nil {
-				match.WinnerID = opponent.ID
-				var winnerDelta, loserDelta, winnerNewRating, loserNewRating float64
-				var winnerName, winnerAvatar, loserName, loserAvatar string
-
-				winnerName = opponent.DisplayName
-				winnerAvatar = opponent.AvatarURL
-				loserName = client.DisplayName
-				loserAvatar = client.AvatarURL
-
-				dbConn, err := database.GetPostgresConnection()
-				if err == nil {
-					wd, ld, wnr, lnr, mErr := database.CreateMatchAndSendRatingDelta(dbConn, opponent.ID, client.ID)
-					if mErr == nil {
-						winnerDelta = wd
-						loserDelta = ld
-						winnerNewRating = wnr
-						loserNewRating = lnr
-					}
-				}
-
-				gameOver := GameOverPayload{
-					MatchID:         match.ID,
-					WinnerID:         opponent.ID,
-					LoserID:          client.ID,
-					WinnerName:      winnerName,
-					WinnerAvatar:    winnerAvatar,
-					WinnerNewRating: winnerNewRating,
-					WinnerDelta:     winnerDelta,
-					LoserName:       loserName,
-					LoserAvatar:     loserAvatar,
-					LoserNewRating:  loserNewRating,
-					LoserDelta:      loserDelta,
-					Reason:          "opponent_disconnected",
-					FinishedAt:      now.Unix(),
-				}
-
-				h.sendLocked(opponent, MsgGameOver, match.ID, opponent.ID, 0, gameOver)
-				opponent.MatchID = ""
-			}
+		if m, ok := h.matches[client.MatchID]; ok {
+			match = m
+			opponent = m.opponentOf(client)
 			delete(h.matches, match.ID)
 		}
 	}
 
 	close(client.send)
+	h.mu.Unlock() // Release lock before any slow work
+
+	// Offload DB call and notification to a goroutine
+	// so the hub loop is never blocked
+	if match != nil && opponent != nil {
+		go h.handleDisconnectWin(match, opponent, client)
+	}
+}
+
+// handleDisconnectWin runs outside the hub loop.
+// It writes the match result to the DB and notifies the winning opponent.
+func (h *Hub) handleDisconnectWin(match *Match, winner *Client, loser *Client) {
+	now := time.Now().UTC()
+	match.Status = MatchFinished
+	match.FinishedAt = &now
+	match.WinnerID = winner.ID
+
+	var winnerDelta, loserDelta, winnerNewRating, loserNewRating float64
+
+	dbConn, err := database.GetPostgresConnection()
+	if err == nil {
+		wd, ld, wnr, lnr, mErr := database.CreateMatchAndSendRatingDelta(
+			dbConn, winner.ID, loser.ID,
+		)
+		if mErr == nil {
+			winnerDelta = wd
+			loserDelta = ld
+			winnerNewRating = wnr
+			loserNewRating = lnr
+		}
+	}
+
+	gameOver := GameOverPayload{
+		MatchID:         match.ID,
+		WinnerID:        winner.ID,
+		LoserID:         loser.ID,
+		WinnerName:      winner.DisplayName,
+		WinnerAvatar:    winner.AvatarURL,
+		WinnerNewRating: winnerNewRating,
+		WinnerDelta:     winnerDelta,
+		LoserName:       loser.DisplayName,
+		LoserAvatar:     loser.AvatarURL,
+		LoserNewRating:  loserNewRating,
+		LoserDelta:      loserDelta,
+		Reason:          "opponent_disconnected",
+		FinishedAt:      now.Unix(),
+	}
+
+	h.sendLocked(winner, MsgGameOver, match.ID, winner.ID, 0, gameOver)
+	winner.MatchID = ""
 }
 
 func (h *Hub) EnqueueIncoming(inbound InboundMessage) {
