@@ -32,7 +32,6 @@ export default function MatchPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
 
-
   const targetCodeRef = useRef('')
   const pollutedCodeRef = useRef('')
 
@@ -72,48 +71,8 @@ export default function MatchPage() {
   } = useEditors()
 
   const finishSentRef = useRef(false)
-  const beginMatchmakingRef = useRef<() => void>(() => {})
 
-  useEffect(() => {
-    beginMatchmakingRef.current()
-  }, [])
-
-  const handleContentChange = useCallback(() => {
-    if (viewStateRef.current !== 'playing') return
-
-    const content = getPlayerContent()
-    sendBufferUpdate(content)
-
-    if (!finishSentRef.current && content === targetCodeRef.current) {
-      finishSentRef.current = true
-      sendPlayerFinished()
-    }
-  }, [sendBufferUpdate, sendPlayerFinished, getPlayerContent])
-
-  useEffect(() => {
-    if (viewState === 'playing') {
-      return setEditors(
-        {
-          pollutedCode: pollutedCodeRef.current,
-          onContentChange: handleContentChange,
-        },
-        setVimMode
-      )
-    }
-
-    if (viewState !== 'finished') {
-      cleanupEditors()
-    }
-  }, [viewState, setEditors, handleContentChange, cleanupEditors])
-
-  useEffect(() => {
-    return () => {
-      disconnect()
-      cleanupEditors()
-    }
-  }, [disconnect, cleanupEditors])
-
-  // Start matchmaking
+  // beginMatchmaking is defined first, then called directly from the mount effect
   const beginMatchmaking = useCallback(() => {
     disconnect()
     cleanupEditors()
@@ -145,18 +104,55 @@ export default function MatchPage() {
       },
       { playerId: matchState.playerId },
       replaceOpponentContent,
-      () => beginMatchmakingRef.current(),
+      () => beginMatchmaking(),
       getViewState
     )
 
     connect(callbacks)
   }, [disconnect, cleanupEditors, connect, replaceOpponentContent, matchState, getViewState])
 
+  // Single effect: fires once on mount, calls beginMatchmaking directly
+  // (previously two separate effects caused a race where the ref was still
+  // the empty placeholder when the mount effect ran in production)
   useEffect(() => {
-    beginMatchmakingRef.current = () => {
-      beginMatchmaking()
+    beginMatchmaking()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      disconnect()
+      cleanupEditors()
     }
-  }, [beginMatchmaking])
+  }, [disconnect, cleanupEditors])
+
+  const handleContentChange = useCallback(() => {
+    if (viewStateRef.current !== 'playing') return
+
+    const content = getPlayerContent()
+    sendBufferUpdate(content)
+
+    if (!finishSentRef.current && content === targetCodeRef.current) {
+      finishSentRef.current = true
+      sendPlayerFinished()
+    }
+  }, [sendBufferUpdate, sendPlayerFinished, getPlayerContent])
+
+  useEffect(() => {
+    if (viewState === 'playing') {
+      return setEditors(
+        {
+          pollutedCode: pollutedCodeRef.current,
+          onContentChange: handleContentChange,
+        },
+        setVimMode
+      )
+    }
+
+    if (viewState !== 'finished') {
+      cleanupEditors()
+    }
+  }, [viewState, setEditors, handleContentChange, cleanupEditors])
 
   const cancelMatchmaking = () => {
     disconnect()
@@ -178,67 +174,66 @@ export default function MatchPage() {
     sounds[type].play()
   }, [])
 
-  const {crtEnabled, toggleCrt} = useCRT()
+  const { crtEnabled, toggleCrt } = useCRT()
 
   return (
     <TerminalLayout crtEnabled={crtEnabled} onCrtToggle={toggleCrt}>
-
-    <div className="match-page">
-      {isMatchmaking ? (
-        <div className="matchmaking-screen">
-          <div className="matchmaking-content">
-            <h2 className="matchmaking-title">&gt;&gt; SEARCHING FOR OPPONENT...</h2>
-            <div className="matchmaking-anim">
-              <span className="pulse-dot" />
+      <div className="match-page">
+        {isMatchmaking ? (
+          <div className="matchmaking-screen">
+            <div className="matchmaking-content">
+              <h2 className="matchmaking-title">&gt;&gt; SEARCHING FOR OPPONENT...</h2>
+              <div className="matchmaking-anim">
+                <span className="pulse-dot" />
+              </div>
+              <p className="matchmaking-status">{statusText}</p>
+              <button className="cancel-btn" onClick={cancelMatchmaking}>
+                ./CANCEL.sh
+              </button>
             </div>
-            <p className="matchmaking-status">{statusText}</p>
-            <button className="cancel-btn" onClick={cancelMatchmaking}>
-              ./CANCEL.sh
-            </button>
           </div>
-        </div>
-      ) : (
-        <div className="match-container">
-          <div className="editor-grid">
-            <EditorPanel
-              filename="vim_royale.ts"
-              panelTitle="LOCAL [YOU]"
-              vimMode={vimMode}
-              scrollWarningMessage="Use j/k for scrolling"
-              displayName={user?.displayName || 'You'}
-              avatarUrl={user?.avatarUrl || ''}
-              rating={Math.round(user?.rating || 0)}
-              ref={leftRef}
-            />
+        ) : (
+          <div className="match-container">
+            <div className="editor-grid">
+              <EditorPanel
+                filename="vim_royale.ts"
+                panelTitle="LOCAL [YOU]"
+                vimMode={vimMode}
+                scrollWarningMessage="Use j/k for scrolling"
+                displayName={user?.displayName || 'You'}
+                avatarUrl={user?.avatarUrl || ''}
+                rating={Math.round(user?.rating || 0)}
+                ref={leftRef}
+              />
 
-            <EditorPanel
-              filename="opponent.ts"
-              panelTitle="REMOTE [OPP]"
-              scrollWarningMessage="Use j/k for scrolling"
-              displayName={matchState.opponentName || 'Opponent'}
-              avatarUrl={matchState.opponentAvatar || ''}
-              rating={matchState.opponentRating}
-              ref={rightRef}
-            />
-          </div>
-
-          {viewState === 'countdown' && (
-            <div className="countdown-overlay">
-              <div className="countdown-number">{countdown}</div>
+              <EditorPanel
+                filename="opponent.ts"
+                panelTitle="REMOTE [OPP]"
+                scrollWarningMessage="Use j/k for scrolling"
+                displayName={matchState.opponentName || 'Opponent'}
+                avatarUrl={matchState.opponentAvatar || ''}
+                rating={matchState.opponentRating}
+                ref={rightRef}
+              />
             </div>
-          )}
 
-          {viewState === 'finished' && gameOverPayload && (
-            <MatchResultModal
-              isOpen={true}
-              {...parseResult(resultText, gameOverPayload)}
-              onMainMenu={handleMainMenu}
-              onNewMatch={handleNewMatch}
-            />
-          )}
-        </div>
-      )}
-    </div>
+            {viewState === 'countdown' && (
+              <div className="countdown-overlay">
+                <div className="countdown-number">{countdown}</div>
+              </div>
+            )}
+
+            {viewState === 'finished' && gameOverPayload && (
+              <MatchResultModal
+                isOpen={true}
+                {...parseResult(resultText, gameOverPayload)}
+                onMainMenu={handleMainMenu}
+                onNewMatch={handleNewMatch}
+              />
+            )}
+          </div>
+        )}
+      </div>
     </TerminalLayout>
   )
 }
