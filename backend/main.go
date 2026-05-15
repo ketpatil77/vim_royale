@@ -26,6 +26,7 @@ func main() {
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
 			"http://localhost:5173",
+			"https://www.vimroyale.com",
 			"https://vimroyale.com",
 			"https://vim-royale.vercel.app",
 		},
