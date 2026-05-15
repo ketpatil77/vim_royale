@@ -302,7 +302,6 @@
   /* Tags sit on top of this line */
 }
 
-/* Both tags are absolutely lifted to straddle the border line */
 .vt100-tag {
   position: absolute;
   top: -9px; /* vertically centres the text on the border line */
