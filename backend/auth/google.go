@@ -80,7 +80,11 @@ func GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	c.Header("Set-Cookie", fmt.Sprintf("token=%s; Path=/; HttpOnly; SameSite=Lax; Max-Age=%d", jwtToken, 86400*30))
+	c.Header("Set-Cookie", fmt.Sprintf(
+		"token=%s; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=%d",
+		jwtToken,
+		86400*30,
+	))
 	c.Redirect(http.StatusFound, config.FrontendURL)
 }
 
