@@ -1,3 +1,7 @@
+/* ============================================================
+   VIM ROYALE — Landing Page Styles (improved)
+   ============================================================ */
+
 /* ---------- Shell ---------- */
 .vr-shell {
   min-height: 100vh;
@@ -15,6 +19,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 /* ---------- Hero Section ---------- */
@@ -22,8 +29,30 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 52px 32px 48px;
+  padding: 64px 32px 72px;
   gap: 0;
+  position: relative;
+}
+
+/* Scanline background effect in hero */
+.vr-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(57, 255, 20, 0.015) 3px,
+    rgba(57, 255, 20, 0.015) 4px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.vr-hero > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* ASCII art logo */
@@ -35,7 +64,7 @@
   text-shadow: var(--glow);
   white-space: pre;
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   overflow-x: auto;
   max-width: 100%;
 }
@@ -43,47 +72,272 @@
 /* Tagline */
 .vr-tagline {
   font-family: var(--mono);
-  font-size: 14px;
+  font-size: 13px;
   color: var(--green-dim);
-  letter-spacing: 2px;
-  margin-bottom: 36px;
+  letter-spacing: 3px;
+  margin-bottom: 40px;
+  opacity: 0.75;
 }
 
-/* CTA row */
+/* ---- CTA row ---- */
 .vr-ctas {
   display: flex;
-  gap: 20px;
-  margin-bottom: 48px;
+  gap: 16px;
+  margin-bottom: 56px;
   flex-wrap: wrap;
   justify-content: center;
 }
 
-/* CTA buttons — IBM Plex Mono, bracket style */
+/* Primary CTA — filled, glowing */
 .vr-cta {
   font-family: var(--mono);
   font-size: 13px;
-  color: var(--green);
-  background: transparent;
-  border: 1px solid var(--green);
-  padding: 10px 28px;
+  letter-spacing: 2px;
   cursor: pointer;
-  letter-spacing: 1px;
-  transition: background 0s, color 0s;
+  transition: all 0.08s;
+  padding: 12px 36px;
+  border: 1px solid var(--green);
+  background: var(--green);
+  color: var(--bg);
+  font-weight: 700;
+  box-shadow: 0 0 18px rgba(57, 255, 20, 0.35), 0 0 40px rgba(57, 255, 20, 0.1);
 }
 
 .vr-cta:hover {
-  background: var(--green);
-  color: var(--bg);
+  box-shadow: 0 0 28px rgba(57, 255, 20, 0.55), 0 0 60px rgba(57, 255, 20, 0.2);
+  transform: translateY(-1px);
 }
 
+.vr-cta:active {
+  transform: translateY(0);
+}
+
+/* Secondary CTA — outline only, dimmer */
 .vr-cta--dim {
-  border-color: var(--green-dim);
+  background: transparent;
   color: var(--green-dim);
+  border-color: rgba(57, 255, 20, 0.3);
+  box-shadow: none;
+  font-weight: 400;
 }
 
 .vr-cta--dim:hover {
-  background: var(--green-dim);
-  color: var(--bg);
+  background: rgba(57, 255, 20, 0.06);
+  border-color: var(--green-dim);
+  color: var(--green);
+  box-shadow: none;
+  transform: none;
+}
+
+/* ---------- Features Section ---------- */
+.features {
+  padding: 80px 32px 96px;
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.vr-section-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--green-dim);
+  text-align: center;
+  margin: 0 0 8px;
+  opacity: 0.6;
+}
+
+.vr-h1 {
+  font-family: var(--mono);
+  font-size: 22px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--green);
+  text-align: center;
+  margin: 0 0 48px;
+  text-shadow: var(--glow);
+}
+
+/* ---------- Game Mode Cards ---------- */
+.vr-features {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 72px;
+}
+
+.vr-feature {
+  padding: 24px 18px 20px;
+  border: 1px solid rgba(57, 255, 20, 0.12);
+  background: var(--bg-panel);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Accent bar at top of each mode card */
+.vr-feature::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--green);
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.vr-feature:hover {
+  border-color: rgba(57, 255, 20, 0.4);
+  background: rgba(57, 255, 20, 0.04);
+}
+
+.vr-feature:hover::before {
+  opacity: 1;
+}
+
+/* Mode icon (vim command style) */
+.vr-feature-cmd {
+  font-family: var(--mono);
+  font-size: 18px;
+  color: var(--amber, #f5a623);
+  margin: 0 0 10px;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(245, 166, 35, 0.4);
+}
+
+.vr-h2 {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--green);
+  margin: 0 0 8px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.vr-p {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--green-dim);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ---------- Section Divider ---------- */
+.vr-divider {
+  border: none;
+  border-top: 1px solid rgba(57, 255, 20, 0.08);
+  margin: 0 0 48px;
+}
+
+/* ---------- How It Works ---------- */
+.how-it-works-header {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--green-dim);
+  margin: 0 0 28px;
+  padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: inline-block;
+  letter-spacing: 0.5px;
+}
+
+.how-it-works-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.feature-box {
+  background: var(--bg-panel);
+  border: 1px solid rgba(57, 255, 20, 0.18);
+  border-top: none; /* top edge is the .vt100-bar border-top */
+  border-radius: 0;
+  overflow: visible; /* allow .vt100-tag to float above the top edge */
+  transition: border-color 0.12s, box-shadow 0.12s;
+  position: relative;
+  /* push content down so the floating tag doesn't overlap the title */
+  padding-top: 20px;
+}
+
+.feature-box:hover {
+  border-color: rgba(57, 255, 20, 0.4);
+  box-shadow: 0 0 12px rgba(57, 255, 20, 0.06);
+}
+
+/* Large watermark step number */
+.feature-box-watermark {
+  position: absolute;
+  bottom: -8px;
+  right: 10px;
+  font-family: var(--mono);
+  font-size: 72px;
+  font-weight: 900;
+  color: rgba(57, 255, 20, 0.04);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: -4px;
+}
+
+.feature-box--wide {
+  grid-column: span 2;
+}
+
+/* ---- VT100 titlebar ---- */
+/* The full top border is: ╔═[ 01 ]═══════════[ 00:00:03 ]═╗  */
+/* We render it as a flex row of box-drawing characters        */
+/* VT100 topbar — CSS border-top approach, no unicode corners */
+.feature-box-topbar {
+  display: none; /* replaced by .vt100-bar directly */
+}
+
+.vt100-bar {
+  position: relative;
+  height: 0;
+  /* The "top border" of the box — thicker and brighter than side borders */
+  border-top: 1px solid rgba(57, 255, 20, 0.45);
+  margin: 0;
+  /* Tags sit on top of this line */
+}
+
+/* Both tags are absolutely lifted to straddle the border line */
+.vt100-tag {
+  position: absolute;
+  top: -9px; /* vertically centres the text on the border line */
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--amber, #f5a623);
+  /* gap cut into the border line behind the tag */
+  background: var(--bg-panel);
+  padding: 0 4px;
+}
+
+.vt100-tag--left  { left: 10px; }
+.vt100-tag--right { right: 10px; }
+
+.feature-box-title {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--green);
+  margin: 16px 14px 6px;
+  line-height: 1.4;
+}
+
+.feature-box-desc {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--green-dim);
+  margin: 0 14px 16px;
+  line-height: 1.7;
 }
 
 /* ---------- Terminal preview block ---------- */
@@ -91,7 +345,7 @@
   background: var(--bg-panel);
   border: 1px solid var(--border-green);
   width: 100%;
-  max-width: 600px;
+  max-width: 640px;
 }
 
 .vr-term-titlebar {
@@ -147,10 +401,9 @@
 }
 
 .vr-tline--normal .vr-tline-code  { color: var(--green); }
-.vr-tline--error  .vr-tline-code  { color: #ff3131; }
-.vr-tline--amber  .vr-tline-code  { color: var(--amber); }
+.vr-tline--error  .vr-tline-code  { color: #ff4444; }
+.vr-tline--amber  .vr-tline-code  { color: var(--amber, #f5a623); }
 
-/* Statusline row */
 .vr-tline--statusline {
   border-top: 1px solid var(--border);
   margin-top: 4px;
@@ -158,7 +411,7 @@
 .vr-tline--statusline .vr-tline-ln   { color: transparent; }
 .vr-tline--statusline .vr-tline-code { color: var(--green-dim); font-size: 11px; }
 
-/* Blinking block cursor */
+/* Blinking cursor */
 .vr-cursor {
   display: inline-block;
   width: 7px;
@@ -208,11 +461,17 @@
 
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
-  .vr-hero   { padding: 32px 16px 40px; }
-  .vr-ascii  { font-size: 6px; }
-  .vr-ctas   { flex-direction: column; align-items: center; }
+  .vr-hero      { padding: 40px 16px 48px; }
+  .vr-ascii     { font-size: 6px; }
+  .vr-ctas      { flex-direction: column; align-items: center; }
+  .features     { padding: 48px 16px 64px; }
+  .vr-features  { grid-template-columns: repeat(2, 1fr); }
+  .how-it-works-grid { grid-template-columns: 1fr; }
+  .feature-box--wide { grid-column: span 1; }
+  .vr-h1        { font-size: 16px; }
 }
 
 @media (max-width: 480px) {
-  .vr-ascii     { font-size: 4.5px; }
+  .vr-ascii    { font-size: 4.5px; }
+  .vr-features { grid-template-columns: 1fr; }
 }
