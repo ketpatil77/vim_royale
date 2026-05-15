@@ -286,9 +286,6 @@
 }
 
 /* ---- VT100 titlebar ---- */
-/* The full top border is: ╔═[ 01 ]═══════════[ 00:00:03 ]═╗  */
-/* We render it as a flex row of box-drawing characters        */
-/* VT100 topbar — CSS border-top approach, no unicode corners */
 .feature-box-topbar {
   display: none; /* replaced by .vt100-bar directly */
 }
