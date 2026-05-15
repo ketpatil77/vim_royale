@@ -1,21 +1,23 @@
-version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
       POSTGRES_DB: vim_royale
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
   backend:
-    build: .
+    image: ghcr.io/jitesh117/vimroyale-backend:latest
+    restart: unless-stopped
     ports:
       - "8080:8080"
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgres://postgres:secret@postgres:5432/vim_royale?sslmode=disable
+      DATABASE_URL: postgres://postgres:secret@postgres:5432/vim_royale?sslmode=disable
     depends_on:
       - postgres
 
