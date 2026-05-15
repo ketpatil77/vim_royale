@@ -26,7 +26,7 @@ func Load() {
 	GitHubClientID = getEnv("GITHUB_CLIENT_ID", "")
 	GitHubClientSecret = getEnv("GITHUB_CLIENT_SECRET", "")
 	JWTSecret = getEnv("JWT_SECRET", "")
-	FrontendURL = getEnv("FRONTEND_URL", "http://localhost:5173")
+	FrontendURL = getEnv("FRONTEND_URL", "")
 
 	if JWTSecret == "" {
 		log.Println("WARNING: JWT_SECRET not set")

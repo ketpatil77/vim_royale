@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"vim_royale/backend/config"
@@ -27,7 +28,7 @@ func initGoogleOAuth() {
 		ClientSecret: config.GoogleClientSecret,
 		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"},
 		Endpoint:     google.Endpoint,
-		RedirectURL:  "http://localhost:8080/auth/google/callback",
+		RedirectURL:  os.Getenv("GOOGLE_REDIRECT_URL"),
 	}
 }
 

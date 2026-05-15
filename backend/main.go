@@ -24,7 +24,11 @@ func main() {
 
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"},
+		AllowOrigins: []string{
+			"http://localhost:5173",
+			"https://vimroyale.com",
+			"https://vim-royale.vercel.app",
+		},
 		AllowMethods:     []string{"GET", "POST", "OPTIONS", "PUT", "PATCH"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
