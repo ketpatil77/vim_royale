@@ -3,7 +3,7 @@ name: Deploy Backend
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   deploy:
@@ -22,7 +22,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/jitesh117/vimroyale-backend:latest .
+          docker build -t ghcr.io/jitesh117/vimroyale-backend:latest ./backend
 
       - name: Push Docker image
         run: |
