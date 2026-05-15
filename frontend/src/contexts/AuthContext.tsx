@@ -12,16 +12,16 @@ export type User = {
   provider: string;
   providerId: string;
   email: string;
-  displayName?: string;
-  avatarUrl?: string;
+  displayName: string | null;
+  avatarUrl: string | null;
   matches?: number;
   won?: number;
   lost?: number;
   rating?: number;
   lastActive?: string;
-  githubId?: string;
-  twitterId?: string;
-  discordId?: string;
+  githubId: string | null;
+  twitterId: string | null;
+  discordId: string | null;
 };
 
 type AuthContextType = {

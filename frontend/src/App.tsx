@@ -4,7 +4,6 @@ import "vault66-crt-effect/dist/vault66-crt-effect.css"
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { CRTProvider, useCRT } from './contexts/CRTContext'
 import { VimTutor } from './pages/docs/vimTutor'
-import EditProfile from './pages/editProfile'
 import Play from './pages/Play/Play'
 import MatchPage from './pages/Play/MatchPage'
 import Landing from './pages/Landing'
@@ -12,6 +11,7 @@ import Leaderboard from './pages/leaderboard'
 import AuthCallback from './pages/login/AuthCallback'
 import Login from './pages/login/Login'
 import UserProfile from './pages/userProfile'
+import EditProfile from './pages/EditProfile'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()

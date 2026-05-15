@@ -40,11 +40,11 @@ export default function EditProfile() {
   const handleUpdate = () => {
     const updates: Partial<User> = {};
 
-    if (profileForm.displayName !== user?.displayName) updates.displayName = profileForm.displayName;
-    if (profileForm.avatarUrl !== user?.avatarUrl) updates.avatarUrl = profileForm.avatarUrl;
-    if (profileForm.githubId !== user?.githubId) updates.githubId = profileForm.githubId;
-    if (profileForm.twitterId !== user?.twitterId) updates.twitterId = profileForm.twitterId;
-    if (profileForm.discordId !== user?.discordId) updates.discordId = profileForm.discordId;
+    if (profileForm.displayName !== (user?.displayName ?? "")) updates.displayName = profileForm.displayName;
+    if (profileForm.avatarUrl !== (user?.avatarUrl ?? "")) updates.avatarUrl = profileForm.avatarUrl;
+    if (profileForm.githubId !== (user?.githubId ?? "")) updates.githubId = profileForm.githubId;
+    if (profileForm.twitterId !== (user?.twitterId ?? "")) updates.twitterId = profileForm.twitterId;
+    if (profileForm.discordId !== (user?.discordId ?? "")) updates.discordId = profileForm.discordId;
 
     if (Object.keys(updates).length > 0) {
       updateProfile(updates);
@@ -135,7 +135,7 @@ export default function EditProfile() {
               <label>:display_name</label>
               <input
                 type="text"
-                value={profileForm.displayName}
+                value={profileForm.displayName ?? ""}
                 onChange={(e) => setProfileForm({ ...profileForm, displayName: e.target.value })}
                 disabled={!isEditing}
                 placeholder="Enter display name..."
@@ -146,7 +146,7 @@ export default function EditProfile() {
               <label>:github_id</label>
               <input
                 type="text"
-                value={profileForm.githubId}
+                value={profileForm.githubId ?? ""}
                 onChange={(e) => setProfileForm({ ...profileForm, githubId: e.target.value })}
                 disabled={!isEditing}
                 placeholder="username"
@@ -157,7 +157,7 @@ export default function EditProfile() {
               <label>:twitter_id</label>
               <input
                 type="text"
-                value={profileForm.twitterId}
+                value={profileForm.twitterId ?? ""}
                 onChange={(e) => setProfileForm({ ...profileForm, twitterId: e.target.value })}
                 disabled={!isEditing}
                 placeholder="@handle"
@@ -168,7 +168,7 @@ export default function EditProfile() {
               <label>:discord_id</label>
               <input
                 type="text"
-                value={profileForm.discordId}
+                value={profileForm.discordId ?? ""}
                 onChange={(e) => setProfileForm({ ...profileForm, discordId: e.target.value })}
                 disabled={!isEditing}
                 placeholder="username#0000"
