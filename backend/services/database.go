@@ -1,7 +1,6 @@
 package services
 
 import (
-	"fmt"
 	"strings"
 
 	database "vim_royale/backend/db"
@@ -10,6 +9,7 @@ import (
 func (h *Hub) AttachIdentity(client *Client, playerID string) error {
 	var displayName, avatarURL string
 	var rating int
+
 	provider, providerID := splitProviderID(playerID)
 	if provider != "" && providerID != "" {
 		db, err := database.GetPostgresConnection()
@@ -27,7 +27,22 @@ func (h *Hub) AttachIdentity(client *Client, playerID string) error {
 	defer h.mu.Unlock()
 
 	if existing, exists := h.clientsByID[playerID]; exists && existing != client {
-		return fmt.Errorf("player_id_already_connected")
+		// Stale connection still registered — evict it and let the new one in.
+		// This happens when a client reconnects before the hub has processed
+		// the previous Unregister (common on 1 vCPU under any load).
+		delete(h.clientsByID, existing.ID)
+		existing.ID = ""
+		select {
+		case h.Unregister <- existing:
+		default:
+			// Unregister channel full — close the send channel directly
+			// so WritePump exits cleanly
+			select {
+			case <-existing.send:
+			default:
+				close(existing.send)
+			}
+		}
 	}
 
 	client.ID = playerID
