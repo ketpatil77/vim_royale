@@ -44,7 +44,6 @@ const (
 type pollutionConfig struct {
 	maxMutationsPerLine int
 	verbosity           commentVerbosity
-	noiseComments       bool  // inject unrelated // TODO noise
 	enabledTransforms   []int // indices into the transform table
 }
 
@@ -55,28 +54,24 @@ func configFromTier(tier difficultyTier) pollutionConfig {
 		return pollutionConfig{
 			maxMutationsPerLine: 1,
 			verbosity:           verbosityExplicit,
-			noiseComments:       false,
 			enabledTransforms:   []int{0, 1, 3, 6, 9},
 		}
 	case tierIntermediate:
 		return pollutionConfig{
 			maxMutationsPerLine: 2,
 			verbosity:           verbosityHint,
-			noiseComments:       false,
 			enabledTransforms:   []int{0, 1, 2, 3, 4, 5, 6, 9, 10},
 		}
 	case tierAdvanced:
 		return pollutionConfig{
 			maxMutationsPerLine: 3,
 			verbosity:           verbosityNone,
-			noiseComments:       true,
 			enabledTransforms:   allTransforms,
 		}
 	default: // expert
 		return pollutionConfig{
 			maxMutationsPerLine: 4,
 			verbosity:           verbosityNone,
-			noiseComments:       true,
 			enabledTransforms:   allTransforms,
 		}
 	}
@@ -123,29 +118,24 @@ func PickTargetCode() string {
 func PolluteCode(originalCode string, elo int) string {
 	cfg := configFromTier(tierFromElo(elo))
 	lines := strings.Split(originalCode, "\n")
-	out := make([]string, 0, len(lines)+1)
-	out = append(out, "// remove all the comments after correcting the code")
-
+	out := make([]string, 0, len(lines))
 	transformCounts := make(map[int]int)
 
 	for _, line := range lines {
-		mutated, comments := mutateLine(line, cfg, transformCounts)
-		for _, c := range comments {
-			out = append(out, c)
-		}
-		out = append(out, mutated)
+		out = append(out, mutateLine(line, cfg, transformCounts))
 	}
 
 	return strings.Join(out, "\n")
 }
 
-func mutateLine(line string, cfg pollutionConfig, transformCounts map[int]int) (mutatedLine string, precedingComments []string) {
+// mutateLine applies random transforms to a line and attaches any hint as a
+// trailing inline comment directly on the affected line.
+func mutateLine(line string, cfg pollutionConfig, transformCounts map[int]int) string {
 	if strings.TrimSpace(line) == "" {
-		return line, nil
+		return line
 	}
 
 	current := line
-	var comments []string
 
 	shuffled := make([]int, len(cfg.enabledTransforms))
 	copy(shuffled, cfg.enabledTransforms)
@@ -163,18 +153,23 @@ func mutateLine(line string, cfg pollutionConfig, transformCounts map[int]int) (
 			transformCounts[transformIdx]++
 			switch cfg.verbosity {
 			case verbosityExplicit:
-				comments = append(comments, fmt.Sprintf("// fix (%s): %s", motion, instruction))
+				current = appendInlineComment(current, instruction)
 			case verbosityHint:
-				comments = append(comments, fmt.Sprintf("// %s", motion))
+				current = appendInlineComment(current, motion)
 			}
 		}
 	}
 
-	if cfg.noiseComments && rand.Float64() < 0.25 {
-		comments = append(comments, pickNoiseComment())
-	}
+	return current
+}
 
-	return current, comments
+// appendInlineComment attaches a // comment to the last line of s.
+// For multi-line mutations (deadLine, joinSplit, brokenChain) the comment
+// lands on the first (problem) line so it's visible next to the bad code.
+func appendInlineComment(s, comment string) string {
+	lines := strings.Split(s, "\n")
+	lines[0] = lines[0] + " // " + comment
+	return strings.Join(lines, "\n")
 }
 
 // applyTransform returns (mutatedLine, vimMotion, humanInstruction).
@@ -480,29 +475,6 @@ func transformWrongBoolean(line string) (string, string, string) {
 	return line, "", ""
 }
 
-// ─── Noise Comments ───────────────────────────────────────────────────────────
-
-var noiseComments = []string{
-	"// TODO: refactor",
-	"// FIXME: this might be wrong",
-	"// NOTE: revisit later",
-	"// HACK: temporary solution",
-	"// WIP",
-	"// @deprecated",
-	"// eslint-disable-next-line",
-	"// prettier-ignore",
-	"// not sure about this",
-	"// optimise if needed",
-	"// temp variable",
-	"// magic number alert",
-	"// refactor later",
-	"// TODO: cleanup dead code",
-	"// FIXME: confusing naming",
-}
-
-func pickNoiseComment() string {
-	return noiseComments[rand.Intn(len(noiseComments))]
-}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
