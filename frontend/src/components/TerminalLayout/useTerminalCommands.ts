@@ -82,6 +82,10 @@ export function useTerminalCommands({
       navigate("/docs");
       clearCommand();
     },
+    tutor: () => {
+      navigate("/docs/vimtutor");
+      clearCommand();
+    },
     vimtutor: () => {
       navigate("/docs/vimtutor");
       clearCommand();
@@ -103,6 +107,17 @@ export function useTerminalCommands({
     crt: () => {
       onCrtToggle?.();
       clearCommand();
+    },
+    // easter eggs
+    emacs: () => {
+      setCmdFeedback("bruh.");
+      setTimeout(clearCommand, 1500);
+      return;
+    },
+    neovim: () => {
+      setCmdFeedback("blazingly fast!");
+      setTimeout(clearCommand, 1500);
+      return;
     },
   };
 

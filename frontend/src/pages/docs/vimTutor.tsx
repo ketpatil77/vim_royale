@@ -45,7 +45,9 @@ export function VimTutor() {
         <EditorPanel
           filename="vimtutor.txt"
           panelTitle="VIM TUTOR"
+          displayName="vim-disciple"
           vimMode={vimMode}
+          rating={1500}
           scrollWarningMessage="Use keyboard to navigate, scroll wheel is disabled"
           ref={editorRef}
         />

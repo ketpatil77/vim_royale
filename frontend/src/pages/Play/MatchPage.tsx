@@ -111,9 +111,6 @@ export default function MatchPage() {
     connect(callbacks)
   }, [disconnect, cleanupEditors, connect, replaceOpponentContent, matchState, getViewState])
 
-  // Single effect: fires once on mount, calls beginMatchmaking directly
-  // (previously two separate effects caused a race where the ref was still
-  // the empty placeholder when the mount effect ran in production)
   useEffect(() => {
     beginMatchmaking()
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -176,6 +173,21 @@ export default function MatchPage() {
 
   const { crtEnabled, toggleCrt } = useCRT()
 
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (viewStateRef.current === 'playing') {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [])
+
   return (
     <TerminalLayout crtEnabled={crtEnabled} onCrtToggle={toggleCrt}>
       <div className="match-page">
@@ -184,7 +196,10 @@ export default function MatchPage() {
             <div className="matchmaking-content">
               <h2 className="matchmaking-title">&gt;&gt; SEARCHING FOR OPPONENT...</h2>
               <div className="matchmaking-anim">
-                <span className="pulse-dot" />
+                <svg className="magnifying-glass" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="11" cy="11" r="7" stroke="var(--green)" strokeWidth="2"/>
+                  <path d="M16 16L20 20" stroke="var(--green)" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
               </div>
               <p className="matchmaking-status">{statusText}</p>
               <button className="cancel-btn" onClick={cancelMatchmaking}>
