@@ -1,13 +1,13 @@
 .vr-ascii {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 16px;
   line-height: 1.2;
   color: var(--green);
   text-shadow: var(--glow);
   white-space: pre;
   text-align: center;
   margin-bottom: 24px;
-  overflow-x: auto;
+  overflow-y: hidden;
   max-width: 100%;
 }
 
