@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { useCRT } from '../../contexts/CRTContext'
-import './Play.css'
-import { TerminalLayout } from '../../components/TerminalLayout/TerminalLayout'
+import { TerminalLayout } from '../../components/TerminalLayout/TerminalLayout';
+import { useCRT } from '../../contexts/CRTContext';
+import './Play.css';
 
 export default function Play() {
   const { crtEnabled, toggleCrt } = useCRT()

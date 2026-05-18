@@ -5,6 +5,7 @@ import { useCRT } from '../contexts/CRTContext'
 import { VT100TitleBar } from '../components/VT100TitleBar/VT100TitleBar'
 import './Landing.css'
 import { VimRoyaleHero } from '../components/VimRoyaleHero/VimRoyaleHero'
+import NeuralParticleBackground from '../components/AnimatedBackgrounds/NeuralParticleBackground'
 
 const GAME_MODES = [
   { cmd: ':vs',    title: '1V1',           desc: '2 Players, Split Screen' },
@@ -43,6 +44,9 @@ export default function Landing() {
   return (
     <TerminalLayout crtEnabled={crtEnabled} onCrtToggle={toggleCrt}>
       <main className="vr-main">
+
+      <NeuralParticleBackground/>
+        {/* ── Hero ── */}
         <section className="vr-hero">
           <VimRoyaleHero />
           <p className="vr-tagline">&gt; one shall lose, one shall vim</p>

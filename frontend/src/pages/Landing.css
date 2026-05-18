@@ -75,7 +75,7 @@
   cursor: pointer;
   transition: all 0.08s;
   padding: 12px 36px;
-  border: 1px solid var(--green);
+  border: 2px solid var(--green);
   background: var(--green);
   color: var(--bg);
   font-weight: 700;
@@ -97,7 +97,7 @@
   color: var(--green-dim);
   border-color: rgba(57, 255, 20, 0.3);
   box-shadow: none;
-  font-weight: 400;
+  font-weight: bold;
 }
 
 .vr-cta--dim:hover {

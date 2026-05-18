@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useTerminalCommands } from "./useTerminalCommands";
 import "./TerminalLayout.css";
+import VimGlyphBackground from "../AnimatedBackgrounds/VimGlyphBackground";
 
 interface TerminalLayoutProps {
   children: ReactNode;
@@ -38,6 +39,7 @@ export function TerminalLayout({
 
   return (
     <div className="terminal-shell">
+      <VimGlyphBackground style={{zIndex: 0, pointerEvents: 'none'}}/>
       <header className="terminal-topbar">
         <span
           onClick={() => { navigate("/"); closeMenu(); }}
@@ -70,13 +72,18 @@ export function TerminalLayout({
           </span>
           <span onClick={closeMenu} className="terminal-nav-link">:docs</span>
 
-          <span
+          <button
+            className="terminal-crt-toggle"
             onClick={() => { onCrtToggle?.(); closeMenu(); }}
-            className="terminal-nav-link"
-            style={{ cursor: "pointer" }}
+            aria-label="Toggle CRT effect"
+            aria-pressed={crtEnabled}
+            title={crtEnabled ? "CRT effect: ON" : "CRT effect: OFF"}
           >
-            :crt [{crtEnabled ? "on" : "off"}]
-          </span>
+            <span className="terminal-crt-toggle-label">:crt</span>
+            <span className="terminal-crt-toggle-track">
+              <span className="terminal-crt-toggle-thumb" />
+            </span>
+          </button>
 
           {user ? (
             <span

@@ -41,7 +41,7 @@ export function VimTutor() {
     <TerminalLayout 
     crtEnabled={crtEnabled} 
     onCrtToggle={toggleCrt}>
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '24px', flex: 1 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '24px', flex: 1 }}>
         <EditorPanel
           filename="vimtutor.txt"
           panelTitle="VIM TUTOR"

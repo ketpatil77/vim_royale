@@ -113,6 +113,59 @@
   color: var(--bg);
 }
 
+/* ---------- CRT Toggle ---------- */
+.terminal-crt-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  color: var(--green-dim);
+  transition: color 0.15s;
+}
+
+.terminal-crt-toggle:hover {
+  color: var(--green);
+}
+
+.terminal-crt-toggle-label {
+  font-family: var(--mono);
+}
+
+.terminal-crt-toggle-track {
+  display: inline-flex;
+  align-items: center;
+  width: 36px;
+  height: 18px;
+  background: transparent;
+  border: 1px solid currentColor;
+  position: relative;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.terminal-crt-toggle-thumb {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  top: 2px;
+  left: 2px;
+  background: currentColor;
+  transition: left 0.2s ease, background 0.2s, box-shadow 0.2s;
+}
+
+.terminal-crt-toggle[aria-pressed="true"] .terminal-crt-toggle-thumb {
+  left: 20px;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.terminal-crt-toggle[aria-pressed="true"] .terminal-crt-toggle-track {
+  box-shadow: 0 0 8px var(--green-dim);
+}
+
 /* ---------- Main Content ---------- */
 .terminal-main {
   flex: 1;
@@ -206,6 +259,14 @@
 
   .terminal-nav .terminal-nav-link:last-child {
     border-bottom: none;
+  }
+
+  .terminal-nav .terminal-crt-toggle {
+    font-size: 14px;
+    padding: 12px 0;
+    width: 100%;
+    border-bottom: 1px solid var(--border-green);
+    justify-content: space-between;
   }
 
   .terminal-menu-backdrop {
