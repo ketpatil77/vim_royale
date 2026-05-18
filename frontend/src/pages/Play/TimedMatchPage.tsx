@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TerminalLayout } from '../../components/TerminalLayout/TerminalLayout'
 import { useCRT } from '../../contexts/CRTContext'
