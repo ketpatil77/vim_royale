@@ -39,20 +39,6 @@
 }
 
 
-/* ---------- CRT Scanlines ---------- */
-.terminal-scanlines {
-  position: fixed;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.13) 2px,
-    rgba(0, 0, 0, 0.13) 4px
-  );
-  pointer-events: none;
-  z-index: 100;
-}
 
 /* ---------- Topbar ---------- */
 .terminal-topbar {

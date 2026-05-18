@@ -29,22 +29,6 @@
   position: relative;
 }
 
-/* Scanline background effect in hero */
-.vr-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 3px,
-    rgba(57, 255, 20, 0.015) 3px,
-    rgba(57, 255, 20, 0.015) 4px
-  );
-  pointer-events: none;
-  z-index: 0;
-}
-
 .vr-hero > * {
   position: relative;
   z-index: 1;

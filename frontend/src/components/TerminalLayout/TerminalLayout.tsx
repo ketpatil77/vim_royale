@@ -38,8 +38,6 @@ export function TerminalLayout({
 
   return (
     <div className="terminal-shell">
-      {crtEnabled && <div className="terminal-scanlines" aria-hidden="true" />}
-
       <header className="terminal-topbar">
         <span
           onClick={() => { navigate("/"); closeMenu(); }}

@@ -43,8 +43,6 @@ export default function Landing() {
   return (
     <TerminalLayout crtEnabled={crtEnabled} onCrtToggle={toggleCrt}>
       <main className="vr-main">
-
-        {/* ── Hero ── */}
         <section className="vr-hero">
           <VimRoyaleHero />
           <p className="vr-tagline">&gt; one shall lose, one shall vim</p>
