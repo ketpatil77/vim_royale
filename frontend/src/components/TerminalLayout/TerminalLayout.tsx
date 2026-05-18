@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { useTerminalCommands } from "./useTerminalCommands";
-import "./TerminalLayout.css";
 import VimGlyphBackground from "../AnimatedBackgrounds/VimGlyphBackground";
+import "./TerminalLayout.css";
+import { useTerminalCommands } from "./useTerminalCommands";
 
 interface TerminalLayoutProps {
   children: ReactNode;
@@ -64,14 +64,6 @@ export function TerminalLayout({
         )}
 
         <nav className={`terminal-nav ${isMenuOpen ? "open" : ""}`}>
-          <span
-            onClick={() => { navigate("/leaderboard"); closeMenu(); }}
-            className="terminal-nav-link"
-          >
-            :leaderboard
-          </span>
-          <span onClick={closeMenu} className="terminal-nav-link">:docs</span>
-
           <button
             className="terminal-crt-toggle"
             onClick={() => { onCrtToggle?.(); closeMenu(); }}
@@ -84,6 +76,14 @@ export function TerminalLayout({
               <span className="terminal-crt-toggle-thumb" />
             </span>
           </button>
+
+          <span
+            onClick={() => { navigate("/leaderboard"); closeMenu(); }}
+            className="terminal-nav-link"
+          >
+            :leaderboard
+          </span>
+          <span onClick={() => {navigate("docs/vimtutor")}} className="terminal-nav-link">:tutor</span>
 
           {user ? (
             <span

@@ -3,15 +3,18 @@ import CRTEffect from 'vault66-crt-effect'
 import "vault66-crt-effect/dist/vault66-crt-effect.css"
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { CRTProvider, useCRT } from './contexts/CRTContext'
+import { TimedGameProvider } from './contexts/TimedGameContext'
 import { VimTutor } from './pages/docs/vimTutor'
-import Play from './pages/Play/Play'
-import MatchPage from './pages/Play/MatchPage'
+import EditProfile from './pages/EditProfile'
 import Landing from './pages/Landing'
 import Leaderboard from './pages/leaderboard'
 import AuthCallback from './pages/login/AuthCallback'
 import Login from './pages/login/Login'
+import DifficultySelect from './pages/Play/DifficultySelect'
+import MatchPage from './pages/Play/MatchPage'
+import Play from './pages/Play/Play'
+import TimedMatchPage from './pages/Play/TimedMatchPage'
 import UserProfile from './pages/userProfile'
-import EditProfile from './pages/EditProfile'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()
@@ -51,10 +54,26 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/play/difficulty"
+        element={
+          <ProtectedRoute>
+            <DifficultySelect />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/match/multiplayer"
         element={
           <ProtectedRoute>
             <MatchPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/match/timed"
+        element={
+          <ProtectedRoute>
+            <TimedMatchPage />
           </ProtectedRoute>
         }
       />
@@ -89,7 +108,9 @@ function AppContent() {
 
   return (
       <CRTEffect theme='green' enableScanlines={crtEnabled} scanlineOpacity={0.1} scanlineThickness={2} scanlineGap={3} enableSweep={crtEnabled} sweepDuration={12} sweepThickness={8} sweepStyle='classic' enableGlow={false} enableEdgeGlow={true} edgeGlowColor='rgba(91, 179, 135, 0.25)' edgeGlowSize={25} enableFlicker={crtEnabled} flickerIntensity={0.03} flickerSpeed={2} enableVignette={true} vignetteIntensity={0.2} enableGlitch={false}>
-        <AppRoutes />
+        <TimedGameProvider>
+          <AppRoutes />
+        </TimedGameProvider>
       </CRTEffect>
     )
 }

@@ -21,11 +21,17 @@ export default function Play() {
             <span className="play-mode-desc">Challenge other players in real-time</span>
           </button>
           <button
-            className="play-mode-btn play-mode-btn--dim"
-            disabled
+            className="play-mode-btn"
+            onClick={() => navigate('/play/difficulty')}
           >
             <span className="play-mode-label">SINGLE PLAYER</span>
-            <span className="play-mode-desc">Practice your vim skills (coming soon)</span>
+            <span className="play-mode-desc">Practice your vim skills with a 120s timer</span>
+          </button>
+          <button
+            className="play-mode-btn play-mode-btn--dim"
+          >
+            <span className="play-mode-label">MINI GAMES</span>
+            <span className="play-mode-desc">Coming soon...</span>
           </button>
         </div>
       </div>

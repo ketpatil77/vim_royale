@@ -117,8 +117,8 @@ class Particle {
 }
 
 export default function NeuralParticleBackground({
-  count = 200,
-  connectDist = 230,
+  count = 120,
+  connectDist = 130,
   color = [0, 220, 100],
   speed = 1,
   className = '',
@@ -148,34 +148,41 @@ export default function NeuralParticleBackground({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // Size canvas to its CSS container
+    // Size canvas to its CSS container, scaled by devicePixelRatio so it's
+    // sharp on retina / mobile screens (otherwise the canvas is stretched
+    // from CSS pixels → physical pixels and looks blurry)
+    const dpr = window.devicePixelRatio ?? 1
     const setSize = () => {
-      // getBoundingClientRect gives the true rendered size after CSS layout,
-      // so the logical canvas resolution matches exactly — no sparse particles
       const rect = canvas.getBoundingClientRect()
-      canvas.width = Math.round(rect.width)
-      canvas.height = Math.round(rect.height)
+      canvas.width  = Math.round(rect.width  * dpr)
+      canvas.height = Math.round(rect.height * dpr)
+      // Scale all draw calls down so coordinates stay in CSS-pixel space
+      ctx.scale(dpr, dpr)
     }
     setSize()
 
-    // Create particles using current canvas dimensions
+    // Create particles using CSS-pixel dimensions (canvas.width is physical
+    // pixels after DPR scaling, so divide back down)
     const particles = Array.from(
       { length: count },
-      () => new Particle(canvas.width, canvas.height, speed, true),
+      () => new Particle(canvas.width / dpr, canvas.height / dpr, speed, true),
     )
 
     const mouse: MouseState = {
-      x: canvas.width / 2,
-      y: canvas.height / 2,
+      x: canvas.width / dpr / 2,
+      y: canvas.height / dpr / 2,
       active: false,
     }
 
     const pulses: Pulse[] = []
 
-    // On resize: update canvas size AND tell every particle the new bounds
+    // On resize: reset transform, resize canvas, re-apply DPR scale,
+    // then tell every particle the new CSS-pixel bounds
     const onResize = () => {
+      ctx.setTransform(1, 0, 0, 1, 0, 0) // reset before re-scaling
       setSize()
-      for (const p of particles) p.resize(canvas.width, canvas.height)
+      // Particles use CSS-pixel coords, so divide by dpr
+      for (const p of particles) p.resize(canvas.width / dpr, canvas.height / dpr)
     }
     window.addEventListener('resize', onResize)
 
