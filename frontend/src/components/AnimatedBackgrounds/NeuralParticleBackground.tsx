@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, type CSSProperties } from 'react'
+import { useEffect, useRef, useCallback, useState, type CSSProperties } from 'react'
 
 interface NeuralParticleBackgroundProps {
   count?: number
@@ -125,6 +125,7 @@ export default function NeuralParticleBackground({
   style = {},
 }: NeuralParticleBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const [isMobile, setIsMobile] = useState(false)
 
   const rgba = useCallback(
     (alpha: number) => `rgba(${color[0]},${color[1]},${color[2]},${alpha})`,
@@ -140,6 +141,15 @@ export default function NeuralParticleBackground({
     },
     [color],
   )
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  const particleCount = isMobile ? 100 : count
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -164,7 +174,7 @@ export default function NeuralParticleBackground({
     // Create particles using CSS-pixel dimensions (canvas.width is physical
     // pixels after DPR scaling, so divide back down)
     const particles = Array.from(
-      { length: count },
+      { length: particleCount },
       () => new Particle(canvas.width / dpr, canvas.height / dpr, speed, true),
     )
 
@@ -348,7 +358,7 @@ export default function NeuralParticleBackground({
       canvas.removeEventListener('touchmove', onTouchMove)
       canvas.removeEventListener('touchend', onTouchEnd)
     }
-  }, [count, connectDist, speed, rgba, rgbaShifted])
+  }, [particleCount, connectDist, speed, rgba, rgbaShifted])
 
   return (
     <div
