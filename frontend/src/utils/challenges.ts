@@ -959,7 +959,7 @@ export const challenges: Challenge[] = [
 
 export type Difficulty = 'beginner' | 'intermediate' | 'advanced' | 'expert'
 
-export function getRandomChallenge(difficulty: Difficulty): Challenge {
+export function getRandomChallenge(_difficulty: Difficulty): Challenge {
   const shuffled = [...challenges].sort(() => Math.random() - 0.5)
   return shuffled[0]
 }
