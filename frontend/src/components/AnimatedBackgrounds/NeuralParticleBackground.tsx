@@ -117,8 +117,8 @@ class Particle {
 }
 
 export default function NeuralParticleBackground({
-  count = 120,
-  connectDist = 130,
+  count = 200,
+  connectDist = 300,
   color = [0, 220, 100],
   speed = 1,
   className = '',
