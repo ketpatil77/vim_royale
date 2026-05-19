@@ -1,5 +1,5 @@
 import { useRef, useCallback } from 'react'
-import type { Envelope, MatchState, GameStartPayload, BufferUpdatePayload, GameOverPayload, BufferDelta } from './types'
+import type { Envelope, MatchState, GameStartPayload, BufferUpdatePayload, GameOverPayload, BufferDelta, KeystrokesData, PlayerFinishedPayload } from './types'
 import { WS_URL, getOrCreatePlayerId } from './player'
 import {
   parseHelloAckPayload,
@@ -75,9 +75,20 @@ export function useGameSocket() {
     sendEnvelope({
       type: 'PLAYER_FINISHED',
       matchId: matchStateRef.current.matchId,
-      payload: { finalHash: '' },
+      payload: { finalHash: '' } as PlayerFinishedPayload,
     })
   }, [sendEnvelope])
+
+  const sendPlayerFinishedWithKeystrokes = useCallback(
+    (keystrokes: KeystrokesData) => {
+      sendEnvelope({
+        type: 'PLAYER_FINISHED',
+        matchId: matchStateRef.current.matchId,
+        payload: { finalHash: '', keystrokes } as PlayerFinishedPayload,
+      })
+    },
+    [sendEnvelope]
+  )
 
   const buildHelloPayload = useCallback(() => {
     if (user) {
@@ -207,5 +218,6 @@ export function useGameSocket() {
     disconnect,
     sendBufferUpdate,
     sendPlayerFinished,
+    sendPlayerFinishedWithKeystrokes,
   }
 }

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"log"
 	"time"
 
@@ -39,7 +40,7 @@ func (h *Hub) relayBufferUpdate(sender *Client, message Envelope) {
 	h.sendEnvelopeLocked(opponent, message)
 }
 
-func (h *Hub) finishMatch(client *Client) {
+func (h *Hub) finishMatch(client *Client, message Envelope) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -72,6 +73,14 @@ func (h *Hub) finishMatch(client *Client) {
 		loserAvatar = opponent.AvatarURL
 	}
 
+	var keystrokesData *KeystrokesData
+	if message.Payload != nil {
+		var payload PlayerFinishedPayload
+		if err := json.Unmarshal(message.Payload, &payload); err == nil {
+			keystrokesData = payload.Keystrokes
+		}
+	}
+
 	dbConn, err := database.GetPostgresConnection()
 	if err != nil {
 		log.Printf("failed to get postgres connection: %v", err)
@@ -84,6 +93,14 @@ func (h *Hub) finishMatch(client *Client) {
 			loserDelta = ld
 			winnerNewRating = wnr
 			loserNewRating = lnr
+		}
+
+		if keystrokesData != nil {
+			if len(keystrokesData.PlayerA) > 0 {
+				playerAData, _ := json.Marshal(keystrokesData.PlayerA)
+				playerBData, _ := json.Marshal(keystrokesData.PlayerB)
+				database.SaveMatchKeystrokes(dbConn, match.ID, client.ID, playerAData, playerBData)
+			}
 		}
 	}
 

@@ -35,7 +35,7 @@ func GetPostgresConnection() (*gorm.DB, error) {
 
 		log.Println("Database connection established")
 
-		if err := db.AutoMigrate(&models.User{}, &models.Match{}); err != nil {
+		if err := db.AutoMigrate(&models.User{}, &models.Match{}, &models.MatchKeystroke{}); err != nil {
 			log.Printf("AutoMigrate error: %v", err)
 		} else {
 			log.Println("Database migration complete")

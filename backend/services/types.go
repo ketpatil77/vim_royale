@@ -55,10 +55,21 @@ type BufferUpdatePayload struct {
 	Cursor  int    `json:"cursor,omitempty"`
 }
 
+type KeystrokeEntry struct {
+	Ops       json.RawMessage `json:"ops"`
+	Timestamp int64            `json:"timestamp"`
+}
+
+type KeystrokesData struct {
+	PlayerA []KeystrokeEntry `json:"playerA"`
+	PlayerB []KeystrokeEntry `json:"playerB"`
+}
+
 type PlayerFinishedPayload struct {
-	FinalHash string `json:"finalHash,omitempty"`
-	WPM       int    `json:"wpm,omitempty"`
-	Accuracy  int    `json:"accuracy,omitempty"`
+	FinalHash  string          `json:"finalHash,omitempty"`
+	WPM        int             `json:"wpm,omitempty"`
+	Accuracy   int             `json:"accuracy,omitempty"`
+	Keystrokes *KeystrokesData `json:"keystrokes,omitempty"`
 }
 
 type GameOverPayload struct {

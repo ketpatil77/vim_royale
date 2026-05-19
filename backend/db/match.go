@@ -1,6 +1,7 @@
 package database
 
 import (
+	"encoding/json"
 	"time"
 	"vim_royale/backend/models"
 	"vim_royale/backend/utils"
@@ -59,4 +60,15 @@ func findUserByPlayerID(db *gorm.DB, playerID string) (*models.User, error) {
 		return nil, result.Error
 	}
 	return &user, nil
+}
+
+func SaveMatchKeystrokes(db *gorm.DB, matchID string, playerID string, sent json.RawMessage, received json.RawMessage) error {
+	keystroke := &models.MatchKeystroke{
+		MatchID:   matchID,
+		PlayerID:  playerID,
+		Sent:      sent,
+		Received:  received,
+		CreatedAt: time.Now(),
+	}
+	return db.Create(keystroke).Error
 }

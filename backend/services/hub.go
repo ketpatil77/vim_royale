@@ -153,7 +153,7 @@ func (h *Hub) handleIncoming(inbound InboundMessage) {
 	case MsgBufferUpdate:
 		h.relayBufferUpdate(inbound.Client, inbound.Message)
 	case MsgPlayerFinished:
-		h.finishMatch(inbound.Client)
+		h.finishMatch(inbound.Client, inbound.Message)
 	default:
 		h.sendError(inbound.Client, "unsupported_message", "unsupported message type")
 	}
