@@ -65,7 +65,7 @@ export default function MatchPage() {
 
   const getViewState = useCallback(() => viewStateRef.current, [])
 
-  const { connect, disconnect, sendBufferUpdate, sendPlayerFinished, sendPlayerFinishedWithKeystrokes } = useGameSocket()
+  const { connect, disconnect, sendBufferUpdate, sendPlayerFinishedWithKeystrokes } = useGameSocket()
   const {
     leftRef,
     rightRef,

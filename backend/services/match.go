@@ -85,7 +85,13 @@ func (h *Hub) finishMatch(client *Client, message Envelope) {
 	if err != nil {
 		log.Printf("failed to get postgres connection: %v", err)
 	} else {
-		wd, ld, wnr, lnr, mErr := database.CreateMatchAndSendRatingDelta(dbConn, client.ID, loserID)
+		persistedMatchID, wd, ld, wnr, lnr, mErr := database.CreateMatchAndSendRatingDelta(
+			dbConn,
+			client.ID,
+			loserID,
+			match.TargetCode,
+			match.PollutedCode,
+		)
 		if mErr != nil {
 			log.Printf("failed to create match: %v", mErr)
 		} else {
@@ -93,22 +99,21 @@ func (h *Hub) finishMatch(client *Client, message Envelope) {
 			loserDelta = ld
 			winnerNewRating = wnr
 			loserNewRating = lnr
-		}
-
-		if keystrokesData != nil {
-			if len(keystrokesData.PlayerA) > 0 {
+			if keystrokesData != nil && len(keystrokesData.PlayerA) > 0 {
 				playerAData, _ := json.Marshal(keystrokesData.PlayerA)
 				playerBData, _ := json.Marshal(keystrokesData.PlayerB)
-				database.SaveMatchKeystrokes(dbConn, match.ID, client.ID, playerAData, playerBData)
+				if err := database.SaveMatchKeystrokes(dbConn, persistedMatchID, client.ID, playerAData, playerBData); err != nil {
+					log.Printf("failed to save match keystrokes: %v", err)
+				}
 			}
 		}
 	}
 
 	result := GameOverPayload{
 		MatchID:         match.ID,
-		WinnerID:         client.ID,
-		LoserID:          loserID,
-		WinnerName:       winnerName,
+		WinnerID:        client.ID,
+		LoserID:         loserID,
+		WinnerName:      winnerName,
 		WinnerAvatar:    winnerAvatar,
 		WinnerNewRating: winnerNewRating,
 		WinnerDelta:     winnerDelta,

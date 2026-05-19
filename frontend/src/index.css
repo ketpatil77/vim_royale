@@ -29,7 +29,7 @@
   --text-bright: #ffffff;
   --text-dim: #888888;
   --mono: 'Jetbrains Mono', 'Fira Code', monospace;
-  --display: 'Cormorant Garamond', Georgia, serif;
+  --display: 'Jetbrains Mono', Georgia, serif;
   --glow: 0 0 8px #39ff14;
 }
 

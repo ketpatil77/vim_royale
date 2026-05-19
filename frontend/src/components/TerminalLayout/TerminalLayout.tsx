@@ -83,7 +83,7 @@ export function TerminalLayout({
           >
             :leaderboard
           </span>
-          <span onClick={() => {navigate("docs/vimtutor")}} className="terminal-nav-link">:tutor</span>
+          <span onClick={() => {navigate("/docs/vimtutor")}} className="terminal-nav-link">:tutor</span>
 
           {user ? (
             <span
