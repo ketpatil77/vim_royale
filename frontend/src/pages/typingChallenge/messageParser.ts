@@ -2,6 +2,7 @@ import type {
   HelloAckPayload,
   GameStartPayload,
   BufferUpdatePayload,
+  BufferDelta,
   GameOverPayload,
   ErrorPayload,
 } from './types'
@@ -41,13 +42,20 @@ export function parseGameStartPayload(payload: unknown): GameStartPayload | null
 }
 
 export function parseBufferUpdatePayload(payload: unknown): BufferUpdatePayload | null {
-  if (!isRecord(payload) || typeof payload.content !== 'string') return null
-  if (typeof payload.cursor !== 'undefined' && typeof payload.cursor !== 'number') return null
+  if (!isRecord(payload)) return null
 
-  return {
-    content: payload.content,
-    cursor: typeof payload.cursor === 'number' ? payload.cursor : undefined,
+  const content = typeof payload.content === 'string' ? payload.content : undefined
+  const cursor = typeof payload.cursor === 'number' ? payload.cursor : undefined
+
+  let delta: BufferDelta | undefined = undefined
+  const deltaObj = payload.delta as Record<string, unknown> | undefined
+  if (deltaObj && Array.isArray(deltaObj.ops)) {
+    delta = { ops: deltaObj.ops as BufferDelta['ops'] }
   }
+
+  if (!content && !delta) return null
+
+  return { content, delta, cursor }
 }
 
 export function parseGameOverPayload(payload: unknown): GameOverPayload | null {

@@ -1,5 +1,5 @@
 import { useRef, useCallback } from 'react'
-import type { Envelope, MatchState, GameStartPayload, BufferUpdatePayload, GameOverPayload } from './types'
+import type { Envelope, MatchState, GameStartPayload, BufferUpdatePayload, GameOverPayload, BufferDelta } from './types'
 import { WS_URL, getOrCreatePlayerId } from './player'
 import {
   parseHelloAckPayload,
@@ -13,7 +13,7 @@ import { useAuth } from '../../contexts/AuthContext'
 type GameSocketCallbacks = {
   onHelloAck: (playerId: string) => void
   onGameStart: (payload: GameStartPayload) => void
-  onBufferUpdate: (content: string) => void
+  onBufferUpdate: (content: string | undefined, delta: BufferDelta | undefined) => void
   onGameOver: (payload: GameOverPayload, playerId: string) => void
   onError: (code: string, message: string) => void
   onConnecting: () => void
@@ -59,13 +59,13 @@ export function useGameSocket() {
   }, [])
 
   const sendBufferUpdate = useCallback(
-    (content: string) => {
+    (content?: string, delta?: BufferDelta) => {
       const seq = seqRef.current++
       sendEnvelope({
         type: 'BUFFER_UPDATE',
         matchId: matchStateRef.current.matchId,
         seq,
-        payload: { content } as BufferUpdatePayload,
+        payload: { content, delta } as BufferUpdatePayload,
       })
     },
     [sendEnvelope]
@@ -131,7 +131,7 @@ export function useGameSocket() {
             callbacks.onError('payload_error', 'Invalid BUFFER_UPDATE payload')
             return
           }
-          callbacks.onBufferUpdate(payload.content)
+          callbacks.onBufferUpdate(payload.content, payload.delta)
           break
         }
         case 'GAME_OVER': {

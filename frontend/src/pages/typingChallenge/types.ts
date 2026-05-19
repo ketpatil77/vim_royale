@@ -33,8 +33,17 @@ export type GameStartPayload = {
   pollutedCode: string
 }
 
+export type BufferDeltaOp =
+  | { type: 'insert'; pos: number; text: string }
+  | { type: 'delete'; from: number; to: number }
+
+export type BufferDelta = {
+  ops: BufferDeltaOp[]
+}
+
 export type BufferUpdatePayload = {
-  content: string
+  content?: string
+  delta?: BufferDelta
   cursor?: number
 }
 

@@ -7,7 +7,7 @@ import {
 } from '@codemirror/commands'
 import { javascript } from '@codemirror/lang-javascript'
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language'
-import { EditorState, type Extension } from '@codemirror/state'
+import { EditorState, type Extension, ChangeSet } from '@codemirror/state'
 import { vscodeDark } from '@uiw/codemirror-theme-vscode'
 import { EditorView, drawSelection, keymap, lineNumbers } from '@codemirror/view'
 import { vim } from '@replit/codemirror-vim'
@@ -54,7 +54,7 @@ const editorTheme = EditorView.theme({
 type CreateEditorStateArgs = {
   content: string
   readOnly: boolean
-  onDocChanged?: (content: string) => void
+  onDocChanged?: (content: string, changes: ChangeSet) => void
 }
 
 export function createEditorState({
@@ -86,7 +86,7 @@ export function createEditorState({
   if (onDocChanged) {
     extensions.push(
       EditorView.updateListener.of((update) => {
-        if (update.docChanged) onDocChanged(update.state.doc.toString())
+        if (update.docChanged) onDocChanged(update.state.doc.toString(), update.changes)
       }),
     )
   }

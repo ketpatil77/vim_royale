@@ -2,6 +2,7 @@ import type {
   GameStartPayload,
   GameOverPayload,
   MatchState,
+  BufferDelta,
 } from './types'
 
 type Setters = {
@@ -25,6 +26,7 @@ export function createSocketCallbacks(
   refs: Refs,
   matchState: { playerId: string },
   replaceOpponentContent: (content: string) => void,
+  applyDelta: (delta: BufferDelta) => void,
   onMatchStart: () => void,
   getViewState: () => string
 ) {
@@ -69,8 +71,12 @@ export function createSocketCallbacks(
       setViewState('countdown')
     },
 
-    onBufferUpdate: (content: string) => {
-      replaceOpponentContent(content)
+    onBufferUpdate: (content: string | undefined, delta: BufferDelta | undefined) => {
+      if (delta) {
+        applyDelta(delta)
+      } else if (content) {
+        replaceOpponentContent(content)
+      }
     },
 
     onGameOver: (payload: GameOverPayload, playerId: string) => {

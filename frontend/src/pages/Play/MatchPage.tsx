@@ -67,6 +67,8 @@ export default function MatchPage() {
     cleanup: cleanupEditors,
     setEditors,
     replaceOpponentContent,
+    applyDelta,
+    changesToDelta,
     getPlayerContent,
   } = useEditors()
 
@@ -104,6 +106,7 @@ export default function MatchPage() {
       },
       { playerId: matchState.playerId },
       replaceOpponentContent,
+      applyDelta,
       () => beginMatchmaking(),
       getViewState
     )
@@ -123,17 +126,18 @@ export default function MatchPage() {
     }
   }, [disconnect, cleanupEditors])
 
-  const handleContentChange = useCallback(() => {
+  const handleContentChange = useCallback((_content: string, changes: any) => {
     if (viewStateRef.current !== 'playing') return
 
-    const content = getPlayerContent()
-    sendBufferUpdate(content)
+    const delta = changesToDelta(changes)
+    sendBufferUpdate(undefined, delta)
 
+    const content = getPlayerContent()
     if (!finishSentRef.current && content === targetCodeRef.current) {
       finishSentRef.current = true
       sendPlayerFinished()
     }
-  }, [sendBufferUpdate, sendPlayerFinished, getPlayerContent])
+  }, [sendBufferUpdate, sendPlayerFinished, getPlayerContent, changesToDelta])
 
   useEffect(() => {
     if (viewState === 'playing') {
