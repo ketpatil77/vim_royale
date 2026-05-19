@@ -15,6 +15,7 @@ import MatchPage from './pages/Play/MatchPage'
 import Play from './pages/Play/Play'
 import TimedMatchPage from './pages/Play/TimedMatchPage'
 import UserProfile from './pages/userProfile'
+import MatchReplayPage from './pages/MatchReplay/MatchReplay'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()
@@ -98,6 +99,10 @@ function AppRoutes() {
             <EditProfile />
           </ProtectedRoute>
         }
+      />
+      <Route
+        path="/match/:matchId/replay"
+        element={<MatchReplayPage />}
       />
     </Routes>
   )

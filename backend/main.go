@@ -48,6 +48,8 @@ func main() {
 	r.GET("/leaderboard", middleware.RateLimitMiddleware(100, 10*time.Minute), handlers.GetLeaderboard)
 
 	r.GET("/users/:username", middleware.RateLimitMiddleware(100, 10*time.Minute), handlers.GetUserFromUsername)
+	r.GET("/users/:username/matches", middleware.RateLimitMiddleware(100, 10*time.Minute), handlers.GetUserMatches)
+	r.GET("/matches/:matchId/replay", middleware.RateLimitMiddleware(100, 10*time.Minute), handlers.GetMatchReplay)
 	addr := os.Getenv("ADDR")
 	if addr == "" {
 		addr = ":8080"

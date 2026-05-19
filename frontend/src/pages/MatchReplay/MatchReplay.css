@@ -1,0 +1,356 @@
+.match-replay-page {
+  min-height: calc(100vh - 52px);
+  height: calc(100vh - 52px);
+  width: 100%;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 16px;
+  overflow: hidden;
+}
+
+.match-replay-feedback {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  color: var(--green);
+  letter-spacing: 0.06em;
+}
+
+.match-replay-feedback--error {
+  color: var(--red);
+}
+
+.match-replay-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+}
+
+.match-replay-title {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--green);
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.match-replay-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 6px;
+}
+
+.match-replay-back-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 7px 12px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.match-replay-back-btn:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.replay-editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  flex: 1;
+  min-height: 0;
+}
+
+.replay-editor-panel {
+  position: relative;
+  background: linear-gradient(to bottom, rgba(15, 15, 18, 0.96), rgba(8, 8, 10, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.02),
+    0 20px 50px rgba(0, 0, 0, 0.6);
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.replay-editor-panel--p0 {
+  box-shadow:
+    0 0 0 1px rgba(57, 255, 20, 0.15),
+    0 20px 50px rgba(0, 0, 0, 0.6);
+}
+
+.replay-editor-panel--p1 {
+  box-shadow:
+    0 0 0 1px rgba(255, 68, 68, 0.15),
+    0 20px 50px rgba(0, 0, 0, 0.6);
+}
+
+.replay-editor-topbar {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
+  flex-shrink: 0;
+}
+
+.traffic-lights {
+  display: flex;
+  gap: 8px;
+}
+
+.dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+
+.dot.red {
+  background: #ff5f57;
+}
+
+.dot.yellow {
+  background: #febc2e;
+}
+
+.dot.green {
+  background: #28c840;
+}
+
+.filename {
+  margin-left: 16px;
+  color: #6b7280;
+  font-size: 12px;
+  font-family: var(--mono);
+}
+
+.replay-player-info-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.replay-player-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.replay-player-name {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-bright);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.replay-finished-chip {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #000;
+  background: var(--green);
+  border: 1px solid var(--green);
+  padding: 2px 8px;
+  letter-spacing: 0.06em;
+}
+
+.replay-editor-content {
+  flex: 1;
+  overflow: hidden;
+  background: #10131a;
+}
+
+.replay-editor-mount .cm-editor {
+  height: 100%;
+}
+
+.replay-editor-mount .cm-scroller {
+  overflow: auto;
+}
+
+.replay-editor-stats {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.replay-editor-stats b {
+  color: var(--text-bright);
+  font-weight: 500;
+}
+
+.match-replay-controls-wrap {
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  padding: 12px;
+  flex-shrink: 0;
+}
+
+.replay-timeline {
+  position: relative;
+  height: 34px;
+  background: #11161f;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.replay-tick {
+  position: absolute;
+  width: 2px;
+  height: 10px;
+  border-radius: 2px;
+  opacity: 0.7;
+}
+
+.replay-tick--p0 {
+  background: #39ff14;
+}
+
+.replay-tick--p1 {
+  background: #ff5f57;
+}
+
+.replay-progress-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: rgba(57, 255, 20, 0.12);
+  pointer-events: none;
+}
+
+.replay-playhead {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--green);
+  transform: translateX(-1px);
+  pointer-events: none;
+}
+
+.match-replay-controls {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.replay-control-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  padding: 6px 12px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.replay-control-btn:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.replay-control-btn--primary {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.replay-control-btn--active {
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-bg);
+}
+
+.match-replay-time {
+  margin-left: 6px;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.match-replay-speed-group {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.match-replay-speed-label {
+  color: var(--text-dim);
+  font-size: 11px;
+  font-family: var(--mono);
+}
+
+@media (max-width: 1024px) {
+  .match-replay-page {
+    height: auto;
+    min-height: calc(100vh - 52px);
+    overflow: visible;
+  }
+
+  .replay-editor-grid {
+    grid-template-columns: 1fr;
+    flex: none;
+  }
+
+  .replay-editor-panel {
+    min-height: 360px;
+    max-height: 360px;
+  }
+}
+
+@media (max-width: 640px) {
+  .match-replay-page {
+    padding: 10px;
+  }
+
+  .match-replay-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .match-replay-controls {
+    flex-wrap: wrap;
+  }
+
+  .match-replay-speed-group {
+    width: 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+  }
+}

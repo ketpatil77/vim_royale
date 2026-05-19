@@ -111,8 +111,8 @@ func (h *Hub) handleDisconnectWin(match *Match, winner *Client, loser *Client) {
 
 	dbConn, err := database.GetPostgresConnection()
 	if err == nil {
-		wd, ld, wnr, lnr, mErr := database.CreateMatchAndSendRatingDelta(
-			dbConn, winner.ID, loser.ID,
+		_, wd, ld, wnr, lnr, mErr := database.CreateMatchAndSendRatingDelta(
+			dbConn, winner.ID, loser.ID, match.TargetCode, match.PollutedCode,
 		)
 		if mErr == nil {
 			winnerDelta = wd
@@ -153,7 +153,7 @@ func (h *Hub) handleIncoming(inbound InboundMessage) {
 	case MsgBufferUpdate:
 		h.relayBufferUpdate(inbound.Client, inbound.Message)
 	case MsgPlayerFinished:
-		h.finishMatch(inbound.Client)
+		h.finishMatch(inbound.Client, inbound.Message)
 	default:
 		h.sendError(inbound.Client, "unsupported_message", "unsupported message type")
 	}

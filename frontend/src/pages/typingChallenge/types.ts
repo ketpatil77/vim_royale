@@ -45,6 +45,7 @@ export type BufferUpdatePayload = {
   content?: string
   delta?: BufferDelta
   cursor?: number
+  timestamp?: number
 }
 
 export type GameOverPayload = {
@@ -77,4 +78,21 @@ export type MatchState = {
   opponentAvatar: string
   opponentRating: number
   matchId: string
+}
+
+export type KeystrokeEntry = {
+  ops: BufferDeltaOp[]
+  timestamp: number
+}
+
+export type KeystrokesData = {
+  playerA: KeystrokeEntry[]
+  playerB: KeystrokeEntry[]
+}
+
+export type PlayerFinishedPayload = {
+  finalHash?: string
+  wpm?: number
+  accuracy?: number
+  keystrokes?: KeystrokesData
 }

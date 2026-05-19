@@ -6,7 +6,7 @@ import { EditorPanel } from '../../components/EditorPanel/EditorPanel'
 import { TerminalLayout } from '../../components/TerminalLayout/TerminalLayout'
 import MatchResultModal, { parseResult } from '../../components/MatchResultModal/MatchResultModal'
 import { createSocketCallbacks } from '../typingChallenge/createSocketCallbacks'
-import type { MatchState, ViewState, GameOverPayload } from '../typingChallenge/types'
+import type { MatchState, ViewState, GameOverPayload, KeystrokeEntry } from '../typingChallenge/types'
 import { useEditors } from '../typingChallenge/useEditors'
 import { useGameSocket } from '../typingChallenge/useGameSocket'
 import { sounds } from '../../utils/sound'
@@ -35,6 +35,11 @@ export default function MatchPage() {
   const targetCodeRef = useRef('')
   const pollutedCodeRef = useRef('')
 
+  const keystrokesRef = useRef<{ sent: KeystrokeEntry[]; received: KeystrokeEntry[] }>({
+    sent: [],
+    received: [],
+  })
+
   const viewStateRef = useRef(viewState)
   useEffect(() => {
     viewStateRef.current = viewState
@@ -60,7 +65,7 @@ export default function MatchPage() {
 
   const getViewState = useCallback(() => viewStateRef.current, [])
 
-  const { connect, disconnect, sendBufferUpdate, sendPlayerFinished } = useGameSocket()
+  const { connect, disconnect, sendBufferUpdate, sendPlayerFinishedWithKeystrokes } = useGameSocket()
   const {
     leftRef,
     rightRef,
@@ -73,6 +78,21 @@ export default function MatchPage() {
   } = useEditors()
 
   const finishSentRef = useRef(false)
+
+  const recordReceivedKeystroke = useCallback((delta: { ops: any[] }) => {
+    if (viewStateRef.current !== 'playing') return
+    keystrokesRef.current.received.push({
+      ops: delta.ops,
+      timestamp: Date.now(),
+    })
+  }, [])
+
+  const handlePlayerWon = useCallback(() => {
+    sendPlayerFinishedWithKeystrokes({
+      playerA: keystrokesRef.current.sent,
+      playerB: keystrokesRef.current.received,
+    })
+  }, [sendPlayerFinishedWithKeystrokes])
 
   // beginMatchmaking is defined first, then called directly from the mount effect
   const beginMatchmaking = useCallback(() => {
@@ -107,12 +127,14 @@ export default function MatchPage() {
       { playerId: matchState.playerId },
       replaceOpponentContent,
       applyDelta,
+      recordReceivedKeystroke,
+      handlePlayerWon,
       () => beginMatchmaking(),
       getViewState
     )
 
     connect(callbacks)
-  }, [disconnect, cleanupEditors, connect, replaceOpponentContent, matchState, getViewState])
+  }, [disconnect, cleanupEditors, connect, replaceOpponentContent, applyDelta, recordReceivedKeystroke, handlePlayerWon, matchState, getViewState])
 
   useEffect(() => {
     beginMatchmaking()
@@ -126,18 +148,33 @@ export default function MatchPage() {
     }
   }, [disconnect, cleanupEditors])
 
+  useEffect(() => {
+    if (viewState === 'playing') {
+      keystrokesRef.current = { sent: [], received: [] }
+    }
+  }, [viewState])
+
   const handleContentChange = useCallback((_content: string, changes: any) => {
     if (viewStateRef.current !== 'playing') return
 
     const delta = changesToDelta(changes)
     sendBufferUpdate(undefined, delta)
 
+    keystrokesRef.current.sent.push({
+      ops: delta.ops,
+      timestamp: Date.now(),
+    })
+
     const content = getPlayerContent()
     if (!finishSentRef.current && content === targetCodeRef.current) {
       finishSentRef.current = true
-      sendPlayerFinished()
+      const keystrokes: KeystrokeEntry[] = keystrokesRef.current.sent
+      sendPlayerFinishedWithKeystrokes({
+        playerA: keystrokes,
+        playerB: keystrokesRef.current.received,
+      })
     }
-  }, [sendBufferUpdate, sendPlayerFinished, getPlayerContent, changesToDelta])
+  }, [sendBufferUpdate, getPlayerContent, changesToDelta, sendPlayerFinishedWithKeystrokes])
 
   useEffect(() => {
     if (viewState === 'playing') {
