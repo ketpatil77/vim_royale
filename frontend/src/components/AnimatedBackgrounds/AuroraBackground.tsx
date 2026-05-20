@@ -5,11 +5,6 @@ interface AuroraBackgroundProps {
   style?: CSSProperties
 }
 
-interface MouseState {
-  x: number
-  y: number
-}
-
 interface Dot {
   x: number
   y: number
@@ -104,8 +99,6 @@ export default function AuroraBackground({
     }
     setSize()
 
-    const mouse: MouseState = { x: W / 2, y: H / 2 }
-
     // ── Orbs ─────────────────────────────────────────────────────────────────
     const getW = () => W
     const getH = () => H
@@ -169,54 +162,13 @@ export default function AuroraBackground({
       }
     }
 
-    const drawCursor = (t: number) => {
-      const { x: mx, y: my } = mouse
-      const pulse = 0.5 + 0.5 * Math.sin(t * 3)
-      const len = 14 + pulse * 4
-
-      ctx.strokeStyle = `rgba(0,255,100,${0.55 + pulse * 0.2})`
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.moveTo(mx - len, my)
-      ctx.lineTo(mx + len, my)
-      ctx.stroke()
-
-      ctx.beginPath()
-      ctx.moveTo(mx, my - len)
-      ctx.lineTo(mx, my + len)
-      ctx.stroke()
-
-      ctx.beginPath()
-      ctx.arc(mx, my, 2, 0, Math.PI * 2)
-      ctx.fillStyle = `rgba(0,255,100,${0.7 + pulse * 0.3})`
-      ctx.fill()
-
-      ctx.beginPath()
-      ctx.arc(mx, my, 10 + pulse * 3, 0, Math.PI * 2)
-      ctx.strokeStyle = `rgba(0,255,100,${0.12 + pulse * 0.08})`
-      ctx.lineWidth = 1
-      ctx.stroke()
-    }
+    
 
     // ── Events ────────────────────────────────────────────────────────────────
-    const onMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect()
-      mouse.x = e.clientX - rect.left
-      mouse.y = e.clientY - rect.top
-    }
-    const onTouchMove = (e: TouchEvent) => {
-      const rect = canvas.getBoundingClientRect()
-      mouse.x = e.touches[0].clientX - rect.left
-      mouse.y = e.touches[0].clientY - rect.top
-    }
     const onResize = () => {
       setSize()
-      mouse.x = W / 2
-      mouse.y = H / 2
     }
 
-    canvas.addEventListener('mousemove', onMouseMove)
-    canvas.addEventListener('touchmove', onTouchMove, { passive: true })
     window.addEventListener('resize', onResize)
 
     // ── Loop ──────────────────────────────────────────────────────────────────
@@ -230,15 +182,12 @@ export default function AuroraBackground({
       drawGrid(t)
       for (const o of orbs) { o.update(); o.draw(ctx) }
       drawDots(t)
-      drawCursor(t)
     }
     animate()
 
     // ── Cleanup ───────────────────────────────────────────────────────────────
     return () => {
       cancelAnimationFrame(rafId)
-      canvas.removeEventListener('mousemove', onMouseMove)
-      canvas.removeEventListener('touchmove', onTouchMove)
       window.removeEventListener('resize', onResize)
     }
   }, [])
@@ -250,7 +199,7 @@ export default function AuroraBackground({
         position: 'absolute',
         inset: 0,
         overflow: 'hidden',
-        cursor: 'none',
+        cursor: 'default',
         ...style,
       }}
     >
