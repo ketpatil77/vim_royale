@@ -31,10 +31,10 @@ const HOW_TO_PLAY_STEPS = [
   },
   {
     step: '03',
-    cmd: ':w',
-    title: 'save when it passes',
-    desc: 'Run the tests by writing the file. The first correct buffer wins the round, so every clean edit matters.',
-    tag: 'WIN',
+    cmd: ':check',
+    title: 'match the target code',
+    desc: 'The game watches your buffer as you edit. The moment it matches the clean solution, the round ends automatically.',
+    tag: 'DONE',
   },
   {
     step: '04',
