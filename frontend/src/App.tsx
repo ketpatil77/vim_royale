@@ -11,6 +11,7 @@ import Leaderboard from './pages/leaderboard'
 import AuthCallback from './pages/login/AuthCallback'
 import Login from './pages/login/Login'
 import DifficultySelect from './pages/Play/DifficultySelect'
+import ComputerSelect from './pages/Play/ComputerSelect'
 import MatchPage from './pages/Play/MatchPage'
 import Play from './pages/Play/Play'
 import TimedMatchPage from './pages/Play/TimedMatchPage'
@@ -63,10 +64,26 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/play/computer"
+        element={
+          <ProtectedRoute>
+            <ComputerSelect />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/match/multiplayer"
         element={
           <ProtectedRoute>
-            <MatchPage />
+            <MatchPage mode="multiplayer" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/match/computer"
+        element={
+          <ProtectedRoute>
+            <MatchPage mode="computer" />
           </ProtectedRoute>
         }
       />

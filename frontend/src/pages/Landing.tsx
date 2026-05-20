@@ -8,10 +8,41 @@ import { VimRoyaleHero } from '../components/VimRoyaleHero/VimRoyaleHero'
 import NeuralParticleBackground from '../components/AnimatedBackgrounds/NeuralParticleBackground'
 
 const GAME_MODES = [
-  { cmd: ':vs',    title: '1V1',           desc: '2 Players, Split Screen' },
-  { cmd: ':timer', title: 'Single Player', desc: 'Timed challenges against yourself' },
-  { cmd: ':top',   title: 'Leaderboard',   desc: 'Compete for the top spot' },
+  { cmd: ':vs',       title: '1V1',           desc: '2 Players, Split Screen' },
+  { cmd: ':timer',    title: 'Single Player', desc: 'Timed challenges against yourself' },
+  { cmd: ':top',      title: 'Leaderboard',   desc: 'Compete for the top spot' },
   { cmd: ':vimtutor', title: 'VimTutor',      desc: 'Learn vim the way it was meant to be' },
+]
+
+const HOW_TO_PLAY_STEPS = [
+  {
+    step: '01',
+    cmd: ':load',
+    title: 'receive a polluted algorithm',
+    desc: "You're dropped into a real algorithm — quicksort, BFS, Dijkstra — intentionally broken. Wrong indentation, misplaced tokens, subtle logic bugs. Your editor opens immediately.",
+    tag: 'INPUT',
+  },
+  {
+    step: '02',
+    cmd: ':fix',
+    title: 'diagnose & repair with vim motions',
+    desc: 'No mouse. No arrow keys. Use the full vim arsenal — ci\", da(, :%s/old/new/g — to hunt and fix every corruption as fast as possible.',
+    tag: 'EDIT',
+  },
+  {
+    step: '03',
+    cmd: ':w',
+    title: 'first correct save wins',
+    desc: 'The moment your buffer passes all tests, the round ends. Against an opponent, their screen goes dark. Milliseconds count.',
+    tag: 'WIN',
+  },
+  {
+    step: '04',
+    cmd: ':rank',
+    title: 'elo shifts, you climb',
+    desc: 'Win fast, win efficiently — your ELO reflects both correctness and speed. The leaderboard is unforgiving.',
+    tag: 'RANK',
+  },
 ]
 
 const HOW_IT_WORKS = [
@@ -44,8 +75,8 @@ export default function Landing() {
   return (
     <TerminalLayout crtEnabled={crtEnabled} onCrtToggle={toggleCrt}>
       <main className="vr-main">
+        <NeuralParticleBackground />
 
-      <NeuralParticleBackground/>
         {/* ── Hero ── */}
         <section className="vr-hero">
           <VimRoyaleHero />
@@ -65,7 +96,6 @@ export default function Landing() {
         <section className="features">
           <p className="vr-section-label">choose your battle</p>
           <h1 className="vr-h1">Different Game Modes</h1>
-
           <div className="vr-features">
             {GAME_MODES.map(({ cmd, title, desc }) => (
               <div className="vr-feature" key={title}>
@@ -76,7 +106,27 @@ export default function Landing() {
             ))}
           </div>
 
-          <hr className="vr-divider" />
+
+          {/* ── How to Play ── */}
+          <p className="vr-section-label">the loop</p>
+          <h2 className="vr-h1">How to Play</h2>
+
+          <div className="htp-grid">
+            {HOW_TO_PLAY_STEPS.map(({ step, cmd, title, desc, tag }) => (
+              <div className="htp-card" key={step}>
+                <div className="htp-card-topbar">
+                  <span className="htp-card-step">{step}</span>
+                  <span className="htp-card-cmd">{cmd}</span>
+                  <span className="htp-card-tag">{tag}</span>
+                </div>
+                <h3 className="htp-card-title">{title}</h3>
+                <p className="htp-card-desc">{desc}</p>
+                <span className="htp-card-watermark" aria-hidden="true">{step}</span>
+              </div>
+            ))}
+          </div>
+
+
 
           {/* ── How It Works ── */}
           <h2 className="how-it-works-header">:how-it-works</h2>
@@ -91,7 +141,6 @@ export default function Landing() {
             ))}
           </div>
         </section>
-
       </main>
     </TerminalLayout>
   )

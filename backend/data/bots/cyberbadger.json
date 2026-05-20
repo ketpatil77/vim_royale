@@ -1,0 +1,10 @@
+{
+  "bot": {
+    "id": "cyberbadger",
+    "name": "CyberBadger",
+    "avatar": "https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_3.png",
+    "rating": 1200,
+    "difficulty": "medium"
+  },
+  "sequences": []
+}

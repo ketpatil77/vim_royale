@@ -3,6 +3,7 @@ export type MessageType =
   | 'HELLO_ACK'
   | 'QUEUE_JOIN'
   | 'GAME_START'
+  | 'BOT_GAME_START'
   | 'BUFFER_UPDATE'
   | 'PLAYER_FINISHED'
   | 'GAME_OVER'
@@ -27,6 +28,18 @@ export type GameStartPayload = {
   opponentName: string
   opponentAvatar: string
   opponentRating: number
+  role: 'A' | 'B'
+  startedAt: number
+  targetCode: string
+  pollutedCode: string
+}
+
+export type BotGameStartPayload = {
+  matchId: string
+  botId: string
+  botName: string
+  botAvatar: string
+  botRating: number
   role: 'A' | 'B'
   startedAt: number
   targetCode: string
@@ -77,6 +90,7 @@ export type MatchState = {
   opponentName: string
   opponentAvatar: string
   opponentRating: number
+  opponentIsBot: boolean
   matchId: string
 }
 

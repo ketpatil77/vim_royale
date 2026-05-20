@@ -9,8 +9,8 @@ import (
 	"vim_royale/backend/config"
 	"vim_royale/backend/middleware"
 
-	"github.com/gorilla/websocket"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/gorilla/websocket"
 )
 
 const (
@@ -28,6 +28,7 @@ type Client struct {
 	DisplayName string
 	AvatarURL   string
 	Rating      int
+	BotID       string
 	EnqueuedAt  time.Time
 	Conn        *websocket.Conn
 	Hub         *Hub
@@ -35,11 +36,12 @@ type Client struct {
 	MatchID     string
 }
 
-func NewClient(conn *websocket.Conn, hub *Hub) *Client {
+func NewClient(conn *websocket.Conn, hub *Hub, botID string) *Client {
 	return &Client{
-		Conn: conn,
-		Hub:  hub,
-		send: make(chan []byte, 256),
+		Conn:  conn,
+		Hub:   hub,
+		BotID: botID,
+		send:  make(chan []byte, 256),
 	}
 }
 

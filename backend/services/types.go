@@ -12,6 +12,7 @@ const (
 	MsgHelloAck       MessageType = "HELLO_ACK"
 	MsgQueueJoin      MessageType = "QUEUE_JOIN"
 	MsgGameStart      MessageType = "GAME_START"
+	MsgBotGameStart   MessageType = "BOT_GAME_START"
 	MsgBufferUpdate   MessageType = "BUFFER_UPDATE"
 	MsgPlayerFinished MessageType = "PLAYER_FINISHED"
 	MsgGameOver       MessageType = "GAME_OVER"
@@ -39,15 +40,27 @@ type HelloAckPayload struct {
 type QueueJoinPayload struct{}
 
 type GameStartPayload struct {
-	MatchID         string `json:"matchId"`
-	OpponentID      string `json:"opponentId"`
-	OpponentName    string `json:"opponentName"`
-	OpponentAvatar  string `json:"opponentAvatar"`
-	OpponentRating  int    `json:"opponentRating"`
-	Role            string `json:"role"`
-	StartedAt       int64  `json:"startedAt"`
-	TargetCode      string `json:"targetCode"`
-	PollutedCode    string `json:"pollutedCode"`
+	MatchID        string `json:"matchId"`
+	OpponentID     string `json:"opponentId"`
+	OpponentName   string `json:"opponentName"`
+	OpponentAvatar string `json:"opponentAvatar"`
+	OpponentRating int    `json:"opponentRating"`
+	Role           string `json:"role"`
+	StartedAt      int64  `json:"startedAt"`
+	TargetCode     string `json:"targetCode"`
+	PollutedCode   string `json:"pollutedCode"`
+}
+
+type BotGameStartPayload struct {
+	MatchID      string `json:"matchId"`
+	BotID        string `json:"botId"`
+	BotName      string `json:"botName"`
+	BotAvatar    string `json:"botAvatar"`
+	BotRating    int    `json:"botRating"`
+	Role         string `json:"role"`
+	StartedAt    int64  `json:"startedAt"`
+	TargetCode   string `json:"targetCode"`
+	PollutedCode string `json:"pollutedCode"`
 }
 
 type BufferUpdatePayload struct {
@@ -57,7 +70,7 @@ type BufferUpdatePayload struct {
 
 type KeystrokeEntry struct {
 	Ops       json.RawMessage `json:"ops"`
-	Timestamp int64            `json:"timestamp"`
+	Timestamp int64           `json:"timestamp"`
 }
 
 type KeystrokesData struct {
@@ -105,6 +118,8 @@ type Match struct {
 	ID           string
 	PlayerA      *Client
 	PlayerB      *Client
+	BotID        string
+	Bot          *Bot
 	Status       MatchStatus
 	TargetCode   string
 	PollutedCode string
@@ -112,6 +127,7 @@ type Match struct {
 	FinishedAt   *time.Time
 	WinnerID     string
 	LastSeqByID  map[string]int64
+	BotMatch     *BotMatch
 }
 
 type InboundMessage struct {

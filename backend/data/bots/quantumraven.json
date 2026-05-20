@@ -1,0 +1,10 @@
+{
+  "bot": {
+    "id": "quantumraven",
+    "name": "QuantumRaven",
+    "avatar": "https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_5.png",
+    "rating": 2000,
+    "difficulty": "expert"
+  },
+  "sequences": []
+}

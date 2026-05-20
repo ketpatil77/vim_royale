@@ -1,5 +1,6 @@
 import type {
   GameStartPayload,
+  BotGameStartPayload,
   GameOverPayload,
   MatchState,
   BufferDelta,
@@ -50,7 +51,7 @@ export function createSocketCallbacks(
 
   return {
     onHelloAck: (playerId: string) => {
-      setMatchState({ playerId, opponentId: '', opponentName: '', opponentAvatar: '', opponentRating: 0, matchId: '' })
+      setMatchState({ playerId, opponentId: '', opponentName: '', opponentAvatar: '', opponentRating: 0, opponentIsBot: false, matchId: '' })
       setStatusText('Finding an opponent...')
     },
 
@@ -65,11 +66,32 @@ export function createSocketCallbacks(
         opponentName: payload.opponentName,
         opponentAvatar: payload.opponentAvatar,
         opponentRating: payload.opponentRating,
+        opponentIsBot: false,
         matchId: payload.matchId,
       })
       setVimMode('NORMAL')
       setResultText('')
       setStatusText('Match started')
+      setViewState('countdown')
+    },
+
+    onBotGameStart: (payload: BotGameStartPayload) => {
+      targetCodeRef.current = payload.targetCode
+      pollutedCodeRef.current = payload.pollutedCode
+      finishSentRef.current = false
+
+      setMatchState({
+        playerId: matchState.playerId,
+        opponentId: `bot_${payload.botId}`,
+        opponentName: payload.botName,
+        opponentAvatar: payload.botAvatar,
+        opponentRating: payload.botRating,
+        opponentIsBot: true,
+        matchId: payload.matchId,
+      })
+      setVimMode('NORMAL')
+      setResultText('')
+      setStatusText('Bot duel started')
       setViewState('countdown')
     },
 
