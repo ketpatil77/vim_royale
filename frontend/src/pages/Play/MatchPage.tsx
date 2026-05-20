@@ -289,7 +289,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
                 filename="vim_royale.ts"
                 panelTitle="LOCAL [YOU]"
                 vimMode={vimMode}
-                scrollWarningMessage="Use j/k for scrolling"
+                scrollWarningMessage="use keyboard to navigate, scroll wheel is disabled"
                 displayName={user?.displayName || 'You'}
                 avatarUrl={user?.avatarUrl || ''}
                 rating={Math.round(user?.rating || 0)}
@@ -299,7 +299,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
               <EditorPanel
                 filename="opponent.ts"
                 panelTitle={matchState.opponentIsBot ? 'BOT [AI]' : 'REMOTE [OPP]'}
-                scrollWarningMessage="Use j/k for scrolling"
+                scrollWarningMessage="use keyboard to navigate, scroll wheel is disabled"
                 displayName={matchState.opponentName || (matchState.opponentIsBot ? 'Bot' : 'Opponent')}
                 avatarUrl={matchState.opponentAvatar || ''}
                 rating={matchState.opponentRating}

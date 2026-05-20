@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 
 interface UseTerminalCommandsProps {
@@ -29,97 +29,112 @@ export function useTerminalCommands({
 
   const { loginFunc } = useAuth()
 
-  const COMMANDS: Record<string, () => void> = {
-    play: () => {
-      navigate("/play");
-      clearCommand();
-    },
-    leaderboard: () => {
-      navigate("/leaderboard");
-      clearCommand();
-    },
-    lb: () => {
-      navigate("/leaderboard");
-      clearCommand();
-    },
-    login: () => {
-      navigate("/login");
-      clearCommand();
-    },
-    authenticate: () => {
-      navigate("/login");
-      clearCommand();
-    },
-    google: () => {
-      if (window.location.pathname == "/login") {
-        loginFunc("google");
-      }
-      clearCommand();
-    },
-    github: () => {
-      if (window.location.pathname == "/login") {
-        loginFunc("github");
-      }
-      clearCommand();
-    },
-    back: () => {
-      window.history.back();
-      clearCommand();
-    },
-    forward: () => {
-      window.history.forward();
-      clearCommand();
-    },
-    home: () => {
-      navigate("/");
-      clearCommand();
-    },
-    root: () => {
-      navigate("/")
-      clearCommand();
-    },
-    docs: () => {
-      navigate("/docs");
-      clearCommand();
-    },
-    tutor: () => {
-      navigate("/docs/vimtutor");
-      clearCommand();
-    },
-    vimtutor: () => {
-      navigate("/docs/vimtutor");
-      clearCommand();
-    },
-    profile: () => {
-      if (user) {
-        navigate("/editProfile");
-      } else {
-        setCmdFeedback("profile: command requires login");
+  const COMMANDS = useMemo<Record<string, () => void>>(
+    () => ({
+      play: () => {
+        navigate("/play");
+        clearCommand();
+      },
+      leaderboard: () => {
+        navigate("/leaderboard");
+        clearCommand();
+      },
+      lb: () => {
+        navigate("/leaderboard");
+        clearCommand();
+      },
+      guide: () => {
+        navigate("/walkthrough");
+        clearCommand();
+      },
+      walkthrough: () => {
+        navigate("/walkthrough");
+        clearCommand();
+      },
+      login: () => {
+        navigate("/login");
+        clearCommand();
+      },
+      authenticate: () => {
+        navigate("/login");
+        clearCommand();
+      },
+      google: () => {
+        if (window.location.pathname == "/login") {
+          loginFunc("google");
+        }
+        clearCommand();
+      },
+      github: () => {
+        if (window.location.pathname == "/login") {
+          loginFunc("github");
+        }
+        clearCommand();
+      },
+      back: () => {
+        window.history.back();
+        clearCommand();
+      },
+      forward: () => {
+        window.history.forward();
+        clearCommand();
+      },
+      home: () => {
+        navigate("/");
+        clearCommand();
+      },
+      root: () => {
+        navigate("/");
+        clearCommand();
+      },
+      q: () => {
+        window.history.back();
+        clearCommand();
+      },
+      docs: () => {
+        navigate("/docs");
+        clearCommand();
+      },
+      tutor: () => {
+        navigate("/docs/vimtutor");
+        clearCommand();
+      },
+      vimtutor: () => {
+        navigate("/docs/vimtutor");
+        clearCommand();
+      },
+      profile: () => {
+        if (user) {
+          navigate("/editprofile");
+        } else {
+          setCmdFeedback("profile: command requires login");
+          setTimeout(clearCommand, 1500);
+          return;
+        }
+        clearCommand();
+      },
+      logout: () => {
+        onLogout();
+        clearCommand();
+      },
+      crt: () => {
+        onCrtToggle?.();
+        clearCommand();
+      },
+      // easter eggs
+      emacs: () => {
+        setCmdFeedback("bruh.");
         setTimeout(clearCommand, 1500);
         return;
-      }
-      clearCommand();
-    },
-    logout: () => {
-      onLogout();
-      clearCommand();
-    },
-    crt: () => {
-      onCrtToggle?.();
-      clearCommand();
-    },
-    // easter eggs
-    emacs: () => {
-      setCmdFeedback("bruh.");
-      setTimeout(clearCommand, 1500);
-      return;
-    },
-    neovim: () => {
-      setCmdFeedback("blazingly fast!");
-      setTimeout(clearCommand, 1500);
-      return;
-    },
-  };
+      },
+      neovim: () => {
+        setCmdFeedback("blazingly fast!");
+        setTimeout(clearCommand, 1500);
+        return;
+      },
+    }),
+    [clearCommand, loginFunc, navigate, onCrtToggle, onLogout, user]
+  );
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -154,7 +169,7 @@ export function useTerminalCommands({
         setCommand((prev) => prev + event.key);
       }
     },
-    [command, clearCommand]
+    [COMMANDS, command, clearCommand]
   );
 
   useEffect(() => {
