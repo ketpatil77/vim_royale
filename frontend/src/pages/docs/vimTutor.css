@@ -1,0 +1,137 @@
+.vimtutor-page {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 28px 24px 36px;
+  color: var(--green);
+  overflow-x: hidden;
+}
+
+.vimtutor-shell {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.vimtutor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  border: 1px solid var(--border-green);
+  background:
+    linear-gradient(180deg, rgba(57, 255, 20, 0.035), rgba(57, 255, 20, 0)),
+    rgba(8, 8, 8, 0.94);
+  padding: 18px 20px;
+}
+
+.vimtutor-command {
+  margin: 0 0 8px;
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.vimtutor-header h1 {
+  margin: 0;
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 24px;
+  line-height: 1.1;
+  text-transform: uppercase;
+  text-shadow: var(--glow);
+}
+
+.vimtutor-meta,
+.vimtutor-status {
+  margin: 8px 0 0;
+  color: var(--green-dim);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.vimtutor-actions {
+  min-width: min(360px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  text-align: right;
+}
+
+.vimtutor-status {
+  margin: 0;
+  color: var(--green-faint);
+}
+
+.vimtutor-reset-button {
+  min-height: 40px;
+  border: 1px solid rgba(57, 255, 20, 0.28);
+  background: transparent;
+  color: var(--green-dim);
+  padding: 0 16px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.vimtutor-reset-button:hover,
+.vimtutor-reset-button:focus-visible {
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: 0 0 16px rgba(57, 255, 20, 0.16);
+  outline: none;
+}
+
+.vimtutor-reset-button--armed {
+  border-color: var(--amber);
+  color: var(--amber);
+  background: rgba(255, 176, 0, 0.08);
+}
+
+.vimtutor-reset-button--armed:hover,
+.vimtutor-reset-button--armed:focus-visible {
+  border-color: var(--red);
+  color: var(--red);
+  box-shadow: 0 0 16px rgba(255, 49, 49, 0.18);
+}
+
+.vimtutor-editor-frame {
+  width: 100%;
+  min-width: 0;
+}
+
+.vimtutor-editor-frame > .editor-panel {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 720px) {
+  .vimtutor-page {
+    padding: 16px 12px 24px;
+  }
+
+  .vimtutor-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .vimtutor-actions {
+    min-width: 0;
+    align-items: stretch;
+    text-align: left;
+  }
+
+  .vimtutor-reset-button {
+    width: 100%;
+  }
+}

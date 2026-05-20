@@ -19,6 +19,7 @@ export type User = {
   lost?: number;
   rating?: number;
   lastActive?: string;
+  hasSeenWalkthrough?: boolean;
   githubId: string | null;
   twitterId: string | null;
   discordId: string | null;
@@ -107,4 +108,3 @@ export function useAuth() {
   }
   return context;
 }
-

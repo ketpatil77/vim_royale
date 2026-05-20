@@ -83,6 +83,12 @@ export function TerminalLayout({
           >
             :leaderboard
           </span>
+          <span
+            onClick={() => { navigate("/walkthrough"); closeMenu(); }}
+            className="terminal-nav-link"
+          >
+            :guide
+          </span>
           <span onClick={() => {navigate("/docs/vimtutor")}} className="terminal-nav-link">:tutor</span>
 
           {user ? (
@@ -120,4 +126,3 @@ export function TerminalLayout({
     </div>
   );
 }
-
