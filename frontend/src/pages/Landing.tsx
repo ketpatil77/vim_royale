@@ -1,11 +1,11 @@
 import { useNavigate } from 'react-router-dom'
+import AuroraBackground from '../components/AnimatedBackgrounds/AuroraBackground'
 import VimRoyaleDuel from '../components/HeroEditors'
 import { TerminalLayout } from '../components/TerminalLayout/TerminalLayout'
-import { useCRT } from '../contexts/CRTContext'
-import { VT100TitleBar } from '../components/VT100TitleBar/VT100TitleBar'
-import './Landing.css'
 import { VimRoyaleHero } from '../components/VimRoyaleHero/VimRoyaleHero'
-import NeuralParticleBackground from '../components/AnimatedBackgrounds/NeuralParticleBackground'
+import { VT100TitleBar } from '../components/VT100TitleBar/VT100TitleBar'
+import { useCRT } from '../contexts/CRTContext'
+import './Landing.css'
 
 const GAME_MODES = [
   { cmd: ':vs',       title: '1V1',           desc: '2 Players, Split Screen' },
@@ -75,7 +75,7 @@ export default function Landing() {
   return (
     <TerminalLayout crtEnabled={crtEnabled} onCrtToggle={toggleCrt}>
       <main className="vr-main">
-        <NeuralParticleBackground />
+        <AuroraBackground/>
 
         {/* ── Hero ── */}
         <section className="vr-hero">
