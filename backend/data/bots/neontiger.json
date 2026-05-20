@@ -1,0 +1,10 @@
+{
+  "bot": {
+    "id": "neontiger",
+    "name": "NeonTiger",
+    "avatar": "https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_4.png",
+    "rating": 1600,
+    "difficulty": "hard"
+  },
+  "sequences": []
+}

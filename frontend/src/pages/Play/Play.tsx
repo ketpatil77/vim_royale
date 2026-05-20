@@ -28,6 +28,13 @@ export default function Play() {
             <span className="play-mode-desc">Practice your vim skills with a 120s timer</span>
           </button>
           <button
+            className="play-mode-btn"
+            onClick={() => navigate('/play/computer')}
+          >
+            <span className="play-mode-label">PLAY VS COMPUTER</span>
+            <span className="play-mode-desc">Race AI bots across four skill tiers</span>
+          </button>
+          <button
             className="play-mode-btn play-mode-btn--dim"
           >
             <span className="play-mode-label">MINI GAMES</span>

@@ -26,7 +26,8 @@ func WsHandler(hub *services.Hub) gin.HandlerFunc {
 			return
 		}
 
-		client := services.NewClient(conn, hub)
+		botID := c.Query("botId")
+		client := services.NewClient(conn, hub, botID)
 		hub.Register <- client
 
 		go client.WritePump()

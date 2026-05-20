@@ -1,3 +1,4 @@
+/* ---------- Shell ---------- */
 .vr-shell {
   min-height: 100vh;
   display: flex;
@@ -19,7 +20,7 @@
   width: 100%;
 }
 
-/* ---------- Hero Section ---------- */
+/* ---------- Hero ---------- */
 .vr-hero {
   display: flex;
   flex-direction: column;
@@ -34,7 +35,6 @@
   z-index: 1;
 }
 
-/* ASCII art logo */
 .vr-ascii {
   font-family: var(--mono);
   font-size: 12px;
@@ -48,7 +48,6 @@
   max-width: 100%;
 }
 
-/* Tagline */
 .vr-tagline {
   font-family: var(--mono);
   font-size: 13px;
@@ -67,7 +66,6 @@
   justify-content: center;
 }
 
-/* Primary CTA — filled, glowing */
 .vr-cta {
   font-family: var(--mono);
   font-size: 13px;
@@ -87,11 +85,8 @@
   transform: translateY(-1px);
 }
 
-.vr-cta:active {
-  transform: translateY(0);
-}
+.vr-cta:active { transform: translateY(0); }
 
-/* Secondary CTA — outline only, dimmer */
 .vr-cta--dim {
   background: transparent;
   color: var(--green-dim);
@@ -158,13 +153,10 @@
   overflow: hidden;
 }
 
-/* Accent bar at top of each mode card */
 .vr-feature::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 0; left: 0; right: 0;
   height: 2px;
   background: var(--green);
   opacity: 0;
@@ -173,14 +165,11 @@
 
 .vr-feature:hover {
   border-color: rgba(57, 255, 20, 0.4);
-  background: rgba(57, 255, 20, 0.04);
+  /* background: rgba(57, 255, 20, 0.04); */
 }
 
-.vr-feature:hover::before {
-  opacity: 1;
-}
+.vr-feature:hover::before { opacity: 1; }
 
-/* Mode icon (vim command style) */
 .vr-feature-cmd {
   font-family: var(--mono);
   font-size: 18px;
@@ -214,7 +203,124 @@
   margin: 0 0 48px;
 }
 
-/* ---------- How It Works ---------- */
+/* ================================================================
+   HOW TO PLAY
+   ================================================================ */
+
+/* Intro line */
+.htp-intro {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--green-dim);
+  line-height: 1.7;
+  margin: -24px 0 40px;
+  max-width: 600px;
+  padding: 10px 16px;
+  border-left: 2px solid rgba(57, 255, 20, 0.25);
+  background: rgba(57, 255, 20, 0.025);
+}
+
+.htp-intro-prompt {
+  color: var(--green);
+  opacity: 0.5;
+  user-select: none;
+}
+
+/* 4-column step grid */
+.htp-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+/* Step card */
+.htp-card {
+  background: var(--bg-panel);
+  border: 1px solid rgba(57, 255, 20, 0.14);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.15s, background 0.15s;
+  padding-bottom: 16px;
+}
+
+.htp-card:hover {
+  border-color: rgba(57, 255, 20, 0.38);
+  /* background: rgba(57, 255, 20, 0.035); */
+}
+
+/* Top bar with step / cmd / tag */
+.htp-card-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 0;
+  border-bottom: 1px solid rgba(57, 255, 20, 0.1);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+}
+
+.htp-card-step {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--green-dim);
+  opacity: 0.5;
+  letter-spacing: 1px;
+}
+
+.htp-card-cmd {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--amber, #f5a623);
+  text-shadow: 0 0 8px rgba(245, 166, 35, 0.35);
+  letter-spacing: 1px;
+}
+
+.htp-card-tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--bg);
+  background: rgba(57, 255, 20, 0.55);
+  padding: 2px 6px;
+}
+
+.htp-card-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--green);
+  margin: 0 12px 8px;
+  line-height: 1.45;
+  letter-spacing: 0.5px;
+}
+
+.htp-card-desc {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--green-dim);
+  margin: 0 12px;
+  line-height: 1.7;
+  opacity: 0.8;
+}
+
+/* Large watermark */
+.htp-card-watermark {
+  position: absolute;
+  bottom: -12px;
+  right: 6px;
+  font-family: var(--mono);
+  font-size: 72px;
+  font-weight: 900;
+  color: rgba(57, 255, 20, 0.035);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: -4px;
+}
+
+/* ================================================================
+   HOW IT WORKS
+   ================================================================ */
 .how-it-works-header {
   font-family: var(--mono);
   font-size: 12px;
@@ -236,12 +342,11 @@
 .feature-box {
   background: var(--bg-panel);
   border: 1px solid rgba(57, 255, 20, 0.18);
-  border-top: none; /* top edge is the .vt100-bar border-top */
+  border-top: none;
   border-radius: 0;
-  overflow: visible; /* allow .vt100-tag to float above the top edge */
+  overflow: visible;
   transition: border-color 0.12s, box-shadow 0.12s;
   position: relative;
-  /* push content down so the floating tag doesn't overlap the title */
   padding-top: 20px;
 }
 
@@ -250,7 +355,6 @@
   box-shadow: 0 0 12px rgba(57, 255, 20, 0.06);
 }
 
-/* Large watermark step number */
 .feature-box-watermark {
   position: absolute;
   bottom: -8px;
@@ -265,33 +369,25 @@
   letter-spacing: -4px;
 }
 
-.feature-box--wide {
-  grid-column: span 2;
-}
+.feature-box--wide { grid-column: span 2; }
 
-/* ---- VT100 titlebar ---- */
-.feature-box-topbar {
-  display: none; /* replaced by .vt100-bar directly */
-}
+.feature-box-topbar { display: none; }
 
 .vt100-bar {
   position: relative;
   height: 0;
-  /* The "top border" of the box — thicker and brighter than side borders */
   border-top: 1px solid rgba(57, 255, 20, 0.45);
   margin: 0;
-  /* Tags sit on top of this line */
 }
 
 .vt100-tag {
   position: absolute;
-  top: -9px; /* vertically centres the text on the border line */
+  top: -9px;
   font-family: var(--mono);
   font-size: 11px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   color: var(--amber, #f5a623);
-  /* gap cut into the border line behind the tag */
   background: var(--bg-panel);
   padding: 0 4px;
 }
@@ -334,8 +430,7 @@
 
 .vr-term-dot {
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 8px; height: 8px;
   border-radius: 50%;
   background: var(--green-dim);
   opacity: 0.55;
@@ -348,11 +443,8 @@
   margin-left: 8px;
 }
 
-.vr-term-body {
-  padding: 12px 0;
-}
+.vr-term-body { padding: 12px 0; }
 
-/* Terminal lines */
 .vr-tline {
   display: flex;
   font-size: 12px;
@@ -370,14 +462,11 @@
   user-select: none;
 }
 
-.vr-tline-code {
-  color: var(--green);
-  font-family: var(--mono);
-}
+.vr-tline-code { color: var(--green); font-family: var(--mono); }
 
-.vr-tline--normal .vr-tline-code  { color: var(--green); }
-.vr-tline--error  .vr-tline-code  { color: #ff4444; }
-.vr-tline--amber  .vr-tline-code  { color: var(--amber, #f5a623); }
+.vr-tline--normal .vr-tline-code { color: var(--green); }
+.vr-tline--error  .vr-tline-code { color: #ff4444; }
+.vr-tline--amber  .vr-tline-code { color: var(--amber, #f5a623); }
 
 .vr-tline--statusline {
   border-top: 1px solid var(--border);
@@ -385,22 +474,6 @@
 }
 .vr-tline--statusline .vr-tline-ln   { color: transparent; }
 .vr-tline--statusline .vr-tline-code { color: var(--green-dim); font-size: 11px; }
-
-/* Blinking cursor */
-.vr-cursor {
-  display: inline-block;
-  width: 7px;
-  height: 12px;
-  background: var(--green);
-  margin-left: 2px;
-  vertical-align: middle;
-  animation: vr-blink 1s step-end infinite;
-}
-
-@keyframes vr-blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
-}
 
 /* ---------- Footer ---------- */
 .vr-footer {
@@ -425,14 +498,8 @@
   transition: color 0s;
 }
 
-.vr-footer-links span:hover {
-  color: var(--green);
-}
-
-.vr-footer-sep {
-  cursor: default !important;
-  color: var(--border) !important;
-}
+.vr-footer-links span:hover { color: var(--green); }
+.vr-footer-sep { cursor: default !important; color: var(--border) !important; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
@@ -441,6 +508,7 @@
   .vr-ctas      { flex-direction: column; align-items: center; }
   .features     { padding: 48px 16px 64px; }
   .vr-features  { grid-template-columns: repeat(2, 1fr); }
+  .htp-grid     { grid-template-columns: repeat(2, 1fr); }
   .how-it-works-grid { grid-template-columns: 1fr; }
   .feature-box--wide { grid-column: span 1; }
   .vr-h1        { font-size: 16px; }
@@ -449,4 +517,5 @@
 @media (max-width: 480px) {
   .vr-ascii    { font-size: 4.5px; }
   .vr-features { grid-template-columns: 1fr; }
+  .htp-grid    { grid-template-columns: 1fr; }
 }

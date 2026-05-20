@@ -1,9 +1,10 @@
 import { useRef, useCallback } from 'react'
-import type { Envelope, MatchState, GameStartPayload, BufferUpdatePayload, GameOverPayload, BufferDelta, KeystrokesData, PlayerFinishedPayload } from './types'
+import type { Envelope, MatchState, GameStartPayload, BotGameStartPayload, BufferUpdatePayload, GameOverPayload, BufferDelta, KeystrokesData, PlayerFinishedPayload } from './types'
 import { WS_URL, getOrCreatePlayerId } from './player'
 import {
   parseHelloAckPayload,
   parseGameStartPayload,
+  parseBotGameStartPayload,
   parseBufferUpdatePayload,
   parseGameOverPayload,
   parseErrorPayload,
@@ -13,6 +14,7 @@ import { useAuth } from '../../contexts/AuthContext'
 type GameSocketCallbacks = {
   onHelloAck: (playerId: string) => void
   onGameStart: (payload: GameStartPayload) => void
+  onBotGameStart: (payload: BotGameStartPayload) => void
   onBufferUpdate: (content: string | undefined, delta: BufferDelta | undefined) => void
   onGameOver: (payload: GameOverPayload, playerId: string) => void
   onError: (code: string, message: string) => void
@@ -28,11 +30,12 @@ export function useGameSocket() {
   const viewStateRef = useRef<'idle' | 'matchmaking' | 'countdown' | 'playing' | 'finished' | 'error'>('idle')
   const matchStateRef = useRef<MatchState>({
     playerId: '',
-    opponentId: '',
-    opponentName: '',
-    opponentAvatar: '',
-    opponentRating: 0,
-    matchId: '',
+      opponentId: '',
+      opponentName: '',
+      opponentAvatar: '',
+      opponentRating: 0,
+      opponentIsBot: false,
+      matchId: '',
   })
   const { user } = useAuth()
 
@@ -135,6 +138,26 @@ export function useGameSocket() {
           callbacks.onGameStart(payload)
           break
         }
+        case 'BOT_GAME_START': {
+          const payload = parseBotGameStartPayload(envelope.payload)
+          if (!payload) {
+            viewStateRef.current = 'error'
+            callbacks.onError('payload_error', 'Invalid BOT_GAME_START payload')
+            return
+          }
+          seqRef.current = 1
+          setMatchStateRef({
+            matchId: payload.matchId,
+            opponentId: `bot_${payload.botId}`,
+            opponentName: payload.botName,
+            opponentAvatar: payload.botAvatar,
+            opponentRating: payload.botRating,
+            opponentIsBot: true,
+          })
+          viewStateRef.current = 'playing'
+          callbacks.onBotGameStart(payload)
+          break
+        }
         case 'BUFFER_UPDATE': {
           const payload = parseBufferUpdatePayload(envelope.payload)
           if (!payload) {
@@ -173,16 +196,16 @@ export function useGameSocket() {
   )
 
   const connect = useCallback(
-    (callbacks: GameSocketCallbacks) => {
+    (callbacks: GameSocketCallbacks, options?: { wsUrl?: string }) => {
       disconnect()
       shouldIgnoreCloseRef.current = false
 
       const playerId = buildHelloPayload()
-      setMatchStateRef({ playerId: playerId.playerId || 'pending', opponentId: '', opponentName: '', opponentAvatar: '', opponentRating: 0, matchId: '' })
+      setMatchStateRef({ playerId: playerId.playerId || 'pending', opponentId: '', opponentName: '', opponentAvatar: '', opponentRating: 0, opponentIsBot: false, matchId: '' })
       seqRef.current = 1
       viewStateRef.current = 'matchmaking'
 
-      const ws = new WebSocket(WS_URL)
+      const ws = new WebSocket(options?.wsUrl || WS_URL)
       wsRef.current = ws
 
       ws.onopen = () => {

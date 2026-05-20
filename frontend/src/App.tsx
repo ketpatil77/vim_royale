@@ -5,12 +5,13 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { CRTProvider, useCRT } from './contexts/CRTContext'
 import { TimedGameProvider } from './contexts/TimedGameContext'
 import { VimTutor } from './pages/docs/vimTutor'
-import EditProfile from './pages/EditProfile'
+import EditProfile from './pages/editProfile'
 import Landing from './pages/Landing'
 import Leaderboard from './pages/leaderboard'
 import AuthCallback from './pages/login/AuthCallback'
 import Login from './pages/login/Login'
 import DifficultySelect from './pages/Play/DifficultySelect'
+import ComputerSelect from './pages/Play/ComputerSelect'
 import MatchPage from './pages/Play/MatchPage'
 import Play from './pages/Play/Play'
 import TimedMatchPage from './pages/Play/TimedMatchPage'
@@ -63,10 +64,26 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/play/computer"
+        element={
+          <ProtectedRoute>
+            <ComputerSelect />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/match/multiplayer"
         element={
           <ProtectedRoute>
-            <MatchPage />
+            <MatchPage mode="multiplayer" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/match/computer"
+        element={
+          <ProtectedRoute>
+            <MatchPage mode="computer" />
           </ProtectedRoute>
         }
       />

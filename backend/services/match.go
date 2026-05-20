@@ -29,6 +29,11 @@ func (h *Hub) relayBufferUpdate(sender *Client, message Envelope) {
 	}
 	match.LastSeqByID[sender.ID] = message.Seq
 
+	if match.BotID != "" {
+		// Bot games don't relay player deltas to another websocket peer.
+		return
+	}
+
 	opponent := match.opponentOf(sender)
 	if opponent == nil {
 		h.sendErrorLocked(sender, "opponent_missing", "opponent is unavailable")
@@ -52,6 +57,11 @@ func (h *Hub) finishMatch(client *Client, message Envelope) {
 	match, ok := h.matches[client.MatchID]
 	if !ok || match.Status != MatchPlaying {
 		h.sendErrorLocked(client, "match_not_active", "match is not active")
+		return
+	}
+
+	if match.BotID != "" {
+		h.finishBotMatch(match, client)
 		return
 	}
 
@@ -131,6 +141,70 @@ func (h *Hub) finishMatch(client *Client, message Envelope) {
 		opponent.MatchID = ""
 	}
 
+	client.MatchID = ""
+	delete(h.matches, match.ID)
+}
+
+func (h *Hub) finishBotMatch(match *Match, client *Client) {
+	now := time.Now().UTC()
+	match.Status = MatchFinished
+	match.FinishedAt = &now
+
+	botMatch := match.BotMatch
+	if botMatch != nil {
+		botMatch.PlayerFinished = true
+	}
+
+	botID := match.BotID
+	botName := "Bot"
+	botAvatar := ""
+	botRating := 0
+	if match.Bot != nil {
+		botName = match.Bot.Name
+		botAvatar = match.Bot.Avatar
+		botRating = match.Bot.Rating
+	}
+
+	playerWon := botMatch == nil || !botMatch.BotFinished
+	winnerID := client.ID
+	loserID := "bot_" + botID
+	winnerName := client.DisplayName
+	winnerAvatar := client.AvatarURL
+	loserName := botName
+	loserAvatar := botAvatar
+	winnerNewRating := float64(client.Rating)
+	loserNewRating := float64(botRating)
+
+	if !playerWon {
+		winnerID = loserID
+		loserID = client.ID
+		winnerName = botName
+		winnerAvatar = botAvatar
+		loserName = client.DisplayName
+		loserAvatar = client.AvatarURL
+		winnerNewRating = float64(botRating)
+		loserNewRating = float64(client.Rating)
+	}
+
+	match.WinnerID = winnerID
+
+	result := GameOverPayload{
+		MatchID:         match.ID,
+		WinnerID:        winnerID,
+		LoserID:         loserID,
+		WinnerName:      winnerName,
+		WinnerAvatar:    winnerAvatar,
+		WinnerNewRating: winnerNewRating,
+		WinnerDelta:     0,
+		LoserName:       loserName,
+		LoserAvatar:     loserAvatar,
+		LoserNewRating:  loserNewRating,
+		LoserDelta:      0,
+		Reason:          "player_finished",
+		FinishedAt:      now.Unix(),
+	}
+
+	h.sendLocked(client, MsgGameOver, match.ID, client.ID, 0, result)
 	client.MatchID = ""
 	delete(h.matches, match.ID)
 }

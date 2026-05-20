@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useCRT } from '../../contexts/CRTContext'
 import { useAuth } from '../../contexts/AuthContext'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { EditorPanel } from '../../components/EditorPanel/EditorPanel'
 import { TerminalLayout } from '../../components/TerminalLayout/TerminalLayout'
 import MatchResultModal, { parseResult } from '../../components/MatchResultModal/MatchResultModal'
@@ -10,6 +10,7 @@ import type { MatchState, ViewState, GameOverPayload, KeystrokeEntry } from '../
 import { useEditors } from '../typingChallenge/useEditors'
 import { useGameSocket } from '../typingChallenge/useGameSocket'
 import { sounds } from '../../utils/sound'
+import { WS_URL } from '../../config'
 import './MatchPage.css'
 
 const initialMatchState: MatchState = {
@@ -18,10 +19,15 @@ const initialMatchState: MatchState = {
   opponentName: '',
   opponentAvatar: '',
   opponentRating: 0,
+  opponentIsBot: false,
   matchId: '',
 }
 
-export default function MatchPage() {
+type MatchPageProps = {
+  mode?: 'multiplayer' | 'computer'
+}
+
+export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   const [viewState, setViewState] = useState<ViewState>('matchmaking')
   const [countdown, setCountdown] = useState(3)
   const [statusText, setStatusText] = useState('Initializing...')
@@ -31,6 +37,9 @@ export default function MatchPage() {
   const [gameOverPayload, setGameOverPayload] = useState<GameOverPayload | null>(null)
   const navigate = useNavigate()
   const { user } = useAuth()
+  const [searchParams] = useSearchParams()
+  const selectedBotId = searchParams.get('botId') || ''
+  const isComputerMode = mode === 'computer'
 
   const targetCodeRef = useRef('')
   const pollutedCodeRef = useRef('')
@@ -94,8 +103,17 @@ export default function MatchPage() {
     })
   }, [sendPlayerFinishedWithKeystrokes])
 
-  // beginMatchmaking is defined first, then called directly from the mount effect
+  const playSound = useCallback((type: 'win' | 'lose') => {
+    sounds[type].play()
+  }, [])
+
   const beginMatchmaking = useCallback(() => {
+    if (isComputerMode && !selectedBotId) {
+      setStatusText('Missing bot selection. Redirecting...')
+      navigate('/play/computer')
+      return
+    }
+
     disconnect()
     cleanupEditors()
 
@@ -106,7 +124,7 @@ export default function MatchPage() {
     setMatchState(initialMatchState)
     setResultText('')
     setGameOverPayload(null)
-    setStatusText('Connecting to matchmaking server...')
+    setStatusText(isComputerMode ? 'Connecting to bot server...' : 'Connecting to matchmaking server...')
     setViewState('matchmaking')
 
     const callbacks = createSocketCallbacks(
@@ -133,8 +151,26 @@ export default function MatchPage() {
       getViewState
     )
 
-    connect(callbacks)
-  }, [disconnect, cleanupEditors, connect, replaceOpponentContent, applyDelta, recordReceivedKeystroke, handlePlayerWon, matchState, getViewState])
+    const wsUrl = isComputerMode
+      ? `${WS_URL}?botId=${encodeURIComponent(selectedBotId)}`
+      : WS_URL
+
+    connect(callbacks, { wsUrl })
+  }, [
+    isComputerMode,
+    selectedBotId,
+    navigate,
+    disconnect,
+    cleanupEditors,
+    playSound,
+    matchState.playerId,
+    replaceOpponentContent,
+    applyDelta,
+    recordReceivedKeystroke,
+    handlePlayerWon,
+    getViewState,
+    connect,
+  ])
 
   useEffect(() => {
     beginMatchmaking()
@@ -195,7 +231,7 @@ export default function MatchPage() {
   const cancelMatchmaking = () => {
     disconnect()
     cleanupEditors()
-    navigate('/play')
+    navigate(isComputerMode ? '/play/computer' : '/play')
   }
 
   const isMatchmaking = viewState === 'matchmaking'
@@ -207,10 +243,6 @@ export default function MatchPage() {
   const handleNewMatch = () => {
     beginMatchmaking()
   }
-
-  const playSound = useCallback((type: 'win' | 'lose') => {
-    sounds[type].play()
-  }, [])
 
   const { crtEnabled, toggleCrt } = useCRT()
 
@@ -235,7 +267,9 @@ export default function MatchPage() {
         {isMatchmaking ? (
           <div className="matchmaking-screen">
             <div className="matchmaking-content">
-              <h2 className="matchmaking-title">&gt;&gt; SEARCHING FOR OPPONENT...</h2>
+              <h2 className="matchmaking-title">
+                {isComputerMode ? '>> PREPARING BOT DUEL...' : '>> SEARCHING FOR OPPONENT...'}
+              </h2>
               <div className="matchmaking-anim">
                 <svg className="magnifying-glass" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="11" cy="11" r="7" stroke="var(--green)" strokeWidth="2"/>
@@ -264,9 +298,9 @@ export default function MatchPage() {
 
               <EditorPanel
                 filename="opponent.ts"
-                panelTitle="REMOTE [OPP]"
+                panelTitle={matchState.opponentIsBot ? 'BOT [AI]' : 'REMOTE [OPP]'}
                 scrollWarningMessage="Use j/k for scrolling"
-                displayName={matchState.opponentName || 'Opponent'}
+                displayName={matchState.opponentName || (matchState.opponentIsBot ? 'Bot' : 'Opponent')}
                 avatarUrl={matchState.opponentAvatar || ''}
                 rating={matchState.opponentRating}
                 ref={rightRef}

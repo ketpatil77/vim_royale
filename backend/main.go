@@ -4,6 +4,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"time"
 
 	"vim_royale/backend/config"
@@ -19,6 +20,10 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 
 	config.Load()
+
+	if err := services.InitBotManager(filepath.Join("data", "bots")); err != nil {
+		log.Printf("bot manager init warning: %v", err)
+	}
 
 	hub := services.NewHub()
 	go hub.Run()

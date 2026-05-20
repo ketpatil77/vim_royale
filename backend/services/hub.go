@@ -149,6 +149,10 @@ func (h *Hub) EnqueueIncoming(inbound InboundMessage) {
 func (h *Hub) handleIncoming(inbound InboundMessage) {
 	switch inbound.Message.Type {
 	case MsgQueueJoin:
+		if inbound.Client.BotID != "" {
+			h.startBotGame(inbound.Client, inbound.Client.BotID)
+			return
+		}
 		h.enqueueForMatch(inbound.Client)
 	case MsgBufferUpdate:
 		h.relayBufferUpdate(inbound.Client, inbound.Message)

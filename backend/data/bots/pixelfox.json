@@ -1,0 +1,10 @@
+{
+  "bot": {
+    "id": "pixelfox",
+    "name": "PixelFox",
+    "avatar": "https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_2.png",
+    "rating": 800,
+    "difficulty": "easy"
+  },
+  "sequences": []
+}

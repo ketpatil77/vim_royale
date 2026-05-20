@@ -1,6 +1,7 @@
 import type {
   HelloAckPayload,
   GameStartPayload,
+  BotGameStartPayload,
   BufferUpdatePayload,
   BufferDelta,
   GameOverPayload,
@@ -34,6 +35,31 @@ export function parseGameStartPayload(payload: unknown): GameStartPayload | null
     opponentName: payload.opponentName,
     opponentAvatar: payload.opponentAvatar,
     opponentRating: payload.opponentRating,
+    role: payload.role,
+    startedAt: payload.startedAt,
+    targetCode: payload.targetCode,
+    pollutedCode: payload.pollutedCode,
+  }
+}
+
+export function parseBotGameStartPayload(payload: unknown): BotGameStartPayload | null {
+  if (!isRecord(payload)) return null
+  if (typeof payload.matchId !== 'string') return null
+  if (typeof payload.botId !== 'string') return null
+  if (typeof payload.botName !== 'string') return null
+  if (typeof payload.botAvatar !== 'string') return null
+  if (typeof payload.botRating !== 'number') return null
+  if (payload.role !== 'A' && payload.role !== 'B') return null
+  if (typeof payload.startedAt !== 'number') return null
+  if (typeof payload.targetCode !== 'string') return null
+  if (typeof payload.pollutedCode !== 'string') return null
+
+  return {
+    matchId: payload.matchId,
+    botId: payload.botId,
+    botName: payload.botName,
+    botAvatar: payload.botAvatar,
+    botRating: payload.botRating,
     role: payload.role,
     startedAt: payload.startedAt,
     targetCode: payload.targetCode,
