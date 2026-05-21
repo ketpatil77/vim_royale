@@ -10,6 +10,9 @@ func (h *Hub) enqueueForMatch(client *Client) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
+	if !h.isClientActiveLocked(client) {
+		return
+	}
 	if client.ID == "" {
 		h.sendErrorLocked(client, "unauthenticated", "send HELLO before queueing")
 		return
@@ -47,7 +50,15 @@ func (h *Hub) tryMatchBucket(bucket *ratingBucket) {
 		pB := bucket.players[1]
 		bucket.players = bucket.players[2:]
 
-		if pA == pB || pA.ID == "" || pB.ID == "" {
+		validA := h.isClientActiveLocked(pA) && pA.ID != ""
+		validB := h.isClientActiveLocked(pB) && pB.ID != ""
+		if pA == pB || !validA || !validB {
+			if validB && pA != pB {
+				bucket.players = append([]*Client{pB}, bucket.players...)
+			}
+			if validA {
+				bucket.players = append([]*Client{pA}, bucket.players...)
+			}
 			continue
 		}
 
@@ -107,7 +118,7 @@ func (h *Hub) removeFromQueueLocked(target *Client) {
 
 	bucketIdx := target.Rating
 	if bucketIdx < 0 || bucketIdx >= numBuckets {
-		return
+		bucketIdx = 0
 	}
 
 	bucket := h.waitingBuckets[bucketIdx]
@@ -119,11 +130,19 @@ func (h *Hub) removeFromQueueLocked(target *Client) {
 	defer bucket.mu.Unlock()
 
 	for i, c := range bucket.players {
-		if c.ID == target.ID {
+		if c == target {
 			bucket.players = append(bucket.players[:i], bucket.players[i+1:]...)
 			return
 		}
 	}
+}
+
+func (h *Hub) isClientActiveLocked(client *Client) bool {
+	if client == nil || client.closed {
+		return false
+	}
+	_, ok := h.clients[client]
+	return ok
 }
 
 func (h *Hub) runMatchExpansion() {

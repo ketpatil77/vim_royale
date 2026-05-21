@@ -27,14 +27,18 @@ func (h *Hub) sendLocked(client *Client, msgType MessageType, matchID, playerID 
 		Type:      msgType,
 		MatchID:   matchID,
 		PlayerID:  playerID,
-		Seq:      seq,
+		Seq:       seq,
 		Timestamp: time.Now().UTC().Unix(),
-		Payload:  raw,
+		Payload:   raw,
 	}
 	h.sendEnvelopeLocked(client, envelope)
 }
 
 func (h *Hub) sendEnvelopeLocked(client *Client, envelope Envelope) {
+	if client == nil || client.closed {
+		return
+	}
+
 	select {
 	case client.send <- mustMarshalEnvelope(envelope):
 	default:

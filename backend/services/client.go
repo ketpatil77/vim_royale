@@ -33,6 +33,7 @@ type Client struct {
 	Conn        *websocket.Conn
 	Hub         *Hub
 	send        chan []byte
+	closed      bool
 	MatchID     string
 }
 

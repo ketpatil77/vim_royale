@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useCRT } from '../../contexts/CRTContext'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -22,6 +22,9 @@ const initialMatchState: MatchState = {
   opponentIsBot: false,
   matchId: '',
 }
+
+const shouldWarnBeforeLeaving = (state: ViewState) => state === 'countdown' || state === 'playing'
+const activeMatchLeaveWarning = 'A match is currently in progress.'
 
 type MatchPageProps = {
   mode?: 'multiplayer' | 'computer'
@@ -50,7 +53,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   })
 
   const viewStateRef = useRef(viewState)
-  useEffect(() => {
+  useLayoutEffect(() => {
     viewStateRef.current = viewState
   }, [viewState])
 
@@ -96,13 +99,6 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
     })
   }, [])
 
-  const handlePlayerWon = useCallback(() => {
-    sendPlayerFinishedWithKeystrokes({
-      playerA: keystrokesRef.current.sent,
-      playerB: keystrokesRef.current.received,
-    })
-  }, [sendPlayerFinishedWithKeystrokes])
-
   const playSound = useCallback((type: 'win' | 'lose') => {
     sounds[type].play()
   }, [])
@@ -146,7 +142,6 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
       replaceOpponentContent,
       applyDelta,
       recordReceivedKeystroke,
-      handlePlayerWon,
       () => beginMatchmaking(),
       getViewState
     )
@@ -167,7 +162,6 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
     replaceOpponentContent,
     applyDelta,
     recordReceivedKeystroke,
-    handlePlayerWon,
     getViewState,
     connect,
   ])
@@ -248,16 +242,23 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (viewStateRef.current === 'playing') {
-        e.preventDefault()
-        e.returnValue = ''
+      if (!shouldWarnBeforeLeaving(viewStateRef.current)) {
+        return
       }
+
+      e.preventDefault()
+      e.returnValue = activeMatchLeaveWarning
+      return activeMatchLeaveWarning
     }
 
     window.addEventListener('beforeunload', handleBeforeUnload)
+    window.onbeforeunload = handleBeforeUnload
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
+      if (window.onbeforeunload === handleBeforeUnload) {
+        window.onbeforeunload = null
+      }
     }
   }, [])
 

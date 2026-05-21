@@ -71,6 +71,7 @@ func (h *Hub) handleUnregister(client *Client) {
 
 	delete(h.clients, client)
 	h.removeFromQueueLocked(client)
+	client.closed = true
 
 	if client.ID != "" {
 		if current, ok := h.clientsByID[client.ID]; ok && current == client {
@@ -89,7 +90,9 @@ func (h *Hub) handleUnregister(client *Client) {
 		}
 	}
 
-	close(client.send)
+	if client.send != nil {
+		close(client.send)
+	}
 	h.mu.Unlock() // Release lock before any slow work
 
 	// Offload DB call and notification to a goroutine
@@ -138,8 +141,10 @@ func (h *Hub) handleDisconnectWin(match *Match, winner *Client, loser *Client) {
 		FinishedAt:      now.Unix(),
 	}
 
+	h.mu.Lock()
 	h.sendLocked(winner, MsgGameOver, match.ID, winner.ID, 0, gameOver)
 	winner.MatchID = ""
+	h.mu.Unlock()
 }
 
 func (h *Hub) EnqueueIncoming(inbound InboundMessage) {

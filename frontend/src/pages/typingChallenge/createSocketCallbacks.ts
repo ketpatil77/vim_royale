@@ -29,7 +29,6 @@ export function createSocketCallbacks(
   replaceOpponentContent: (content: string) => void,
   applyDelta: (delta: BufferDelta) => void,
   recordReceivedKeystroke: (delta: BufferDelta) => void,
-  onPlayerWon: () => void,
   onMatchStart: () => void,
   getViewState: () => string
 ) {
@@ -117,10 +116,6 @@ export function createSocketCallbacks(
       playSound(youWon ? 'win' : 'lose')
       setStatusText('Match finished')
       setViewState('finished')
-
-      if (youWon && payload.reason === 'opponent_disconnected') {
-        onPlayerWon()
-      }
     },
 
     onError: (code: string, message: string) => {

@@ -129,6 +129,10 @@ func (h *Hub) startBotGame(client *Client, botID string) {
 	}
 
 	h.mu.Lock()
+	if !h.isClientActiveLocked(client) {
+		h.mu.Unlock()
+		return
+	}
 	if client.MatchID != "" {
 		h.sendErrorLocked(client, "already_in_match", "player already in an active match")
 		h.mu.Unlock()
