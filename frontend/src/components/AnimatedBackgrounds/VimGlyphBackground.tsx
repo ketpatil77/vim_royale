@@ -52,12 +52,12 @@ class Glyph {
   #init(scatter = false) {
     this.x = Math.random() * this.#w
     this.y = scatter ? Math.random() * this.#h : this.#h + 30
-    this.#vy = -(0.08 + Math.random() * 0.18) * this.#speed
+    this.#vy = -(0.18 + Math.random() * 0.35) * this.#speed
     this.#vx = (Math.random() - 0.5) * 0.08
     this.text = VIM_COMMANDS[Math.floor(Math.random() * VIM_COMMANDS.length)]
-    this.#baseAlpha = 0.1 + Math.random() * 0.22
+    this.#baseAlpha = 0.22 + Math.random() * 0.38
     this.alpha = this.#baseAlpha
-    this.#size = 10 + Math.floor(Math.random() * 7)
+    this.#size = 11 + Math.floor(Math.random() * 8)
     this.#maxLife = 280 + Math.random() * 300
     this.#age = scatter ? Math.random() * this.#maxLife : 0
     this.#drift = (Math.random() - 0.5) * 0.0015
@@ -76,12 +76,12 @@ class Glyph {
       Math.min(this.#age / 40, (this.#maxLife - this.#age) / 40),
     )
     const twinkle =
-      0.85 + 0.15 * Math.sin(t * this.#twinkleSpeed + this.#twinklePhase)
+      0.7 + 0.3 * Math.sin(t * this.#twinkleSpeed + this.#twinklePhase)
 
     const dx = this.x - mouse.x
     const dy = this.y - mouse.y
     const dist = Math.sqrt(dx * dx + dy * dy)
-    const proximity = dist < 120 ? (1 - dist / 120) * 0.55 : 0
+    const proximity = dist < 160 ? (1 - dist / 160) * 0.9 : 0
 
     this.alpha = (this.#baseAlpha + proximity) * fade * twinkle
 
@@ -94,8 +94,8 @@ class Glyph {
     ctx.fillStyle = primaryColor
     ctx.fillText(this.text, this.x, this.y)
 
-    if (this.alpha > 0.12) {
-      ctx.globalAlpha = this.alpha * 0.18
+    if (this.alpha > 0.08) {
+      ctx.globalAlpha = this.alpha * 0.35
       ctx.font = `${this.#size + 2}px monospace`
       ctx.fillStyle = bloomColor
       ctx.fillText(this.text, this.x - 0.5, this.y)
@@ -104,7 +104,7 @@ class Glyph {
 }
 
 export default function VimGlyphBackground({
-  count = 200,
+  count = 55,
   color = '#00ff55',
   className = '',
   style = {},
@@ -246,6 +246,7 @@ export default function VimGlyphBackground({
         position: 'absolute',
         inset: 0,
         overflow: 'hidden',
+        cursor: 'crosshair',
         ...style,
       }}
     >
@@ -253,6 +254,18 @@ export default function VimGlyphBackground({
       <canvas
         ref={canvasRef}
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+      />
+
+      {/* CRT scanlines overlay */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          background:
+            'repeating-linear-gradient(0deg,rgba(0,0,0,0.12) 0px,rgba(0,0,0,0.12) 1px,transparent 1px,transparent 4px)',
+        }}
       />
 
       {/* Phosphor vignette */}

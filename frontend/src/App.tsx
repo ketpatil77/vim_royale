@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import CRTEffect from 'vault66-crt-effect'
 import "vault66-crt-effect/dist/vault66-crt-effect.css"
+import { AnalyticsRouteTracker } from './components/AnalyticsRouteTracker'
 import { WalkthroughPrompt } from './components/Walkthrough/WalkthroughPrompt'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { CRTProvider, useCRT } from './contexts/CRTContext'
@@ -136,6 +137,7 @@ function AppContent() {
   return (
       <CRTEffect theme='green' enableScanlines={crtEnabled} scanlineOpacity={0.1} scanlineThickness={2} scanlineGap={3} enableSweep={crtEnabled} sweepDuration={12} sweepThickness={8} sweepStyle='classic' enableGlow={false} enableEdgeGlow={true} edgeGlowColor='rgba(91, 179, 135, 0.25)' edgeGlowSize={25} enableFlicker={crtEnabled} flickerIntensity={0.03} flickerSpeed={2} enableVignette={true} vignetteIntensity={0.2} enableGlitch={false}>
         <TimedGameProvider>
+          <AnalyticsRouteTracker />
           <AppRoutes />
           {!isLoading && location.pathname !== "/walkthrough" && (
             <WalkthroughPrompt user={user} />
