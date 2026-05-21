@@ -46,7 +46,8 @@ export function WalkthroughPrompt({ user }: { user: User | null }) {
         aria-labelledby="walkthrough-prompt-title"
       >
         <div className="walkthrough-prompt-topline">
-          <span>first_login.guide</span>
+          <span>first_login.md</span>
+
           <button type="button" onClick={markSeen} aria-label="Dismiss walkthrough prompt">
             :q
           </button>

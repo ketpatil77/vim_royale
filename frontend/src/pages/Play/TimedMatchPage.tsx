@@ -67,12 +67,6 @@ export default function TimedMatchPage() {
   }, [status])
 
   useEffect(() => {
-    if (timeLeft <= TIMER_WARNING_THRESHOLD && status === 'playing') {
-      sounds.lose.play()
-    }
-  }, [timeLeft, status])
-
-  useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (status === 'playing') {
         e.preventDefault()
