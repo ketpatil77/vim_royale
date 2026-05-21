@@ -374,8 +374,8 @@
 }
 
 .edit-toggle-btn--logout:hover {
-  background: var(--amber);
-  border-color: var(--amber);
+  background: var(--red);
+  border-color: var(--red);
   color: #000;
 }
 
