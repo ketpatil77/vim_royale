@@ -29,7 +29,7 @@ const STEPS: WalkthroughStep[] = [
     eyebrow: "boot sequence",
     title: "Welcome to Vim Royale",
     summary:
-      "Vim Royale is a competitive coding game where two players race to repair corrupted code using vim.",
+      "Vim Royale is a competitive vim game where two players race to repair corrupted code using vim motions.",
     points: [
       "Move through real editing challenges with vim motions, operators, and commands.",
       "Out-maneuver your opponent by making precise edits faster.",
