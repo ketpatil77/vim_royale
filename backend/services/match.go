@@ -131,6 +131,7 @@ func (h *Hub) finishMatch(client *Client, message Envelope) {
 		LoserAvatar:     loserAvatar,
 		LoserNewRating:  loserNewRating,
 		LoserDelta:      loserDelta,
+		ResultType:      "decisive",
 		Reason:          "player_finished",
 		FinishedAt:      now.Unix(),
 	}
@@ -200,6 +201,7 @@ func (h *Hub) finishBotMatch(match *Match, client *Client) {
 		LoserAvatar:     loserAvatar,
 		LoserNewRating:  loserNewRating,
 		LoserDelta:      0,
+		ResultType:      "decisive",
 		Reason:          "player_finished",
 		FinishedAt:      now.Unix(),
 	}
@@ -207,4 +209,81 @@ func (h *Hub) finishBotMatch(match *Match, client *Client) {
 	h.sendLocked(client, MsgGameOver, match.ID, client.ID, 0, result)
 	client.MatchID = ""
 	delete(h.matches, match.ID)
+}
+
+func (h *Hub) finishMatchAsDraw(matchID, reason string) {
+	h.mu.Lock()
+	match, ok := h.matches[matchID]
+	if !ok || match.Status != MatchPlaying || match.BotID != "" {
+		h.mu.Unlock()
+		return
+	}
+
+	playerA := match.PlayerA
+	playerB := match.PlayerB
+	now := time.Now().UTC()
+	match.Status = MatchFinished
+	match.FinishedAt = &now
+	match.WinnerID = ""
+
+	if playerA != nil {
+		playerA.MatchID = ""
+	}
+	if playerB != nil {
+		playerB.MatchID = ""
+	}
+	delete(h.matches, match.ID)
+	h.mu.Unlock()
+
+	if playerA != nil && playerB != nil {
+		dbConn, err := database.GetPostgresConnection()
+		if err != nil {
+			log.Printf("failed to get postgres connection: %v", err)
+		} else if _, err := database.CreateDrawMatch(dbConn, playerA.ID, playerB.ID, match.TargetCode, match.PollutedCode); err != nil {
+			log.Printf("failed to persist drawn match: %v", err)
+		}
+	}
+
+	aID, aName, aAvatar := "", "Player A", ""
+	bID, bName, bAvatar := "", "Player B", ""
+	aRating, bRating := 0.0, 0.0
+
+	if playerA != nil {
+		aID = playerA.ID
+		aName = playerA.DisplayName
+		aAvatar = playerA.AvatarURL
+		aRating = float64(playerA.Rating)
+	}
+	if playerB != nil {
+		bID = playerB.ID
+		bName = playerB.DisplayName
+		bAvatar = playerB.AvatarURL
+		bRating = float64(playerB.Rating)
+	}
+
+	result := GameOverPayload{
+		MatchID:         match.ID,
+		WinnerID:        aID,
+		LoserID:         bID,
+		WinnerName:      aName,
+		WinnerAvatar:    aAvatar,
+		WinnerNewRating: aRating,
+		WinnerDelta:     0,
+		LoserName:       bName,
+		LoserAvatar:     bAvatar,
+		LoserNewRating:  bRating,
+		LoserDelta:      0,
+		ResultType:      "draw",
+		Reason:          reason,
+		FinishedAt:      now.Unix(),
+	}
+
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if playerA != nil {
+		h.sendLocked(playerA, MsgGameOver, match.ID, playerA.ID, 0, result)
+	}
+	if playerB != nil {
+		h.sendLocked(playerB, MsgGameOver, match.ID, playerB.ID, 0, result)
+	}
 }

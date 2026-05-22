@@ -45,6 +45,7 @@ type GameStartPayload struct {
 	OpponentName   string `json:"opponentName"`
 	OpponentAvatar string `json:"opponentAvatar"`
 	OpponentRating int    `json:"opponentRating"`
+	RoundDurationS int    `json:"roundDurationSec"`
 	Role           string `json:"role"`
 	StartedAt      int64  `json:"startedAt"`
 	TargetCode     string `json:"targetCode"`
@@ -52,15 +53,16 @@ type GameStartPayload struct {
 }
 
 type BotGameStartPayload struct {
-	MatchID      string `json:"matchId"`
-	BotID        string `json:"botId"`
-	BotName      string `json:"botName"`
-	BotAvatar    string `json:"botAvatar"`
-	BotRating    int    `json:"botRating"`
-	Role         string `json:"role"`
-	StartedAt    int64  `json:"startedAt"`
-	TargetCode   string `json:"targetCode"`
-	PollutedCode string `json:"pollutedCode"`
+	MatchID        string `json:"matchId"`
+	BotID          string `json:"botId"`
+	BotName        string `json:"botName"`
+	BotAvatar      string `json:"botAvatar"`
+	BotRating      int    `json:"botRating"`
+	RoundDurationS int    `json:"roundDurationSec"`
+	Role           string `json:"role"`
+	StartedAt      int64  `json:"startedAt"`
+	TargetCode     string `json:"targetCode"`
+	PollutedCode   string `json:"pollutedCode"`
 }
 
 type BufferUpdatePayload struct {
@@ -97,6 +99,7 @@ type GameOverPayload struct {
 	LoserAvatar     string  `json:"loserAvatar"`
 	LoserNewRating  float64 `json:"loserNewRating"`
 	LoserDelta      float64 `json:"loserDelta"`
+	ResultType      string  `json:"resultType"`
 	Reason          string  `json:"reason"`
 	FinishedAt      int64   `json:"finishedAt"`
 }

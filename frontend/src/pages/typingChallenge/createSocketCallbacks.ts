@@ -50,7 +50,7 @@ export function createSocketCallbacks(
 
   return {
     onHelloAck: (playerId: string) => {
-      setMatchState({ playerId, opponentId: '', opponentName: '', opponentAvatar: '', opponentRating: 0, opponentIsBot: false, matchId: '' })
+      setMatchState({ playerId, opponentId: '', opponentName: '', opponentAvatar: '', opponentRating: 0, opponentIsBot: false, matchId: '', roundDurationSec: 180 })
       setStatusText('Finding an opponent...')
     },
 
@@ -67,6 +67,7 @@ export function createSocketCallbacks(
         opponentRating: payload.opponentRating,
         opponentIsBot: false,
         matchId: payload.matchId,
+        roundDurationSec: payload.roundDurationSec || 180,
       })
       setVimMode('NORMAL')
       setResultText('')
@@ -87,6 +88,7 @@ export function createSocketCallbacks(
         opponentRating: payload.botRating,
         opponentIsBot: true,
         matchId: payload.matchId,
+        roundDurationSec: payload.roundDurationSec || 180,
       })
       setVimMode('NORMAL')
       setResultText('')
@@ -104,6 +106,14 @@ export function createSocketCallbacks(
     },
 
     onGameOver: (payload: GameOverPayload, playerId: string) => {
+      if (payload.resultType === 'draw') {
+        setResultText('Match drawn. Time limit reached.')
+        setGameOverPayload(payload)
+        setStatusText('Match drawn')
+        setViewState('finished')
+        return
+      }
+
       const youWon = payload.winnerId === playerId
       const reason = payload.reason === 'opponent_disconnected'
         ? 'Opponent disconnected'

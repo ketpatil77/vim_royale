@@ -15,6 +15,7 @@ type UserMatchHistoryEntry struct {
 	OpponentDisplayName string `json:"opponentDisplayName"`
 	OpponentAvatarURL   string `json:"opponentAvatarUrl"`
 	IsWinner            bool   `json:"isWinner"`
+	IsDraw              bool   `json:"isDraw"`
 	ReplayAvailable     bool   `json:"replayAvailable"`
 }
 
@@ -222,13 +223,15 @@ func GetUserMatches(c *gin.Context) {
 		}
 
 		matchID := match.MatchID.String()
+		isDraw := match.Outcome == "draw"
 		response = append(response, UserMatchHistoryEntry{
 			MatchID:             matchID,
 			FinishedAt:          finishedAt,
 			OpponentUsername:    opponent.Username,
 			OpponentDisplayName: opponent.DisplayName,
 			OpponentAvatarURL:   opponent.AvatarURL,
-			IsWinner:            match.WinnerID == user.ID,
+			IsWinner:            !isDraw && match.WinnerID == user.ID,
+			IsDraw:              isDraw,
 			ReplayAvailable:     replayAvailability[matchID],
 		})
 	}

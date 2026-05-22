@@ -17,6 +17,7 @@ type Match struct {
 	TargetCode   string    `json:"target_code" gorm:"type:text"`
 	PollutedCode string    `json:"polluted_code" gorm:"type:text"`
 	WinnerID     uint      `json:"winner_id"`
+	Outcome      string    `json:"outcome" gorm:"default:'decisive';index"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 	FinishedAt   time.Time `json:"finished_at"`

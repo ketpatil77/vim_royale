@@ -158,15 +158,16 @@ func (h *Hub) startBotGame(client *Client, botID string) {
 	client.MatchID = matchID
 
 	startPayload := BotGameStartPayload{
-		MatchID:      matchID,
-		BotID:        bot.ID,
-		BotName:      bot.Name,
-		BotAvatar:    bot.Avatar,
-		BotRating:    bot.Rating,
-		Role:         "A",
-		StartedAt:    now.Unix(),
-		TargetCode:   targetCode,
-		PollutedCode: pollutedCode,
+		MatchID:        matchID,
+		BotID:          bot.ID,
+		BotName:        bot.Name,
+		BotAvatar:      bot.Avatar,
+		BotRating:      bot.Rating,
+		RoundDurationS: roundDurationInSeconds,
+		Role:           "A",
+		StartedAt:      now.Unix(),
+		TargetCode:     targetCode,
+		PollutedCode:   pollutedCode,
 	}
 	h.sendLocked(client, MsgBotGameStart, matchID, client.ID, 0, startPayload)
 	h.mu.Unlock()
@@ -269,6 +270,7 @@ func (h *Hub) runBotReplay(matchID string) {
 		LoserAvatar:     player.AvatarURL,
 		LoserNewRating:  float64(player.Rating),
 		LoserDelta:      0,
+		ResultType:      "decisive",
 		Reason:          "player_finished",
 		FinishedAt:      now.Unix(),
 	}

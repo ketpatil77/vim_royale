@@ -61,6 +61,10 @@
   color: red;
 }
 
+.result-modal-title.draw {
+  color: var(--yellow);
+}
+
 .result-modal-description {
   color: var(--text-dim);
   font-size: 13px;
@@ -93,6 +97,11 @@
 .player-card--loser {
   border: 2px solid #ff3b30;
   background: rgba(255, 59, 48, 0.04);
+}
+
+.player-card--draw {
+  border: 2px solid rgba(229, 192, 123, 0.45);
+  background: rgba(229, 192, 123, 0.08);
 }
 
 .player-card-avatar {

@@ -28,6 +28,7 @@ export type GameStartPayload = {
   opponentName: string
   opponentAvatar: string
   opponentRating: number
+  roundDurationSec?: number
   role: 'A' | 'B'
   startedAt: number
   targetCode: string
@@ -40,6 +41,7 @@ export type BotGameStartPayload = {
   botName: string
   botAvatar: string
   botRating: number
+  roundDurationSec?: number
   role: 'A' | 'B'
   startedAt: number
   targetCode: string
@@ -73,6 +75,7 @@ export type GameOverPayload = {
   loserAvatar: string
   loserNewRating: number
   loserDelta: number
+  resultType?: 'decisive' | 'draw'
   reason: string
   finishedAt: number
 }
@@ -92,6 +95,7 @@ export type MatchState = {
   opponentRating: number
   opponentIsBot: boolean
   matchId: string
+  roundDurationSec: number
 }
 
 export type KeystrokeEntry = {

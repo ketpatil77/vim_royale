@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useCRT } from '../../contexts/CRTContext'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -21,10 +21,36 @@ const initialMatchState: MatchState = {
   opponentRating: 0,
   opponentIsBot: false,
   matchId: '',
+  roundDurationSec: 180,
 }
 
 const shouldWarnBeforeLeaving = (state: ViewState) => state === 'countdown' || state === 'playing'
 const activeMatchLeaveWarning = 'A match is currently in progress.'
+const defaultRoundDurationSec = 180
+
+const normalizeLines = (value: string) => value.replace(/\r\n/g, '\n').split('\n')
+
+const findChangedLineIndexes = (targetCode: string, pollutedCode: string): number[] => {
+  const targetLines = normalizeLines(targetCode)
+  const pollutedLines = normalizeLines(pollutedCode)
+  const max = Math.max(targetLines.length, pollutedLines.length)
+  const changed: number[] = []
+
+  for (let i = 0; i < max; i += 1) {
+    if ((targetLines[i] || '') !== (pollutedLines[i] || '')) {
+      changed.push(i)
+    }
+  }
+
+  return changed
+}
+
+const formatRoundClock = (seconds: number): string => {
+  const safe = Math.max(0, seconds)
+  const minutes = Math.floor(safe / 60)
+  const remainder = safe % 60
+  return `${minutes}:${String(remainder).padStart(2, '0')}`
+}
 
 type MatchPageProps = {
   mode?: 'multiplayer' | 'computer'
@@ -38,6 +64,8 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   const [matchState, setMatchState] = useState<MatchState>(initialMatchState)
   const [resultText, setResultText] = useState('')
   const [gameOverPayload, setGameOverPayload] = useState<GameOverPayload | null>(null)
+  const [roundSecondsLeft, setRoundSecondsLeft] = useState(defaultRoundDurationSec)
+  const [playerContent, setPlayerContent] = useState('')
   const navigate = useNavigate()
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
@@ -120,6 +148,8 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
     setMatchState(initialMatchState)
     setResultText('')
     setGameOverPayload(null)
+    setRoundSecondsLeft(defaultRoundDurationSec)
+    setPlayerContent('')
     setStatusText(isComputerMode ? 'Connecting to bot server...' : 'Connecting to matchmaking server...')
     setViewState('matchmaking')
 
@@ -185,6 +215,32 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   }, [viewState])
 
   useEffect(() => {
+    if (isComputerMode) return
+
+    if (viewState === 'countdown') {
+      setRoundSecondsLeft(matchState.roundDurationSec || defaultRoundDurationSec)
+      return
+    }
+
+    if (viewState !== 'playing') return
+
+    const duration = matchState.roundDurationSec || defaultRoundDurationSec
+    setRoundSecondsLeft(duration)
+    const deadlineAt = Date.now() + duration * 1000
+
+    const interval = window.setInterval(() => {
+      const remainingMs = deadlineAt - Date.now()
+      const remainingSeconds = Math.max(0, Math.ceil(remainingMs / 1000))
+      setRoundSecondsLeft(remainingSeconds)
+      if (remainingSeconds <= 0) {
+        window.clearInterval(interval)
+      }
+    }, 250)
+
+    return () => window.clearInterval(interval)
+  }, [isComputerMode, viewState, matchState.roundDurationSec])
+
+  useEffect(() => {
     if (viewState !== 'playing' || !leftRef.current) return
 
     const editorMount = leftRef.current
@@ -219,6 +275,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
     })
 
     const content = getPlayerContent()
+    setPlayerContent(content)
     if (!finishSentRef.current && content === targetCodeRef.current) {
       finishSentRef.current = true
       const keystrokes: KeystrokeEntry[] = keystrokesRef.current.sent
@@ -231,6 +288,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
 
   useEffect(() => {
     if (viewState === 'playing') {
+      setPlayerContent(pollutedCodeRef.current)
       return setEditors(
         {
           pollutedCode: pollutedCodeRef.current,
@@ -252,6 +310,26 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   }
 
   const isMatchmaking = viewState === 'matchmaking'
+  const showMatchHud = !isComputerMode && (viewState === 'playing' || viewState === 'countdown')
+  const currentPlayerBuffer = (viewState === 'playing' || viewState === 'finished')
+    ? playerContent
+    : pollutedCodeRef.current
+
+  const baselineChangedLines = useMemo(
+    () => findChangedLineIndexes(targetCodeRef.current, pollutedCodeRef.current),
+    [matchState.matchId]
+  )
+
+  const currentChangedLines = useMemo(() => {
+    if (!targetCodeRef.current) return []
+    const current = currentPlayerBuffer
+    return findChangedLineIndexes(targetCodeRef.current, current)
+  }, [currentPlayerBuffer, matchState.matchId])
+
+  const totalChecks = baselineChangedLines.length
+  const completedChecks = Math.max(0, totalChecks - currentChangedLines.length)
+  const completionRatio = totalChecks > 0 ? completedChecks / totalChecks : 1
+  const completionPercent = Math.round(completionRatio * 100)
 
   const handleMainMenu = () => {
     navigate('/play')
@@ -308,6 +386,25 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
           </div>
         ) : (
           <div className="match-container">
+            {showMatchHud && (
+              <div className="match-hud" aria-label="round progress">
+                <div className={`match-hud-timer ${roundSecondsLeft <= 30 ? 'critical' : roundSecondsLeft <= 60 ? 'warning' : ''}`}>
+                  <span className="match-hud-timer-label">TIME</span>
+                  <span className="match-hud-timer-value">{formatRoundClock(roundSecondsLeft)}</span>
+                </div>
+
+                <div className="match-progress-group">
+                  <div className="match-progress-meta">
+                    <span className="match-progress-label">PROGRESS</span>
+                    <span className="match-progress-value">{completionPercent}%</span>
+                  </div>
+                  <div className="match-progress-track" aria-hidden="true">
+                    <span className="match-progress-fill" style={{ width: `${completionPercent}%` }} />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="editor-grid">
               <EditorPanel
                 filename="vim_royale.ts"

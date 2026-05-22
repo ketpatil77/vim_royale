@@ -53,6 +53,12 @@ func UpdateUserStats(db *gorm.DB, user *models.User, won bool) error {
 	return db.Save(user).Error
 }
 
+func UpdateUserStatsForDraw(db *gorm.DB, user *models.User) error {
+	user.LastActive = time.Now()
+	user.Matches += 1
+	return db.Save(user).Error
+}
+
 func GetUserFromProvider(db *gorm.DB, provider, providerID string) (*models.User, error) {
 	var user models.User
 	if err := db.Where("provider = ? AND provider_id = ?", provider, providerID).First(&user).Error; err != nil {
