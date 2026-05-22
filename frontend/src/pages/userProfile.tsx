@@ -40,8 +40,12 @@ type MatchesResponse = {
   totalPages: number;
 };
 
-function getHoursAgo(isoDate: string): string {
+function getHoursAgo(isoDate: string | null | undefined): string {
+  if (!isoDate || isoDate.startsWith("0001-01-01")) return "never";
+
   const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return "never";
+
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
