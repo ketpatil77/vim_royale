@@ -162,7 +162,7 @@ function transformDeadLine(line: string): [string, string, string] {
   const deadLines = ['var _unused = null;', "console.log('debug');", 'void 0;', 'undefined;', 'null;']
   const indent = leadingSpaces(line)
   const dead = indent + deadLines[Math.floor(Math.random() * deadLines.length)]
-  return [dead + '\n' + line, 'dd', 'the line above should not be there']
+  return [dead + '\n' + line, 'dd', 'this line should not be there']
 }
 
 function transformJoinSplit(line: string): [string, string, string] {

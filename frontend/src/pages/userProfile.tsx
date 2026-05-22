@@ -29,6 +29,7 @@ type MatchHistoryEntry = {
   opponentDisplayName: string;
   opponentAvatarUrl: string;
   isWinner: boolean;
+  isDraw: boolean;
   replayAvailable: boolean;
 };
 
@@ -292,8 +293,8 @@ export default function UserProfile() {
                     </div>
                   </div>
 
-                  <div className={`profile-match-result ${match.isWinner ? "win" : "loss"}`}>
-                    {match.isWinner ? "WIN" : "LOSS"}
+                  <div className={`profile-match-result ${match.isDraw ? "draw" : match.isWinner ? "win" : "loss"}`}>
+                    {match.isDraw ? "DRAW" : match.isWinner ? "WIN" : "LOSS"}
                   </div>
 
                   <button

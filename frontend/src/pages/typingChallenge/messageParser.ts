@@ -24,6 +24,7 @@ export function parseGameStartPayload(payload: unknown): GameStartPayload | null
   if (typeof payload.opponentName !== 'string') return null
   if (typeof payload.opponentAvatar !== 'string') return null
   if (typeof payload.opponentRating !== 'number') return null
+  if (payload.roundDurationSec !== undefined && typeof payload.roundDurationSec !== 'number') return null
   if (payload.role !== 'A' && payload.role !== 'B') return null
   if (typeof payload.startedAt !== 'number') return null
   if (typeof payload.targetCode !== 'string') return null
@@ -35,6 +36,7 @@ export function parseGameStartPayload(payload: unknown): GameStartPayload | null
     opponentName: payload.opponentName,
     opponentAvatar: payload.opponentAvatar,
     opponentRating: payload.opponentRating,
+    roundDurationSec: typeof payload.roundDurationSec === 'number' ? payload.roundDurationSec : 180,
     role: payload.role,
     startedAt: payload.startedAt,
     targetCode: payload.targetCode,
@@ -49,6 +51,7 @@ export function parseBotGameStartPayload(payload: unknown): BotGameStartPayload 
   if (typeof payload.botName !== 'string') return null
   if (typeof payload.botAvatar !== 'string') return null
   if (typeof payload.botRating !== 'number') return null
+  if (payload.roundDurationSec !== undefined && typeof payload.roundDurationSec !== 'number') return null
   if (payload.role !== 'A' && payload.role !== 'B') return null
   if (typeof payload.startedAt !== 'number') return null
   if (typeof payload.targetCode !== 'string') return null
@@ -60,6 +63,7 @@ export function parseBotGameStartPayload(payload: unknown): BotGameStartPayload 
     botName: payload.botName,
     botAvatar: payload.botAvatar,
     botRating: payload.botRating,
+    roundDurationSec: typeof payload.roundDurationSec === 'number' ? payload.roundDurationSec : 180,
     role: payload.role,
     startedAt: payload.startedAt,
     targetCode: payload.targetCode,
@@ -97,6 +101,7 @@ export function parseGameOverPayload(payload: unknown): GameOverPayload | null {
   if (typeof payload.loserAvatar !== 'string') return null
   if (typeof payload.loserNewRating !== 'number') return null
   if (typeof payload.loserDelta !== 'number') return null
+  if (payload.resultType !== undefined && payload.resultType !== 'decisive' && payload.resultType !== 'draw') return null
   if (typeof payload.reason !== 'string') return null
   if (typeof payload.finishedAt !== 'number') return null
 
@@ -112,6 +117,7 @@ export function parseGameOverPayload(payload: unknown): GameOverPayload | null {
     loserAvatar: payload.loserAvatar,
     loserNewRating: payload.loserNewRating,
     loserDelta: payload.loserDelta,
+    resultType: payload.resultType === 'draw' ? 'draw' : 'decisive',
     reason: payload.reason,
     finishedAt: payload.finishedAt,
   }

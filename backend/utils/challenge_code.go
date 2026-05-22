@@ -13,9 +13,9 @@ type difficultyTier int
 
 const (
 	tierBeginner     difficultyTier = iota // 0–799
-	tierIntermediate                        // 800–1199
-	tierAdvanced                            // 1200–1599
-	tierExpert                              // 1600+
+	tierIntermediate                       // 800–1199
+	tierAdvanced                           // 1200–1599
+	tierExpert                             // 1600+
 )
 
 func tierFromElo(elo int) difficultyTier {
@@ -59,19 +59,19 @@ func configFromTier(tier difficultyTier) pollutionConfig {
 	case tierIntermediate:
 		return pollutionConfig{
 			maxMutationsPerLine: 2,
-			verbosity:           verbosityHint,
+			verbosity:           verbosityExplicit,
 			enabledTransforms:   []int{0, 1, 2, 3, 4, 5, 6, 9, 10},
 		}
 	case tierAdvanced:
 		return pollutionConfig{
 			maxMutationsPerLine: 3,
-			verbosity:           verbosityNone,
+			verbosity:           verbosityExplicit,
 			enabledTransforms:   allTransforms,
 		}
 	default: // expert
 		return pollutionConfig{
 			maxMutationsPerLine: 4,
-			verbosity:           verbosityNone,
+			verbosity:           verbosityExplicit,
 			enabledTransforms:   allTransforms,
 		}
 	}
@@ -321,7 +321,7 @@ func transformDeadLine(line string) (string, string, string) {
 	}
 	indent := leadingSpaces(line)
 	dead := indent + deadLines[rand.Intn(len(deadLines))]
-	return dead + "\n" + line, "dd", "the line above should not be there"
+	return dead + "\n" + line, "dd", "this line should not be there"
 }
 
 // transformJoinSplit breaks a short expression across two lines.
@@ -474,7 +474,6 @@ func transformWrongBoolean(line string) (string, string, string) {
 	}
 	return line, "", ""
 }
-
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

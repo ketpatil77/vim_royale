@@ -6,6 +6,12 @@ import (
 	"vim_royale/backend/utils"
 )
 
+const (
+	roundDuration          = 3 * time.Minute
+	countdownGraceDuration = 3 * time.Second
+	roundDurationInSeconds = int(roundDuration / time.Second)
+)
+
 func (h *Hub) enqueueForMatch(client *Client) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -90,6 +96,7 @@ func (h *Hub) tryMatchBucket(bucket *ratingBucket) {
 			OpponentName:   pB.DisplayName,
 			OpponentAvatar: pB.AvatarURL,
 			OpponentRating: pB.Rating,
+			RoundDurationS: roundDurationInSeconds,
 			Role:           "A",
 			StartedAt:      now.Unix(),
 			TargetCode:     targetCode,
@@ -101,6 +108,7 @@ func (h *Hub) tryMatchBucket(bucket *ratingBucket) {
 			OpponentName:   pA.DisplayName,
 			OpponentAvatar: pA.AvatarURL,
 			OpponentRating: pA.Rating,
+			RoundDurationS: roundDurationInSeconds,
 			Role:           "B",
 			StartedAt:      now.Unix(),
 			TargetCode:     targetCode,
@@ -108,6 +116,8 @@ func (h *Hub) tryMatchBucket(bucket *ratingBucket) {
 		}
 		h.sendLocked(pA, MsgGameStart, matchID, pA.ID, 0, startA)
 		h.sendLocked(pB, MsgGameStart, matchID, pB.ID, 0, startB)
+
+		go h.runRoundTimeout(matchID)
 	}
 }
 
@@ -152,6 +162,15 @@ func (h *Hub) runMatchExpansion() {
 	for range ticker.C {
 		h.expandStaleMatches()
 	}
+}
+
+func (h *Hub) runRoundTimeout(matchID string) {
+	timer := time.NewTimer(roundDuration + countdownGraceDuration)
+	defer timer.Stop()
+
+	<-timer.C
+
+	h.finishMatchAsDraw(matchID, "timeout_draw")
 }
 
 func (h *Hub) expandStaleMatches() {

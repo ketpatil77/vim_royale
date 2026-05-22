@@ -34,6 +34,7 @@ export default function MatchResultModal({
 
   if (!isOpen) return null
 
+  const isDraw = gameOverPayload.resultType === 'draw'
   const { winnerName, winnerAvatar, winnerNewRating, winnerDelta, loserName, loserAvatar, loserNewRating, loserDelta } = gameOverPayload
 
   return (
@@ -44,13 +45,13 @@ export default function MatchResultModal({
         </div>
 
         <div className="result-modal-body">
-          <h2 className={`result-modal-title ${title === 'VICTORY!' ? 'victory' : 'defeat'}`}>
+          <h2 className={`result-modal-title ${title === 'VICTORY!' ? 'victory' : title === 'DRAW' ? 'draw' : 'defeat'}`}>
             {title}
           </h2>
           <p className="result-modal-description">{description}</p>
 
           <div className="result-modal-players">
-            <div className={`player-card player-card--winner`}>
+            <div className={`player-card ${isDraw ? 'player-card--draw' : 'player-card--winner'}`}>
               <img
                 src={winnerAvatar || `https://github.com/identicons/github.png`}
                 alt={winnerName}
@@ -65,7 +66,7 @@ export default function MatchResultModal({
               </div>
             </div>
 
-            <div className={`player-card player-card--loser`}>
+            <div className={`player-card ${isDraw ? 'player-card--draw' : 'player-card--loser'}`}>
               <img
                 src={loserAvatar || `https://github.com/identicons/github.png`}
                 alt={loserName}
@@ -98,6 +99,10 @@ export default function MatchResultModal({
 }
 
 export function parseResult(resultText: string, gameOverPayload: GameOverPayload): { title: string; description: string; gameOverPayload: GameOverPayload } {
+  if (gameOverPayload.resultType === 'draw') {
+    return { title: 'DRAW', description: 'Time limit reached. Ratings unchanged.', gameOverPayload }
+  }
+
   const [outcome, ...rest] = resultText.split('. ')
   const description = rest.join('. ')
 

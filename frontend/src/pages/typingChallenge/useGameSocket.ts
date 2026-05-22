@@ -36,6 +36,7 @@ export function useGameSocket() {
       opponentRating: 0,
       opponentIsBot: false,
       matchId: '',
+      roundDurationSec: 180,
   })
   const { user } = useAuth()
 
@@ -133,7 +134,14 @@ export function useGameSocket() {
             return
           }
           seqRef.current = 1
-          setMatchStateRef({ matchId: payload.matchId, opponentId: payload.opponentId, opponentName: payload.opponentName, opponentAvatar: payload.opponentAvatar, opponentRating: payload.opponentRating })
+          setMatchStateRef({
+            matchId: payload.matchId,
+            opponentId: payload.opponentId,
+            opponentName: payload.opponentName,
+            opponentAvatar: payload.opponentAvatar,
+            opponentRating: payload.opponentRating,
+            roundDurationSec: payload.roundDurationSec || 180,
+          })
           viewStateRef.current = 'playing'
           callbacks.onGameStart(payload)
           break
@@ -153,6 +161,7 @@ export function useGameSocket() {
             opponentAvatar: payload.botAvatar,
             opponentRating: payload.botRating,
             opponentIsBot: true,
+            roundDurationSec: payload.roundDurationSec || 180,
           })
           viewStateRef.current = 'playing'
           callbacks.onBotGameStart(payload)
@@ -201,7 +210,7 @@ export function useGameSocket() {
       shouldIgnoreCloseRef.current = false
 
       const playerId = buildHelloPayload()
-      setMatchStateRef({ playerId: playerId.playerId || 'pending', opponentId: '', opponentName: '', opponentAvatar: '', opponentRating: 0, opponentIsBot: false, matchId: '' })
+      setMatchStateRef({ playerId: playerId.playerId || 'pending', opponentId: '', opponentName: '', opponentAvatar: '', opponentRating: 0, opponentIsBot: false, matchId: '', roundDurationSec: 180 })
       seqRef.current = 1
       viewStateRef.current = 'matchmaking'
 

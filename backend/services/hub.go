@@ -137,6 +137,7 @@ func (h *Hub) handleDisconnectWin(match *Match, winner *Client, loser *Client) {
 		LoserAvatar:     loser.AvatarURL,
 		LoserNewRating:  loserNewRating,
 		LoserDelta:      loserDelta,
+		ResultType:      "decisive",
 		Reason:          "opponent_disconnected",
 		FinishedAt:      now.Unix(),
 	}

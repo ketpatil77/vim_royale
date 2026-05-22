@@ -32,6 +32,7 @@ func CreateMatchAndSendRatingDelta(db *gorm.DB, winnerID, loserID, targetCode, p
 		TargetCode:   targetCode,
 		PollutedCode: pollutedCode,
 		WinnerID:     winner.ID,
+		Outcome:      "decisive",
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 		FinishedAt:   time.Now(),
@@ -53,6 +54,50 @@ func CreateMatchAndSendRatingDelta(db *gorm.DB, winnerID, loserID, targetCode, p
 	}
 
 	return match.MatchID.String(), winner.Rating - oldWinnerRating, loser.Rating - oldLoserRating, winner.Rating, loser.Rating, nil
+}
+
+func CreateDrawMatch(db *gorm.DB, playerAID, playerBID, targetCode, pollutedCode string) (matchID string, err error) {
+	playerA, err := findUserByPlayerID(db, playerAID)
+	if err != nil {
+		return "", err
+	}
+	playerB, err := findUserByPlayerID(db, playerBID)
+	if err != nil {
+		return "", err
+	}
+
+	match := &models.Match{
+		MatchID:      uuid.New(),
+		PlayerAID:    playerA.ID,
+		PlayerBID:    playerB.ID,
+		PlayerA:      *playerA,
+		PlayerB:      *playerB,
+		TargetCode:   targetCode,
+		PollutedCode: pollutedCode,
+		WinnerID:     0,
+		Outcome:      "draw",
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+		FinishedAt:   time.Now(),
+	}
+
+	err = db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(match).Error; err != nil {
+			return err
+		}
+		if err := UpdateUserStatsForDraw(tx, playerA); err != nil {
+			return err
+		}
+		if err := UpdateUserStatsForDraw(tx, playerB); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return match.MatchID.String(), nil
 }
 
 func findUserByPlayerID(db *gorm.DB, playerID string) (*models.User, error) {
