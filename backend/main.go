@@ -40,21 +40,33 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
-	r.GET("/healthz", middleware.RateLimitMiddleware(10, 10*time.Second), handlers.HealthzHandler)
-	r.GET("/ws", handlers.AuthMiddleware(), handlers.WsHandler(hub))
+	healthLimit := middleware.RateLimitMiddleware(10, 10*time.Second)
+	publicLimit := middleware.RateLimitMiddleware(100, 10*time.Minute)
+	authLimit := middleware.RateLimitMiddleware(20, 10*time.Minute)
+	writeLimit := middleware.RateLimitMiddleware(30, 10*time.Minute)
+	wsLimit := middleware.RateLimitMiddleware(30, time.Minute)
 
-	r.GET("/auth/google", handlers.AuthGoogleHandler)
-	r.GET("/auth/google/callback", handlers.AuthGoogleCallbackHandler)
-	r.GET("/auth/github", handlers.AuthGitHubHandler)
-	r.GET("/auth/github/callback", handlers.AuthGitHubCallbackHandler)
-	r.GET("/auth/me", handlers.AuthMiddleware(), handlers.AuthMeHandler)
-	r.POST("/auth/logout", handlers.AuthLogoutHandler)
-	r.PATCH("/auth/me", handlers.AuthMiddleware(), handlers.UpdateUserProfile)
-	r.GET("/leaderboard", middleware.RateLimitMiddleware(100, 10*time.Minute), handlers.GetLeaderboard)
+	r.GET("/healthz", healthLimit, handlers.HealthzHandler)
+	r.GET("/ws", wsLimit, handlers.AuthMiddleware(), handlers.WsHandler(hub))
 
-	r.GET("/users/:username", middleware.RateLimitMiddleware(100, 10*time.Minute), handlers.GetUserFromUsername)
-	r.GET("/users/:username/matches", middleware.RateLimitMiddleware(100, 10*time.Minute), handlers.GetUserMatches)
-	r.GET("/matches/:matchId/replay", middleware.RateLimitMiddleware(100, 10*time.Minute), handlers.GetMatchReplay)
+	authRoutes := r.Group("/auth", authLimit)
+	{
+		authRoutes.GET("/google", handlers.AuthGoogleHandler)
+		authRoutes.GET("/google/callback", handlers.AuthGoogleCallbackHandler)
+		authRoutes.GET("/github", handlers.AuthGitHubHandler)
+		authRoutes.GET("/github/callback", handlers.AuthGitHubCallbackHandler)
+		authRoutes.GET("/me", handlers.AuthMiddleware(), handlers.AuthMeHandler)
+		authRoutes.POST("/logout", handlers.AuthLogoutHandler)
+		authRoutes.PATCH("/me", writeLimit, handlers.AuthMiddleware(), handlers.UpdateUserProfile)
+	}
+
+	publicRoutes := r.Group("/", publicLimit)
+	{
+		publicRoutes.GET("/leaderboard", handlers.GetLeaderboard)
+		publicRoutes.GET("/users/:username", handlers.GetUserFromUsername)
+		publicRoutes.GET("/users/:username/matches", handlers.GetUserMatches)
+		publicRoutes.GET("/matches/:matchId/replay", handlers.GetMatchReplay)
+	}
 	addr := os.Getenv("ADDR")
 	if addr == "" {
 		addr = ":8080"
