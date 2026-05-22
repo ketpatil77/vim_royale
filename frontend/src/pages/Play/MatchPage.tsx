@@ -184,6 +184,29 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
     }
   }, [viewState])
 
+  useEffect(() => {
+    if (viewState !== 'playing' || !leftRef.current) return
+
+    const editorMount = leftRef.current
+    const preventPaste = (event: Event) => {
+      event.preventDefault()
+    }
+
+    const preventPasteBeforeInput = (event: Event) => {
+      if (event instanceof InputEvent && event.inputType === 'insertFromPaste') {
+        event.preventDefault()
+      }
+    }
+
+    editorMount.addEventListener('paste', preventPaste, true)
+    editorMount.addEventListener('beforeinput', preventPasteBeforeInput, true)
+
+    return () => {
+      editorMount.removeEventListener('paste', preventPaste, true)
+      editorMount.removeEventListener('beforeinput', preventPasteBeforeInput, true)
+    }
+  }, [viewState, leftRef])
+
   const handleContentChange = useCallback((_content: string, changes: any) => {
     if (viewStateRef.current !== 'playing') return
 
