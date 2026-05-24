@@ -20,6 +20,7 @@ import TimedMatchPage from './pages/Play/TimedMatchPage'
 import UserProfile from './pages/userProfile'
 import MatchReplayPage from './pages/MatchReplay/MatchReplay'
 import Walkthrough from './pages/Walkthrough'
+import { VimiumWarningModal } from './components/VimiumWarningModal/VimiumWarningModal'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()
@@ -138,6 +139,7 @@ function AppContent() {
       <CRTEffect theme='green' enableScanlines={crtEnabled} scanlineOpacity={0.1} scanlineThickness={2} scanlineGap={3} enableSweep={crtEnabled} sweepDuration={12} sweepThickness={8} sweepStyle='classic' enableGlow={false} enableEdgeGlow={true} edgeGlowColor='rgba(91, 179, 135, 0.25)' edgeGlowSize={25} enableFlicker={crtEnabled} flickerIntensity={0.03} flickerSpeed={2} enableVignette={true} vignetteIntensity={0.2} enableGlitch={false}>
         <TimedGameProvider>
           <AnalyticsRouteTracker />
+          <VimiumWarningModal />
           <AppRoutes />
           {!isLoading && location.pathname !== "/walkthrough" && (
             <WalkthroughPrompt user={user} />
