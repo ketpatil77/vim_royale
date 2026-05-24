@@ -170,9 +170,14 @@ export function VimiumWarningModal() {
             {isBlockingWarning ? 'Disable Vimium to continue' : 'Vimium warning'}
           </h2>
           {isBlockingWarning ? (
+            <div>
             <p>
               Vimium appears to be enabled. Please disable it first, then return to this tab.
             </p>
+            <button className="vimium-modal-btn vimium-modal-btn-secondary" onClick={() => setShowIntroNotice(false)}>
+              Continue
+            </button>
+            </div>
           ) : (
             <p>
               If you use Vimium (or Vimium C), disable it before playing to avoid keybinding conflicts.
