@@ -294,19 +294,23 @@ export default function LiveSpectate() {
     return () => window.clearInterval(interval)
   }, [snapshot, status.state])
 
-  const completionPercent = useMemo(() => {
-    if (!snapshot) return 0
+  const progressByPlayer = useMemo(() => {
+    if (!snapshot) {
+      return { playerA: 0, playerB: 0 }
+    }
 
     const baselineChanged = findChangedLineIndexes(snapshot.targetCode, snapshot.pollutedCode).length
-    if (baselineChanged <= 0) return 100
+    if (baselineChanged <= 0) {
+      return { playerA: 100, playerB: 100 }
+    }
 
     const aRemaining = findChangedLineIndexes(snapshot.targetCode, playerABuffer).length
     const bRemaining = findChangedLineIndexes(snapshot.targetCode, playerBBuffer).length
-    const aProgress = (baselineChanged - aRemaining) / baselineChanged
-    const bProgress = (baselineChanged - bRemaining) / baselineChanged
-    const average = Math.max(0, Math.min(1, (aProgress + bProgress) / 2))
 
-    return Math.round(average * 100)
+    const playerA = Math.round(Math.max(0, Math.min(1, (baselineChanged - aRemaining) / baselineChanged)) * 100)
+    const playerB = Math.round(Math.max(0, Math.min(1, (baselineChanged - bRemaining) / baselineChanged)) * 100)
+
+    return { playerA, playerB }
   }, [snapshot, playerABuffer, playerBBuffer])
 
   const finishReason = useMemo(() => {
@@ -353,12 +357,24 @@ export default function LiveSpectate() {
               </div>
 
               <div className="match-progress-group">
-                <div className="match-progress-meta">
-                  <span className="match-progress-label">PROGRESS</span>
-                  <span className="match-progress-value">{completionPercent}%</span>
+                <div className="live-spectate-progress-item">
+                  <div className="match-progress-meta">
+                    <span className="match-progress-label">{snapshot.playerA.displayName || 'PLAYER A'}</span>
+                    <span className="match-progress-value">{progressByPlayer.playerA}%</span>
+                  </div>
+                  <div className="match-progress-track" aria-hidden="true">
+                    <span className="match-progress-fill" style={{ width: `${progressByPlayer.playerA}%` }} />
+                  </div>
                 </div>
-                <div className="match-progress-track" aria-hidden="true">
-                  <span className="match-progress-fill" style={{ width: `${completionPercent}%` }} />
+
+                <div className="live-spectate-progress-item">
+                  <div className="match-progress-meta">
+                    <span className="match-progress-label">{snapshot.playerB.displayName || 'PLAYER B'}</span>
+                    <span className="match-progress-value">{progressByPlayer.playerB}%</span>
+                  </div>
+                  <div className="match-progress-track" aria-hidden="true">
+                    <span className="match-progress-fill live-spectate-progress-fill--secondary" style={{ width: `${progressByPlayer.playerB}%` }} />
+                  </div>
                 </div>
               </div>
 
@@ -374,7 +390,6 @@ export default function LiveSpectate() {
                 filename="player_a.ts"
                 panelTitle="LOCAL [YOU]"
                 vimMode="SPECTATE"
-                scrollWarningMessage="spectator mode is read-only"
                 displayName={snapshot.playerA.displayName || 'Player A'}
                 avatarUrl={snapshot.playerA.avatarUrl || ''}
                 ref={leftMountRef}
@@ -383,7 +398,6 @@ export default function LiveSpectate() {
               <EditorPanel
                 filename="opponent.ts"
                 panelTitle="REMOTE [OPP]"
-                scrollWarningMessage="spectator mode is read-only"
                 displayName={snapshot.playerB.displayName || 'Player B'}
                 avatarUrl={snapshot.playerB.avatarUrl || ''}
                 ref={rightMountRef}

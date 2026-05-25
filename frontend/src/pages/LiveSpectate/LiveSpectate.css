@@ -34,3 +34,13 @@
   background: var(--green);
   color: #000;
 }
+
+.live-spectate-progress-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.live-spectate-progress-fill--secondary {
+  background: var(--yellow);
+}
