@@ -361,6 +361,12 @@ export default function LiveSpectate() {
                   <span className="match-progress-fill" style={{ width: `${completionPercent}%` }} />
                 </div>
               </div>
+
+              <div className="live-spectate-hud-actions">
+                <button className="live-spectate-hud-back-btn" onClick={() => navigate(-1)}>
+                  BACK
+                </button>
+              </div>
             </div>
 
             <div className="editor-grid">
@@ -387,12 +393,6 @@ export default function LiveSpectate() {
             {status.state === 'finished' && (
               <div className="live-spectate-finish-banner">{finishReason}</div>
             )}
-
-            <div className="live-spectate-actions">
-              <button className="cancel-btn" onClick={() => navigate(-1)}>
-                ./BACK.sh
-              </button>
-            </div>
           </div>
         )}
       </div>
