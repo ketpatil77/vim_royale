@@ -86,6 +86,7 @@ func (h *Hub) handleUnregister(client *Client) {
 		if m, ok := h.matches[client.MatchID]; ok {
 			match = m
 			opponent = m.opponentOf(client)
+			h.closeSpectatorsLocked(match, "opponent_disconnected")
 			delete(h.matches, match.ID)
 		}
 	}

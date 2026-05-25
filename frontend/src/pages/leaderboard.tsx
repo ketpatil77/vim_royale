@@ -11,6 +11,9 @@ type LeaderboardEntry = {
     rating: number
     username: string
     avatarUrl: string | null
+    isLive: boolean
+    liveMatchId: string | null
+    liveMode: string | null
 }
 
 const MEDALS = ['◈', '◇', '△']
@@ -58,6 +61,8 @@ export default function Leaderboard() {
                             {entries.map((entry, i) => {
                                 const rank = i + 1
                                 const isTop3 = rank <= 3
+                                const liveMatchId = entry.liveMatchId
+                                const showLiveEye = Boolean(entry.isLive && liveMatchId)
                                 return (
                                     <div
                                         key={entry.user_id}
@@ -78,6 +83,23 @@ export default function Leaderboard() {
                                             <span className={`lb-row-name ${isTop3 ? `lb-row-name--${rank}` : ''}`}>
                                                 {entry.displayName || 'Anonymous'}
                                             </span>
+                                            {showLiveEye && (
+                                                <button
+                                                    type="button"
+                                                    className="lb-live-btn"
+                                                    title="Watch live match"
+                                                    aria-label={`Watch ${entry.displayName || entry.username} live`}
+                                                    onClick={(event) => {
+                                                        event.stopPropagation()
+                                                        navigate(`/match/${liveMatchId}/live`)
+                                                    }}
+                                                >
+                                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                        <path d="M1.5 12s3.8-7 10.5-7 10.5 7 10.5 7-3.8 7-10.5 7S1.5 12 1.5 12z" stroke="currentColor" strokeWidth="1.6"/>
+                                                        <circle cx="12" cy="12" r="3.2" stroke="currentColor" strokeWidth="1.6"/>
+                                                    </svg>
+                                                </button>
+                                            )}
                                         </span>
                                         <span className={`lb-row-elo ${isTop3 ? `lb-row-elo--${rank}` : ''}`}>
                                             {Math.round(entry.rating)}

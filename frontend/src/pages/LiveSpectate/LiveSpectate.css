@@ -1,0 +1,21 @@
+.live-spectate-match-page {
+  max-width: 1600px;
+}
+
+.live-spectate-finish-banner {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-raised);
+  color: var(--yellow);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+.live-spectate-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}

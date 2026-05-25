@@ -1,5 +1,5 @@
 import { useRef, useCallback } from 'react'
-import type { Envelope, MatchState, GameStartPayload, BotGameStartPayload, BufferUpdatePayload, GameOverPayload, BufferDelta, KeystrokesData, PlayerFinishedPayload } from './types'
+import type { Envelope, MatchState, GameStartPayload, BotGameStartPayload, BufferUpdatePayload, GameOverPayload, SpectatorCountPayload, BufferDelta, KeystrokesData, PlayerFinishedPayload } from './types'
 import { WS_URL, getOrCreatePlayerId } from './player'
 import {
   parseHelloAckPayload,
@@ -7,6 +7,7 @@ import {
   parseBotGameStartPayload,
   parseBufferUpdatePayload,
   parseGameOverPayload,
+  parseSpectatorCountPayload,
   parseErrorPayload,
 } from './messageParser'
 import { useAuth } from '../../contexts/AuthContext'
@@ -17,6 +18,7 @@ type GameSocketCallbacks = {
   onBotGameStart: (payload: BotGameStartPayload) => void
   onBufferUpdate: (content: string | undefined, delta: BufferDelta | undefined) => void
   onGameOver: (payload: GameOverPayload, playerId: string) => void
+  onSpectatorCount: (payload: SpectatorCountPayload) => void
   onError: (code: string, message: string) => void
   onConnecting: () => void
   onConnected: () => void
@@ -186,6 +188,14 @@ export function useGameSocket() {
           }
           viewStateRef.current = 'finished'
           callbacks.onGameOver(payload, matchStateRef.current.playerId)
+          break
+        }
+        case 'SPECTATOR_COUNT': {
+          const payload = parseSpectatorCountPayload(envelope.payload)
+          if (!payload) {
+            return
+          }
+          callbacks.onSpectatorCount(payload)
           break
         }
         case 'ERROR': {

@@ -64,6 +64,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   const [matchState, setMatchState] = useState<MatchState>(initialMatchState)
   const [resultText, setResultText] = useState('')
   const [gameOverPayload, setGameOverPayload] = useState<GameOverPayload | null>(null)
+  const [spectatorCount, setSpectatorCount] = useState(0)
   const [roundSecondsLeft, setRoundSecondsLeft] = useState(defaultRoundDurationSec)
   const [playerContent, setPlayerContent] = useState('')
   const navigate = useNavigate()
@@ -148,6 +149,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
     setMatchState(initialMatchState)
     setResultText('')
     setGameOverPayload(null)
+    setSpectatorCount(0)
     setRoundSecondsLeft(defaultRoundDurationSec)
     setPlayerContent('')
     setStatusText(isComputerMode ? 'Connecting to bot server...' : 'Connecting to matchmaking server...')
@@ -160,6 +162,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
         setStatusText,
         setResultText,
         setVimMode,
+        setSpectatorCount,
         setGameOverPayload,
         playSound,
       },
@@ -401,6 +404,17 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
                   <div className="match-progress-track" aria-hidden="true">
                     <span className="match-progress-fill" style={{ width: `${completionPercent}%` }} />
                   </div>
+                </div>
+
+                <div className="match-hud-spectators">
+                  <span className="match-hud-spectators-label">SPECTATORS</span>
+                  <span className="match-hud-spectators-value">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M1.5 12s3.8-7 10.5-7 10.5 7 10.5 7-3.8 7-10.5 7S1.5 12 1.5 12z" stroke="currentColor" strokeWidth="1.6"/>
+                      <circle cx="12" cy="12" r="3.2" stroke="currentColor" strokeWidth="1.6"/>
+                    </svg>
+                    {spectatorCount}
+                  </span>
                 </div>
               </div>
             )}

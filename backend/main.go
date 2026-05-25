@@ -62,9 +62,11 @@ func main() {
 
 	publicRoutes := r.Group("/", publicLimit)
 	{
-		publicRoutes.GET("/leaderboard", handlers.GetLeaderboard)
+		publicRoutes.GET("/leaderboard", handlers.GetLeaderboard(hub))
 		publicRoutes.GET("/users/:username", handlers.GetUserFromUsername)
+		publicRoutes.GET("/users/:username/live", handlers.GetUserLiveStatus(hub))
 		publicRoutes.GET("/users/:username/matches", handlers.GetUserMatches)
+		publicRoutes.GET("/matches/:matchId/spectate", handlers.SpectateMatch(hub))
 		publicRoutes.GET("/matches/:matchId/replay", handlers.GetMatchReplay)
 	}
 	addr := os.Getenv("ADDR")

@@ -4,6 +4,7 @@ import (
 	"strconv"
 	database "vim_royale/backend/db"
 	"vim_royale/backend/models"
+	"vim_royale/backend/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,6 +26,12 @@ type UserMatchesResponse struct {
 	PageSize   int                     `json:"pageSize"`
 	Total      int64                   `json:"total"`
 	TotalPages int                     `json:"totalPages"`
+}
+
+type UserLiveStatusResponse struct {
+	IsLive      bool    `json:"isLive"`
+	LiveMatchID *string `json:"liveMatchId"`
+	LiveMode    *string `json:"liveMode"`
 }
 
 func GetUserFromUsername(c *gin.Context) {
@@ -108,33 +115,56 @@ func UpdateUserProfile(c *gin.Context) {
 	})
 }
 
-func GetLeaderboard(c *gin.Context) {
-	db, err := database.GetPostgresConnection()
-	if err != nil {
-		c.JSON(500, gin.H{"error": "Failed to get database connection"})
-		return
-	}
+func GetLeaderboard(hub *services.Hub) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		db, err := database.GetPostgresConnection()
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Failed to get database connection"})
+			return
+		}
 
-	leaderboard, err := database.GetLeaderboard(db)
-	if err != nil {
-		c.JSON(500, gin.H{"error": "Failed to get leaderboard"})
-		return
-	}
-	response := []map[string]interface{}{}
-	for _, user := range leaderboard {
-		response = append(response, map[string]interface{}{
-			"user_id":     user.ID,
-			"username":    user.Username,
-			"displayName": user.DisplayName,
-			"rating":      user.Rating,
-			"avatarUrl":   user.AvatarURL,
-			"githubId":    user.GithubID,
-			"twitterId":   user.TwitterID,
-			"discordId":   user.DiscordID,
-		})
-	}
+		leaderboard, err := database.GetLeaderboard(db)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Failed to get leaderboard"})
+			return
+		}
 
-	c.JSON(200, response)
+		playerIDs := make([]string, 0, len(leaderboard))
+		for _, user := range leaderboard {
+			playerIDs = append(playerIDs, user.Provider+":"+user.ProviderID)
+		}
+		liveByPlayerID := hub.GetLiveMatchesForPlayers(playerIDs)
+
+		response := []map[string]interface{}{}
+		for _, user := range leaderboard {
+			playerID := user.Provider + ":" + user.ProviderID
+			live := liveByPlayerID[playerID]
+			isLive := live.State == "playing"
+			var liveMatchID *string
+			var liveMode *string
+			if isLive && live.MatchID != "" {
+				liveMatchID = &live.MatchID
+				mode := "multiplayer"
+				liveMode = &mode
+			}
+
+			response = append(response, map[string]interface{}{
+				"user_id":     user.ID,
+				"username":    user.Username,
+				"displayName": user.DisplayName,
+				"rating":      user.Rating,
+				"avatarUrl":   user.AvatarURL,
+				"githubId":    user.GithubID,
+				"twitterId":   user.TwitterID,
+				"discordId":   user.DiscordID,
+				"isLive":      isLive,
+				"liveMatchId": liveMatchID,
+				"liveMode":    liveMode,
+			})
+		}
+
+		c.JSON(200, response)
+	}
 }
 
 func GetUserMatches(c *gin.Context) {
@@ -243,4 +273,42 @@ func GetUserMatches(c *gin.Context) {
 		Total:      total,
 		TotalPages: totalPages,
 	})
+}
+
+func GetUserLiveStatus(hub *services.Hub) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		username := c.Param("username")
+		if username == "" {
+			c.JSON(400, gin.H{"error": "Username is required"})
+			return
+		}
+
+		db, err := database.GetPostgresConnection()
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Failed to get database connection"})
+			return
+		}
+
+		user, err := database.GetUserFromUsername(db, username)
+		if err != nil {
+			c.JSON(404, gin.H{"error": "User not found"})
+			return
+		}
+
+		playerID := user.Provider + ":" + user.ProviderID
+		matchID, mode, isLive := hub.GetLiveMatchForPlayer(playerID)
+
+		var liveMatchID *string
+		var liveMode *string
+		if isLive {
+			liveMatchID = &matchID
+			liveMode = &mode
+		}
+
+		c.JSON(200, UserLiveStatusResponse{
+			IsLive:      isLive,
+			LiveMatchID: liveMatchID,
+			LiveMode:    liveMode,
+		})
+	}
 }

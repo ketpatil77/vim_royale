@@ -85,6 +85,9 @@ func (h *Hub) tryMatchBucket(bucket *ratingBucket) {
 				pA.ID: 0,
 				pB.ID: 0,
 			},
+			PlayerABuffer: pollutedCode,
+			PlayerBBuffer: pollutedCode,
+			spectators:    make(map[int]chan SpectatorEvent),
 		}
 		h.matches[matchID] = match
 		pA.MatchID = matchID

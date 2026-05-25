@@ -7,6 +7,7 @@ export type MessageType =
   | 'BUFFER_UPDATE'
   | 'PLAYER_FINISHED'
   | 'GAME_OVER'
+  | 'SPECTATOR_COUNT'
   | 'ERROR'
 
 export type Envelope = {
@@ -78,6 +79,10 @@ export type GameOverPayload = {
   resultType?: 'decisive' | 'draw'
   reason: string
   finishedAt: number
+}
+
+export type SpectatorCountPayload = {
+  count: number
 }
 
 export type ErrorPayload = {
