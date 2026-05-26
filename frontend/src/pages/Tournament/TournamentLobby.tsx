@@ -99,6 +99,7 @@ export default function TournamentLobby() {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [copyInviteStatus, setCopyInviteStatus] = useState<'idle' | 'copied' | 'error'>('idle')
 
   const currentSessionToken = useMemo(() => {
     if (user) return ''
@@ -530,6 +531,36 @@ export default function TournamentLobby() {
     }
   }
 
+  const handleCopyInviteLink = async () => {
+    if (!inviteLink) return
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(inviteLink)
+      } else if (typeof document !== 'undefined') {
+        const textarea = document.createElement('textarea')
+        textarea.value = inviteLink
+        textarea.setAttribute('readonly', '')
+        textarea.style.position = 'fixed'
+        textarea.style.left = '-9999px'
+        document.body.appendChild(textarea)
+        textarea.select()
+        const copied = document.execCommand('copy')
+        document.body.removeChild(textarea)
+        if (!copied) {
+          throw new Error('copy command failed')
+        }
+      } else {
+        throw new Error('clipboard unavailable')
+      }
+
+      setCopyInviteStatus('copied')
+      window.setTimeout(() => setCopyInviteStatus('idle'), 1800)
+    } catch {
+      setCopyInviteStatus('error')
+      window.setTimeout(() => setCopyInviteStatus('idle'), 2200)
+    }
+  }
+
   const joinMatchmaking = () => {
     if (!state.tournament) return
     const params = new URLSearchParams()
@@ -640,8 +671,22 @@ export default function TournamentLobby() {
 
               {inviteLink && (
                 <div className="tournament-share">
-                  <p className="tournament-label">Invite Link</p>
+                  <div className="tournament-share-head">
+                    <p className="tournament-label">Invite Link</p>
+                    <button
+                      type="button"
+                      className="tournament-btn tournament-btn--small tournament-btn--ghost"
+                      onClick={handleCopyInviteLink}
+                    >
+                      {copyInviteStatus === 'copied' ? 'COPIED' : 'COPY LINK'}
+                    </button>
+                  </div>
                   <code className="tournament-code">{inviteLink}</code>
+                  {copyInviteStatus === 'error' && (
+                    <p className="tournament-copy-feedback tournament-copy-feedback--error">
+                      Could not copy automatically. Please copy the link manually.
+                    </p>
+                  )}
                 </div>
               )}
 
