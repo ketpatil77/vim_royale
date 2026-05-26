@@ -134,8 +134,14 @@ func mutateLine(line string, cfg pollutionConfig, transformCounts map[int]int) s
 	if strings.TrimSpace(line) == "" {
 		return line
 	}
+	codePart, existingComment := splitInlineComment(line)
+	if strings.TrimSpace(codePart) == "" {
+		// Skip comment-only lines.
+		return line
+	}
 
-	current := line
+	current := codePart
+	hints := make([]string, 0, 2)
 
 	shuffled := make([]int, len(cfg.enabledTransforms))
 	copy(shuffled, cfg.enabledTransforms)
@@ -147,29 +153,118 @@ func mutateLine(line string, cfg pollutionConfig, transformCounts map[int]int) s
 		if transformCounts[transformIdx] >= 3 {
 			continue
 		}
+		before := current
 		var motion, instruction string
 		current, motion, instruction = applyTransform(transformIdx, current)
-		if instruction != "" {
-			transformCounts[transformIdx]++
-			switch cfg.verbosity {
-			case verbosityExplicit:
-				current = appendInlineComment(current, instruction)
-			case verbosityHint:
-				current = appendInlineComment(current, motion)
-			}
+		if current == before {
+			continue
+		}
+
+		transformCounts[transformIdx]++
+
+		var hint string
+		switch cfg.verbosity {
+		case verbosityExplicit:
+			hint = instruction
+		case verbosityHint:
+			hint = motion
+		}
+		if strings.TrimSpace(hint) != "" {
+			hints = appendHint(hints, hint, 2)
 		}
 	}
 
-	return current
+	return injectInlineComment(current, existingComment, summarizeHints(hints))
 }
 
-// appendInlineComment attaches a // comment to the last line of s.
-// For multi-line mutations (deadLine, joinSplit, brokenChain) the comment
-// lands on the first (problem) line so it's visible next to the bad code.
-func appendInlineComment(s, comment string) string {
+// injectInlineComment attaches/rebuilds a trailing inline comment on the first
+// line of s. For multi-line mutations it keeps the hint next to the first line.
+func injectInlineComment(s, existingComment, generatedHint string) string {
+	commentParts := make([]string, 0, 2)
+	if strings.TrimSpace(existingComment) != "" {
+		commentParts = append(commentParts, strings.TrimSpace(existingComment))
+	}
+	if strings.TrimSpace(generatedHint) != "" {
+		commentParts = append(commentParts, strings.TrimSpace(generatedHint))
+	}
+	if len(commentParts) == 0 {
+		return s
+	}
+
 	lines := strings.Split(s, "\n")
-	lines[0] = lines[0] + " // " + comment
+	lines[0] = strings.TrimRight(lines[0], " \t") + " // " + strings.Join(commentParts, " | ")
 	return strings.Join(lines, "\n")
+}
+
+func summarizeHints(hints []string) string {
+	switch len(hints) {
+	case 0:
+		return ""
+	case 1:
+		return hints[0]
+	default:
+		return hints[0] + " ; also: " + hints[1]
+	}
+}
+
+func appendHint(hints []string, hint string, max int) []string {
+	trimmed := strings.TrimSpace(hint)
+	if trimmed == "" {
+		return hints
+	}
+	for _, existing := range hints {
+		if existing == trimmed {
+			return hints
+		}
+	}
+	if len(hints) >= max {
+		return hints
+	}
+	return append(hints, trimmed)
+}
+
+// splitInlineComment returns the code prefix and trailing comment text for a JS
+// line comment (`//`), ignoring delimiters inside quoted/template strings.
+func splitInlineComment(line string) (string, string) {
+	inSingle := false
+	inDouble := false
+	inTemplate := false
+	escaped := false
+
+	for i := 0; i < len(line)-1; i++ {
+		ch := line[i]
+		next := line[i+1]
+
+		if escaped {
+			escaped = false
+			continue
+		}
+		if ch == '\\' && (inSingle || inDouble || inTemplate) {
+			escaped = true
+			continue
+		}
+
+		switch ch {
+		case '\'':
+			if !inDouble && !inTemplate {
+				inSingle = !inSingle
+			}
+		case '"':
+			if !inSingle && !inTemplate {
+				inDouble = !inDouble
+			}
+		case '`':
+			if !inSingle && !inDouble {
+				inTemplate = !inTemplate
+			}
+		}
+
+		if !inSingle && !inDouble && !inTemplate && ch == '/' && next == '/' {
+			return line[:i], line[i+2:]
+		}
+	}
+
+	return line, ""
 }
 
 // applyTransform returns (mutatedLine, vimMotion, humanInstruction).
