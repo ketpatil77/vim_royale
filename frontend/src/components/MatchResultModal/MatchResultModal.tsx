@@ -6,8 +6,11 @@ interface MatchResultModalProps {
   isOpen: boolean
   title: string
   description: string
+  contextTag?: string
   onMainMenu: () => void
   onNewMatch: () => void
+  showLoginPrompt?: boolean
+  onLogin?: () => void
   gameOverPayload: GameOverPayload
 }
 
@@ -15,8 +18,11 @@ export default function MatchResultModal({
   isOpen,
   title,
   description,
+  contextTag,
   onMainMenu,
   onNewMatch,
+  showLoginPrompt = false,
+  onLogin,
   gameOverPayload,
 }: MatchResultModalProps) {
 
@@ -26,11 +32,12 @@ export default function MatchResultModal({
     const handleKeydown = (e: KeyboardEvent) => {
       if (e.key === '1') onMainMenu()
       if (e.key === '2') onNewMatch()
+      if (showLoginPrompt && onLogin && e.key === '3') onLogin()
     }
 
     window.addEventListener('keydown', handleKeydown)
     return () => window.removeEventListener('keydown', handleKeydown)
-  }, [isOpen, onMainMenu, onNewMatch])
+  }, [isOpen, onMainMenu, onNewMatch, onLogin, showLoginPrompt])
 
   if (!isOpen) return null
 
@@ -49,6 +56,9 @@ export default function MatchResultModal({
             {title}
           </h2>
           <p className="result-modal-description">{description}</p>
+          {contextTag && (
+            <div className="result-modal-context-tag">{contextTag}</div>
+          )}
 
           <div className="result-modal-players">
             <div className={`player-card ${isDraw ? 'player-card--draw' : 'player-card--winner'}`}>
@@ -93,6 +103,15 @@ export default function MatchResultModal({
             <span className="result-modal-label-new">New Match</span>
           </button>
         </div>
+
+        {showLoginPrompt && onLogin && (
+          <div className="result-modal-login-nudge">
+            <span>Playing as guest —</span>
+            <button className="result-modal-login-link" onClick={onLogin}>
+              log in to save your rating
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -2,12 +2,15 @@ import { createContext, useContext, useState, useCallback, useRef, useEffect, ty
 import type { Difficulty } from '../utils/challenges'
 import { getRandomChallenge } from '../utils/challenges'
 import { polluteCode } from '../utils/polluteCode'
+import { useAuth } from './AuthContext'
+import { getTimedScoreBests, type TimedScoreBestResponse } from '../utils/timedScores'
 
 const TOTAL_TIME = 120
 
 interface TimedGameState {
   status: 'idle' | 'playing' | 'completed' | 'timeout'
   difficulty: Difficulty | null
+  runToken: string
   targetCode: string
   pollutedCode: string
   timeLeft: number
@@ -22,7 +25,7 @@ interface BestScore {
 }
 
 interface TimedGameContextValue extends TimedGameState {
-  startGame: (difficulty: Difficulty) => void
+  startGame: (difficulty: Difficulty, runToken?: string) => void
   checkCompletion: (content: string) => boolean
   resetGame: () => void
   getBestScore: (difficulty: Difficulty) => BestScore | null
@@ -32,30 +35,10 @@ interface TimedGameContextValue extends TimedGameState {
 
 const TimedGameContext = createContext<TimedGameContextValue | null>(null)
 
-const STORAGE_KEY = 'vim_royale_timed_best_scores'
-
-function loadBestScores(): Record<Difficulty, BestScore | null> {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { beginner: null, intermediate: null, advanced: null, expert: null }
-    return JSON.parse(raw)
-  } catch {
-    return { beginner: null, intermediate: null, advanced: null, expert: null }
-  }
-}
-
-function saveBestScore(difficulty: Difficulty, time: number) {
-  const scores = loadBestScores()
-  const existing = scores[difficulty]
-  if (!existing || time < existing.time) {
-    scores[difficulty] = { time, completedAt: Date.now() }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(scores))
-  }
-}
-
 const initialState: TimedGameState = {
   status: 'idle',
   difficulty: null,
+  runToken: '',
   targetCode: '',
   pollutedCode: '',
   timeLeft: TOTAL_TIME,
@@ -65,7 +48,20 @@ const initialState: TimedGameState = {
 }
 
 export function TimedGameProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth()
   const [state, setState] = useState<TimedGameState>(initialState)
+  const [sessionBestScores, setSessionBestScores] = useState<Record<Difficulty, BestScore | null>>({
+    beginner: null,
+    intermediate: null,
+    advanced: null,
+    expert: null,
+  })
+  const [persistedBestScores, setPersistedBestScores] = useState<Record<Difficulty, BestScore | null>>({
+    beginner: null,
+    intermediate: null,
+    advanced: null,
+    expert: null,
+  })
   const timerRef = useRef<number | null>(null)
   const completedRef = useRef(false)
 
@@ -84,7 +80,61 @@ export function TimedGameProvider({ children }: { children: ReactNode }) {
     return () => clearTimer()
   }, [clearTimer])
 
-  const startGame = useCallback((difficulty: Difficulty) => {
+  useEffect(() => {
+    let mounted = true
+
+    const loadBests = async () => {
+      if (!user) {
+        if (mounted) {
+          setPersistedBestScores({
+            beginner: null,
+            intermediate: null,
+            advanced: null,
+            expert: null,
+          })
+        }
+        return
+      }
+
+      try {
+        const response = await getTimedScoreBests()
+        if (!mounted) return
+
+        const mapResponse = (payload: TimedScoreBestResponse): Record<Difficulty, BestScore | null> => ({
+          beginner: payload.beginner
+            ? { time: payload.beginner.timeSeconds, completedAt: new Date(payload.beginner.completedAt).getTime() }
+            : null,
+          intermediate: payload.intermediate
+            ? { time: payload.intermediate.timeSeconds, completedAt: new Date(payload.intermediate.completedAt).getTime() }
+            : null,
+          advanced: payload.advanced
+            ? { time: payload.advanced.timeSeconds, completedAt: new Date(payload.advanced.completedAt).getTime() }
+            : null,
+          expert: payload.expert
+            ? { time: payload.expert.timeSeconds, completedAt: new Date(payload.expert.completedAt).getTime() }
+            : null,
+        })
+
+        setPersistedBestScores(mapResponse(response))
+      } catch {
+        if (!mounted) return
+        setPersistedBestScores({
+          beginner: null,
+          intermediate: null,
+          advanced: null,
+          expert: null,
+        })
+      }
+    }
+
+    loadBests()
+
+    return () => {
+      mounted = false
+    }
+  }, [user])
+
+  const startGame = useCallback((difficulty: Difficulty, runToken = '') => {
     stopGame()
     completedRef.current = false
 
@@ -94,6 +144,7 @@ export function TimedGameProvider({ children }: { children: ReactNode }) {
     setState({
       status: 'playing',
       difficulty,
+      runToken,
       targetCode: challenge.code,
       pollutedCode: polluted,
       timeLeft: TOTAL_TIME,
@@ -117,6 +168,10 @@ export function TimedGameProvider({ children }: { children: ReactNode }) {
   const checkCompletion = useCallback((content: string) => {
     if (completedRef.current) return false
     let isCompleted = false
+    let completedDifficulty: Difficulty | null = null
+    let completedAt = 0
+    let completedTimeTaken = 0
+
     setState(prev => {
       if (prev.status !== 'playing') return prev
       if (content === prev.targetCode) {
@@ -125,11 +180,30 @@ export function TimedGameProvider({ children }: { children: ReactNode }) {
         clearTimer()
         const endTime = Date.now()
         const timeTaken = prev.startTime ? Math.round((endTime - prev.startTime) / 1000) : TOTAL_TIME - prev.timeLeft
-        saveBestScore(prev.difficulty!, timeTaken)
+        completedDifficulty = prev.difficulty!
+        completedAt = endTime
+        completedTimeTaken = timeTaken
         return { ...prev, status: 'completed' as const, endTime, timeLeft: TOTAL_TIME - timeTaken }
       }
       return prev
     })
+
+    if (isCompleted && completedDifficulty) {
+      setSessionBestScores((current) => {
+        const best = current[completedDifficulty!]
+        if (!best || completedTimeTaken < best.time) {
+          return {
+            ...current,
+            [completedDifficulty!]: {
+              time: completedTimeTaken,
+              completedAt,
+            },
+          }
+        }
+        return current
+      })
+    }
+
     return isCompleted
   }, [clearTimer])
 
@@ -140,8 +214,13 @@ export function TimedGameProvider({ children }: { children: ReactNode }) {
   }, [stopGame])
 
   const getBestScore = useCallback((difficulty: Difficulty): BestScore | null => {
-    return loadBestScores()[difficulty] ?? null
-  }, [])
+    const sessionBest = sessionBestScores[difficulty]
+    const persistedBest = persistedBestScores[difficulty]
+
+    if (!sessionBest) return persistedBest
+    if (!persistedBest) return sessionBest
+    return sessionBest.time <= persistedBest.time ? sessionBest : persistedBest
+  }, [sessionBestScores, persistedBestScores])
 
   const getTimeTaken = useCallback((): number | null => {
     if (!state.startTime || !state.endTime) return null

@@ -11,6 +11,7 @@ import {
   parseErrorPayload,
 } from './messageParser'
 import { useAuth } from '../../contexts/AuthContext'
+import { useGuest } from '../../contexts/GuestContext'
 
 type GameSocketCallbacks = {
   onHelloAck: (playerId: string) => void
@@ -28,6 +29,7 @@ type GameSocketCallbacks = {
 type HelloPayload = {
   token?: string
   playerId?: string
+  guestSessionToken?: string
   tournamentId?: number
   tournamentSessionToken?: string
 }
@@ -54,6 +56,7 @@ export function useGameSocket() {
       roundDurationSec: 180,
   })
   const { user } = useAuth()
+  const { guest } = useGuest()
   const queueJoinPayloadRef = useRef<QueueJoinPayload>({})
 
   const setMatchStateRef = useCallback((state: Partial<MatchState>) => {
@@ -120,12 +123,13 @@ export function useGameSocket() {
     if (user) {
       base.playerId = user.provider + ':' + user.providerId
     } else if (!isGuestTournamentSession) {
-      const playerId = getOrCreatePlayerId()
-      base.playerId = playerId
+      const fallbackPlayerId = getOrCreatePlayerId()
+      base.playerId = guest?.guestId || fallbackPlayerId
+      base.guestSessionToken = guest?.sessionToken
     }
 
     return { ...base, ...(overrides || {}) }
-  }, [user])
+  }, [user, guest])
 
   const handleMessage = useCallback(
     (event: MessageEvent, callbacks: GameSocketCallbacks) => {

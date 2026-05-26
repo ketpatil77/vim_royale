@@ -5,6 +5,7 @@ import { AnalyticsRouteTracker } from './components/AnalyticsRouteTracker'
 import { WalkthroughPrompt } from './components/Walkthrough/WalkthroughPrompt'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { CRTProvider, useCRT } from './contexts/CRTContext'
+import { GuestProvider } from './contexts/GuestContext'
 import { TimedGameProvider } from './contexts/TimedGameContext'
 import { VimTutor } from './pages/docs/vimTutor'
 import EditProfile from './pages/EditProfile'
@@ -56,51 +57,27 @@ function AppRoutes() {
       <Route path="/" element={<Landing />} />
       <Route
         path="/play"
-        element={
-          <ProtectedRoute>
-            <Play />
-          </ProtectedRoute>
-        }
+        element={<Play />}
       />
       <Route
         path="/play/difficulty"
-        element={
-          <ProtectedRoute>
-            <DifficultySelect />
-          </ProtectedRoute>
-        }
+        element={<DifficultySelect />}
       />
       <Route
         path="/play/computer"
-        element={
-          <ProtectedRoute>
-            <ComputerSelect />
-          </ProtectedRoute>
-        }
+        element={<ComputerSelect />}
       />
       <Route
         path="/match/multiplayer"
-        element={
-          <ProtectedRoute>
-            <MatchPage mode="multiplayer" />
-          </ProtectedRoute>
-        }
+        element={<MatchPage mode="multiplayer" />}
       />
       <Route
         path="/match/computer"
-        element={
-          <ProtectedRoute>
-            <MatchPage mode="computer" />
-          </ProtectedRoute>
-        }
+        element={<MatchPage mode="computer" />}
       />
       <Route
         path="/match/timed"
-        element={
-          <ProtectedRoute>
-            <TimedMatchPage />
-          </ProtectedRoute>
-        }
+        element={<TimedMatchPage />}
       />
       <Route
         path="/match/tournament"
@@ -160,14 +137,16 @@ function AppContent() {
 
   return (
       <CRTEffect theme='green' enableScanlines={crtEnabled} scanlineOpacity={0.1} scanlineThickness={2} scanlineGap={3} enableSweep={crtEnabled} sweepDuration={12} sweepThickness={8} sweepStyle='classic' enableGlow={false} enableEdgeGlow={true} edgeGlowColor='rgba(91, 179, 135, 0.25)' edgeGlowSize={25} enableFlicker={crtEnabled} flickerIntensity={0.03} flickerSpeed={2} enableVignette={true} vignetteIntensity={0.2} enableGlitch={false}>
-        <TimedGameProvider>
-          <AnalyticsRouteTracker />
-          <VimiumWarningModal />
-          <AppRoutes />
-          {!isLoading && location.pathname !== "/walkthrough" && (
-            <WalkthroughPrompt user={user} />
-          )}
-        </TimedGameProvider>
+        <GuestProvider>
+          <TimedGameProvider>
+            <AnalyticsRouteTracker />
+            <VimiumWarningModal />
+            <AppRoutes />
+            {!isLoading && location.pathname !== "/walkthrough" && (
+              <WalkthroughPrompt user={user} />
+            )}
+          </TimedGameProvider>
+        </GuestProvider>
       </CRTEffect>
     )
 }

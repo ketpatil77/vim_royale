@@ -592,7 +592,7 @@ func optionalUserFromCookie(c *gin.Context, db *gorm.DB) (*models.User, error) {
 	claims := &middleware.Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(config.JWTSecret), nil
-	})
+	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 	if err != nil || !token.Valid {
 		return nil, nil
 	}

@@ -108,6 +108,10 @@ func (h *Hub) finishMatch(client *Client, message Envelope) {
 		loserName = opponent.DisplayName
 		loserAvatar = opponent.AvatarURL
 	}
+	winnerNewRating = float64(client.Rating)
+	if opponent != nil {
+		loserNewRating = float64(opponent.Rating)
+	}
 
 	var keystrokesData *KeystrokesData
 	if message.Payload != nil {
@@ -117,9 +121,16 @@ func (h *Hub) finishMatch(client *Client, message Envelope) {
 		}
 	}
 
+	shouldPersistRankedMatch := match.TournamentID == nil &&
+		opponent != nil &&
+		providerIDLike.MatchString(client.ID) &&
+		providerIDLike.MatchString(loserID)
+
 	dbConn, err := database.GetPostgresConnection()
 	if err != nil {
-		log.Printf("failed to get postgres connection: %v", err)
+		if match.TournamentID != nil || shouldPersistRankedMatch {
+			log.Printf("failed to get postgres connection: %v", err)
+		}
 	} else {
 		if match.TournamentID != nil {
 			if loserID != "" {
@@ -129,11 +140,7 @@ func (h *Hub) finishMatch(client *Client, message Envelope) {
 					PublishTournamentEvent(*match.TournamentID, "match_completed")
 				}
 			}
-			winnerNewRating = float64(client.Rating)
-			if opponent != nil {
-				loserNewRating = float64(opponent.Rating)
-			}
-		} else {
+		} else if shouldPersistRankedMatch {
 			persistedMatchID, wd, ld, wnr, lnr, mErr := database.CreateMatchAndSendRatingDelta(
 				dbConn,
 				client.ID,
@@ -153,6 +160,76 @@ func (h *Hub) finishMatch(client *Client, message Envelope) {
 					playerBData, _ := json.Marshal(keystrokesData.PlayerB)
 					if err := database.SaveMatchKeystrokes(dbConn, persistedMatchID, client.ID, playerAData, playerBData); err != nil {
 						log.Printf("failed to save match keystrokes: %v", err)
+					}
+				}
+			}
+		} else if opponent != nil {
+			winnerIsAuthenticated := providerIDLike.MatchString(client.ID)
+			loserIsAuthenticated := providerIDLike.MatchString(opponent.ID)
+
+			switch {
+			case winnerIsAuthenticated && !loserIsAuthenticated:
+				delta, newRating, mixedErr := database.ApplyMixedMatchRatingDelta(dbConn, client.ID, float64(opponent.Rating), true)
+				if mixedErr != nil {
+					log.Printf("failed to apply mixed match rating delta: %v", mixedErr)
+				} else {
+					winnerDelta = delta
+					winnerNewRating = newRating
+					client.Rating = int(newRating)
+				}
+
+				if client.UserID > 0 {
+					persistedMixedMatchID, persistErr := database.CreateMixedMatchForReplay(
+						dbConn,
+						client.UserID,
+						true,
+						opponent.ID,
+						opponent.DisplayName,
+						opponent.AvatarURL,
+						true,
+						match.TargetCode,
+						match.PollutedCode,
+					)
+					if persistErr != nil {
+						log.Printf("failed to persist mixed match replay row: %v", persistErr)
+					} else if keystrokesData != nil && len(keystrokesData.PlayerA) > 0 {
+						playerAData, _ := json.Marshal(keystrokesData.PlayerA)
+						playerBData, _ := json.Marshal(keystrokesData.PlayerB)
+						if err := database.SaveMatchKeystrokes(dbConn, persistedMixedMatchID, client.ID, playerAData, playerBData); err != nil {
+							log.Printf("failed to save mixed match keystrokes: %v", err)
+						}
+					}
+				}
+			case !winnerIsAuthenticated && loserIsAuthenticated:
+				delta, newRating, mixedErr := database.ApplyMixedMatchRatingDelta(dbConn, opponent.ID, float64(client.Rating), false)
+				if mixedErr != nil {
+					log.Printf("failed to apply mixed match rating delta: %v", mixedErr)
+				} else {
+					loserDelta = delta
+					loserNewRating = newRating
+					opponent.Rating = int(newRating)
+				}
+
+				if opponent.UserID > 0 {
+					persistedMixedMatchID, persistErr := database.CreateMixedMatchForReplay(
+						dbConn,
+						opponent.UserID,
+						false,
+						client.ID,
+						client.DisplayName,
+						client.AvatarURL,
+						false,
+						match.TargetCode,
+						match.PollutedCode,
+					)
+					if persistErr != nil {
+						log.Printf("failed to persist mixed match replay row: %v", persistErr)
+					} else if keystrokesData != nil && len(keystrokesData.PlayerA) > 0 {
+						playerAData, _ := json.Marshal(keystrokesData.PlayerA)
+						playerBData, _ := json.Marshal(keystrokesData.PlayerB)
+						if err := database.SaveMatchKeystrokes(dbConn, persistedMixedMatchID, client.ID, playerAData, playerBData); err != nil {
+							log.Printf("failed to save mixed match keystrokes: %v", err)
+						}
 					}
 				}
 			}
@@ -288,8 +365,12 @@ func (h *Hub) finishMatchAsDraw(matchID, reason string) {
 			} else {
 				PublishTournamentEvent(*match.TournamentID, "match_requeued")
 			}
-		} else if _, err := database.CreateDrawMatch(dbConn, playerA.ID, playerB.ID, match.TargetCode, match.PollutedCode); err != nil {
-			log.Printf("failed to persist drawn match: %v", err)
+		} else if providerIDLike.MatchString(playerA.ID) && providerIDLike.MatchString(playerB.ID) {
+			if _, err := database.CreateDrawMatch(dbConn, playerA.ID, playerB.ID, match.TargetCode, match.PollutedCode); err != nil {
+				log.Printf("failed to persist drawn match: %v", err)
+			}
+		} else {
+			// Guest/casual draw: no ranked persistence.
 		}
 	}
 

@@ -15,6 +15,7 @@ type UserMatchHistoryEntry struct {
 	OpponentUsername    string `json:"opponentUsername"`
 	OpponentDisplayName string `json:"opponentDisplayName"`
 	OpponentAvatarURL   string `json:"opponentAvatarUrl"`
+	OpponentIsGuest     bool   `json:"opponentIsGuest"`
 	IsWinner            bool   `json:"isWinner"`
 	IsDraw              bool   `json:"isDraw"`
 	ReplayAvailable     bool   `json:"replayAvailable"`
@@ -241,9 +242,42 @@ func GetUserMatches(c *gin.Context) {
 
 	response := make([]UserMatchHistoryEntry, 0, len(matches))
 	for _, match := range matches {
-		opponent := match.PlayerB
-		if match.PlayerBID == user.ID {
-			opponent = match.PlayerA
+		isUserPlayerA := match.PlayerAID != nil && *match.PlayerAID == user.ID
+		isUserPlayerB := match.PlayerBID != nil && *match.PlayerBID == user.ID
+
+		opponentUsername := ""
+		opponentDisplayName := "Unknown Opponent"
+		opponentAvatarURL := ""
+		opponentIsGuest := false
+
+		if isUserPlayerA {
+			if match.PlayerB != nil {
+				opponentUsername = match.PlayerB.Username
+				opponentDisplayName = match.PlayerB.DisplayName
+				opponentAvatarURL = match.PlayerB.AvatarURL
+			} else {
+				opponentIsGuest = true
+				if match.PlayerBGuestName != nil && *match.PlayerBGuestName != "" {
+					opponentDisplayName = *match.PlayerBGuestName
+				}
+				if match.PlayerBGuestAvatarURL != nil {
+					opponentAvatarURL = *match.PlayerBGuestAvatarURL
+				}
+			}
+		} else if isUserPlayerB {
+			if match.PlayerA != nil {
+				opponentUsername = match.PlayerA.Username
+				opponentDisplayName = match.PlayerA.DisplayName
+				opponentAvatarURL = match.PlayerA.AvatarURL
+			} else {
+				opponentIsGuest = true
+				if match.PlayerAGuestName != nil && *match.PlayerAGuestName != "" {
+					opponentDisplayName = *match.PlayerAGuestName
+				}
+				if match.PlayerAGuestAvatarURL != nil {
+					opponentAvatarURL = *match.PlayerAGuestAvatarURL
+				}
+			}
 		}
 
 		finishedAt := match.FinishedAt.Unix()
@@ -256,9 +290,10 @@ func GetUserMatches(c *gin.Context) {
 		response = append(response, UserMatchHistoryEntry{
 			MatchID:             matchID,
 			FinishedAt:          finishedAt,
-			OpponentUsername:    opponent.Username,
-			OpponentDisplayName: opponent.DisplayName,
-			OpponentAvatarURL:   opponent.AvatarURL,
+			OpponentUsername:    opponentUsername,
+			OpponentDisplayName: opponentDisplayName,
+			OpponentAvatarURL:   opponentAvatarURL,
+			OpponentIsGuest:     opponentIsGuest,
 			IsWinner:            !isDraw && match.WinnerID == user.ID,
 			IsDraw:              isDraw,
 			ReplayAvailable:     replayAvailability[matchID],

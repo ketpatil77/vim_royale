@@ -28,6 +28,7 @@ type MatchHistoryEntry = {
   opponentUsername: string;
   opponentDisplayName: string;
   opponentAvatarUrl: string;
+  opponentIsGuest: boolean;
   isWinner: boolean;
   isDraw: boolean;
   replayAvailable: boolean;
@@ -343,7 +344,7 @@ export default function UserProfile() {
                         {match.opponentDisplayName || match.opponentUsername || "Unknown Opponent"}
                       </div>
                       <div className="profile-match-meta">
-                        @{match.opponentUsername || "unknown"} · {new Date(match.finishedAt * 1000).toLocaleString()}
+                        {match.opponentIsGuest ? "Guest Opponent" : `@${match.opponentUsername || "unknown"}`} · {new Date(match.finishedAt * 1000).toLocaleString()}
                       </div>
                     </div>
                   </div>

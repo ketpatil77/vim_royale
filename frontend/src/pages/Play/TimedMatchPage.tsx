@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TerminalLayout } from '../../components/TerminalLayout/TerminalLayout'
+import { useAuth } from '../../contexts/AuthContext'
 import { useCRT } from '../../contexts/CRTContext'
+import { useGuest } from '../../contexts/GuestContext'
 import { useTimedGame } from '../../contexts/TimedGameContext'
 import { useSingleEditor } from '../../hooks/useSingleEditor'
 import { sounds } from '../../utils/sound'
+import { completeTimedRun, saveTimedScore, setPendingTimedScore } from '../../utils/timedScores'
 import './TimedMatchPage.css'
 
 const TIMER_WARNING_THRESHOLD = 30
@@ -12,9 +15,12 @@ const TIMER_WARNING_THRESHOLD = 30
 export default function TimedMatchPage() {
   const navigate = useNavigate()
   const { crtEnabled, toggleCrt } = useCRT()
+  const { user } = useAuth()
+  const { guest } = useGuest()
   const {
     status,
     difficulty,
+    runToken,
     targetCode,
     pollutedCode,
     timeLeft,
@@ -27,6 +33,11 @@ export default function TimedMatchPage() {
 
   const [vimMode, setVimMode] = useState('NORMAL')
   const [showResult, setShowResult] = useState(false)
+  const [showQuitWarning, setShowQuitWarning] = useState(false)
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [runReadyForSave, setRunReadyForSave] = useState(false)
+  const completionRequestedRef = useRef(false)
 
   const { editorRef, cleanup: cleanupEditor, setEditor } = useSingleEditor()
 
@@ -67,10 +78,30 @@ export default function TimedMatchPage() {
   }, [status])
 
   useEffect(() => {
+    if (status === 'playing') {
+      completionRequestedRef.current = false
+      setRunReadyForSave(false)
+      setSaveState('idle')
+      return
+    }
+    if (status !== 'completed' || !runToken || completionRequestedRef.current) return
+
+    completionRequestedRef.current = true
+    completeTimedRun(runToken, guest?.sessionToken)
+      .then(() => {
+        setRunReadyForSave(true)
+      })
+      .catch(() => {
+        setRunReadyForSave(false)
+        setSaveState('error')
+      })
+  }, [status, runToken, guest?.sessionToken])
+
+  useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (status === 'playing') {
         e.preventDefault()
-        e.returnValue = ''
+        e.returnValue = 'You are playing as a guest. Unsaved progress will be lost.'
       }
     }
     window.addEventListener('beforeunload', handleBeforeUnload)
@@ -87,8 +118,19 @@ export default function TimedMatchPage() {
   }
 
   const handleMainMenu = () => {
+    if (status === 'playing') {
+      setShowQuitWarning(true)
+      return
+    }
     resetGame()
     setShowResult(false)
+    navigate('/play')
+  }
+
+  const handleConfirmQuit = () => {
+    resetGame()
+    setShowResult(false)
+    setShowQuitWarning(false)
     navigate('/play')
   }
 
@@ -101,6 +143,39 @@ export default function TimedMatchPage() {
   const currentBest = difficulty ? getBestScore(difficulty) : null
   const timeTaken = getTimeTaken()
   const isNewBest = timeTaken !== null && currentBest !== null && timeTaken <= currentBest.time
+
+  const handleSaveScore = async () => {
+    if (status !== 'completed' || !difficulty || !runToken || saveState === 'saving' || saveState === 'saved') {
+      return
+    }
+
+    if (!user) {
+      setShowLoginPrompt(true)
+      return
+    }
+
+    try {
+      setSaveState('saving')
+      if (!runReadyForSave) {
+        await completeTimedRun(runToken, guest?.sessionToken)
+        setRunReadyForSave(true)
+      }
+      await saveTimedScore(runToken, guest?.sessionToken)
+      setSaveState('saved')
+    } catch {
+      setSaveState('error')
+    }
+  }
+
+  const handleLoginToSave = () => {
+    if (status !== 'completed' || !runToken) return
+    setPendingTimedScore({
+      runToken,
+      guestSessionToken: guest?.sessionToken,
+      createdAt: Date.now(),
+    })
+    navigate('/login')
+  }
 
   if (status === 'idle') {
     return null
@@ -160,7 +235,7 @@ export default function TimedMatchPage() {
                 <>
                   <div className="timed-result-stat">
                     <span className="stat-label">Time:</span>
-                    <span className="stat-value">{formatTime(totalTime - (timeTaken || 0))}</span>
+                    <span className="stat-value">{formatTime(timeTaken || 0)}</span>
                   </div>
                   {isNewBest && (
                     <div className="timed-result-new-best">NEW BEST!</div>
@@ -168,6 +243,24 @@ export default function TimedMatchPage() {
                   {!isNewBest && currentBest && (
                     <div className="timed-result-best">
                       Best: {formatTime(currentBest.time)}
+                    </div>
+                  )}
+                  <div className="timed-result-save-row">
+                    <button
+                      className={`timed-result-btn ${saveState === 'saved' ? 'primary' : ''}`}
+                      onClick={handleSaveScore}
+                      disabled={saveState === 'saving' || saveState === 'saved'}
+                    >
+                      {saveState === 'saving'
+                        ? 'SAVING...'
+                        : saveState === 'saved'
+                          ? 'SCORE SAVED'
+                          : 'SAVE SCORE'}
+                    </button>
+                  </div>
+                  {saveState === 'error' && (
+                    <div className="timed-result-save-error">
+                      Failed to save score. Try again.
                     </div>
                   )}
                 </>
@@ -183,6 +276,46 @@ export default function TimedMatchPage() {
                 </button>
                 <button className="timed-result-btn" onClick={handleMainMenu}>
                   MAIN MENU
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showQuitWarning && (
+          <div className="timed-result-overlay">
+            <div className="timed-result-modal">
+              <h2 className="timed-result-title failure">LEAVE GAME?</h2>
+              <div className="timed-result-timeout-msg">
+                {guest && !user
+                  ? 'You are playing as a guest. Unsaved progress will be lost.'
+                  : 'A game is in progress. Unsaved progress will be lost.'}
+              </div>
+              <div className="timed-result-actions">
+                <button className="timed-result-btn primary" onClick={() => setShowQuitWarning(false)}>
+                  KEEP PLAYING
+                </button>
+                <button className="timed-result-btn" onClick={handleConfirmQuit}>
+                  LEAVE
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showLoginPrompt && (
+          <div className="timed-result-overlay">
+            <div className="timed-result-modal">
+              <h2 className="timed-result-title">SAVE SCORE</h2>
+              <div className="timed-result-timeout-msg">
+                Log in to save this score to your account.
+              </div>
+              <div className="timed-result-actions">
+                <button className="timed-result-btn primary" onClick={handleLoginToSave}>
+                  LOGIN TO SAVE
+                </button>
+                <button className="timed-result-btn" onClick={() => setShowLoginPrompt(false)}>
+                  NOT NOW
                 </button>
               </div>
             </div>

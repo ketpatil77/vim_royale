@@ -43,7 +43,7 @@ func main() {
 			config.FrontendURL,
 		},
 		AllowMethods:     []string{"GET", "POST", "OPTIONS", "PUT", "PATCH"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Tournament-Session"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Tournament-Session", "X-Guest-Session"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
@@ -71,6 +71,8 @@ func main() {
 		authRoutes.GET("/me", handlers.AuthMiddleware(), handlers.AuthMeHandler)
 		authRoutes.POST("/logout", csrfProtected, handlers.AuthLogoutHandler)
 		authRoutes.PATCH("/me", writeLimit, handlers.AuthMiddleware(), csrfProtected, handlers.UpdateUserProfile)
+		authRoutes.GET("/timed-scores/best", handlers.AuthMiddleware(), handlers.GetTimedScoreBests)
+		authRoutes.POST("/timed-scores/save", writeLimit, handlers.AuthMiddleware(), csrfProtected, handlers.SaveTimedScore)
 	}
 
 	publicRoutes := r.Group("/", publicLimit)
@@ -81,6 +83,13 @@ func main() {
 		publicRoutes.GET("/users/:username/matches", handlers.GetUserMatches)
 		publicRoutes.GET("/matches/:matchId/spectate", handlers.SpectateMatch(hub))
 		publicRoutes.GET("/matches/:matchId/replay", handlers.GetMatchReplay)
+	}
+
+	publicWriteRoutes := r.Group("/", writeLimit, csrfProtected)
+	{
+		publicWriteRoutes.POST("/guest/session", handlers.CreateGuestSession)
+		publicWriteRoutes.POST("/timed-scores/run", handlers.StartTimedScoreRun)
+		publicWriteRoutes.POST("/timed-scores/complete", handlers.CompleteTimedScoreRun)
 	}
 
 	tournamentPublic := r.Group("/tournaments")

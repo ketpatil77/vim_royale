@@ -262,6 +262,17 @@
   margin-bottom: 16px;
 }
 
+.timed-result-save-row {
+  margin-bottom: 16px;
+}
+
+.timed-result-save-error {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--red);
+  margin-bottom: 16px;
+}
+
 .timed-result-timeout-msg {
   font-family: var(--mono);
   font-size: 14px;
