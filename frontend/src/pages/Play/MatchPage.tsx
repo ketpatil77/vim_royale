@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useCRT } from '../../contexts/CRTContext'
 import { useAuth } from '../../contexts/AuthContext'
+import { useGuest } from '../../contexts/GuestContext'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { EditorPanel } from '../../components/EditorPanel/EditorPanel'
 import { TerminalLayout } from '../../components/TerminalLayout/TerminalLayout'
@@ -53,6 +54,8 @@ const formatRoundClock = (seconds: number): string => {
   return `${minutes}:${String(remainder).padStart(2, '0')}`
 }
 
+const isAuthenticatedIdentity = (id: string): boolean => /^[a-z]+:.+$/.test(id)
+
 type MatchPageProps = {
   mode?: 'multiplayer' | 'computer' | 'tournament'
 }
@@ -70,6 +73,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   const [playerContent, setPlayerContent] = useState('')
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { ensureGuest } = useGuest()
   const [searchParams] = useSearchParams()
   const selectedBotId = searchParams.get('botId') || ''
   const tournamentIdParam = searchParams.get('tournamentId') || ''
@@ -142,7 +146,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
     sounds[type].play()
   }, [])
 
-  const beginMatchmaking = useCallback(() => {
+  const beginMatchmaking = useCallback(async () => {
     if (isComputerMode && !selectedBotId) {
       setStatusText('Missing bot selection. Redirecting...')
       navigate('/play/computer')
@@ -152,6 +156,17 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
       setStatusText('Missing tournament id. Returning to home...')
       navigate('/')
       return
+    }
+
+    const requiresStandardGuestSession = !user && !(isTournamentMode && tournamentSessionToken)
+    if (requiresStandardGuestSession) {
+      try {
+        await ensureGuest()
+      } catch {
+        setStatusText('Failed to create guest session. Please retry.')
+        setViewState('error')
+        return
+      }
     }
 
     disconnect()
@@ -196,15 +211,16 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
       replaceOpponentContent,
       applyDelta,
       recordReceivedKeystroke,
-      () => beginMatchmaking(),
+      () => { void beginMatchmaking() },
       getViewState
     )
 
+    const baseWsUrl = user ? WS_URL : WS_PUBLIC_URL
     const wsUrl = isComputerMode
-      ? `${WS_URL}?botId=${encodeURIComponent(selectedBotId)}`
+      ? `${baseWsUrl}?botId=${encodeURIComponent(selectedBotId)}`
       : isTournamentMode
         ? (user ? WS_URL : WS_PUBLIC_URL)
-      : WS_URL
+      : baseWsUrl
 
     const isTournamentQueue = isTournamentMode && Number.isFinite(parsedTournamentId) && parsedTournamentId > 0
 
@@ -226,6 +242,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
     selectedBotId,
     tournamentIdParam,
     tournamentSessionToken,
+    ensureGuest,
     navigate,
     disconnect,
     cleanupEditors,
@@ -240,7 +257,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   ])
 
   useEffect(() => {
-    beginMatchmaking()
+    void beginMatchmaking()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -386,6 +403,12 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   const completedChecks = Math.max(0, totalChecks - currentChangedLines.length)
   const completionRatio = totalChecks > 0 ? completedChecks / totalChecks : 1
   const completionPercent = Math.round(completionRatio * 100)
+  const shouldShowGuestContextTag = useMemo(() => {
+    if (isComputerMode || isTournamentMode || !gameOverPayload) return false
+    const winnerAuth = isAuthenticatedIdentity(gameOverPayload.winnerId || '')
+    const loserAuth = isAuthenticatedIdentity(gameOverPayload.loserId || '')
+    return winnerAuth !== loserAuth
+  }, [isComputerMode, isTournamentMode, gameOverPayload])
 
   const handleMainMenu = () => {
     if (isTournamentMode && tournamentIdParam) {
@@ -396,7 +419,10 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   }
 
   const handleNewMatch = () => {
-    beginMatchmaking()
+    void beginMatchmaking()
+  }
+  const handleLogin = () => {
+    navigate('/login')
   }
 
   const { crtEnabled, toggleCrt } = useCRT()
@@ -509,8 +535,11 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
               <MatchResultModal
                 isOpen={true}
                 {...parseResult(resultText, gameOverPayload)}
+                contextTag={shouldShowGuestContextTag ? 'CASUAL • GUEST OPPONENT' : undefined}
                 onMainMenu={handleMainMenu}
                 onNewMatch={handleNewMatch}
+                showLoginPrompt={!user}
+                onLogin={handleLogin}
               />
             )}
           </div>

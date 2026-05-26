@@ -2,6 +2,7 @@ package database
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 	"vim_royale/backend/models"
 	"vim_royale/backend/utils"
@@ -25,10 +26,10 @@ func CreateMatchAndSendRatingDelta(db *gorm.DB, winnerID, loserID, targetCode, p
 
 	match := &models.Match{
 		MatchID:      uuid.New(),
-		PlayerAID:    winner.ID,
-		PlayerBID:    loser.ID,
-		PlayerA:      *winner,
-		PlayerB:      *loser,
+		PlayerAID:    &winner.ID,
+		PlayerBID:    &loser.ID,
+		PlayerA:      winner,
+		PlayerB:      loser,
 		TargetCode:   targetCode,
 		PollutedCode: pollutedCode,
 		WinnerID:     winner.ID,
@@ -56,6 +57,27 @@ func CreateMatchAndSendRatingDelta(db *gorm.DB, winnerID, loserID, targetCode, p
 	return match.MatchID.String(), winner.Rating - oldWinnerRating, loser.Rating - oldLoserRating, winner.Rating, loser.Rating, nil
 }
 
+func ApplyMixedMatchRatingDelta(db *gorm.DB, playerID string, opponentRating float64, didWin bool) (playerDelta float64, playerNewRating float64, err error) {
+	player, err := findUserByPlayerID(db, playerID)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	if opponentRating <= 0 {
+		opponentRating = 1500
+	}
+
+	oldPlayerRating := player.Rating
+	newPlayerRating, _ := utils.CalculateElo(player.Rating, opponentRating, didWin)
+
+	player.Rating = newPlayerRating
+	if err := UpdateUserStats(db, player, didWin); err != nil {
+		return 0, 0, err
+	}
+
+	return player.Rating - oldPlayerRating, player.Rating, nil
+}
+
 func CreateDrawMatch(db *gorm.DB, playerAID, playerBID, targetCode, pollutedCode string) (matchID string, err error) {
 	playerA, err := findUserByPlayerID(db, playerAID)
 	if err != nil {
@@ -68,10 +90,10 @@ func CreateDrawMatch(db *gorm.DB, playerAID, playerBID, targetCode, pollutedCode
 
 	match := &models.Match{
 		MatchID:      uuid.New(),
-		PlayerAID:    playerA.ID,
-		PlayerBID:    playerB.ID,
-		PlayerA:      *playerA,
-		PlayerB:      *playerB,
+		PlayerAID:    &playerA.ID,
+		PlayerBID:    &playerB.ID,
+		PlayerA:      playerA,
+		PlayerB:      playerB,
 		TargetCode:   targetCode,
 		PollutedCode: pollutedCode,
 		WinnerID:     0,
@@ -184,6 +206,57 @@ func CountMatchesForUser(db *gorm.DB, userID uint) (int64, error) {
 	return count, result.Error
 }
 
+func CreateMixedMatchForReplay(db *gorm.DB, authUserID uint, authIsPlayerA bool, guestID string, guestName string, guestAvatarURL string, authWon bool, targetCode string, pollutedCode string) (string, error) {
+	match := &models.Match{
+		MatchID:      uuid.New(),
+		TargetCode:   targetCode,
+		PollutedCode: pollutedCode,
+		Outcome:      "decisive",
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+		FinishedAt:   time.Now(),
+	}
+
+	guestID = strings.TrimSpace(guestID)
+	guestName = strings.TrimSpace(guestName)
+	guestAvatarURL = strings.TrimSpace(guestAvatarURL)
+
+	if authIsPlayerA {
+		match.PlayerAID = &authUserID
+		if guestID != "" {
+			match.PlayerBGuestID = &guestID
+		}
+		if guestName != "" {
+			match.PlayerBGuestName = &guestName
+		}
+		if guestAvatarURL != "" {
+			match.PlayerBGuestAvatarURL = &guestAvatarURL
+		}
+	} else {
+		match.PlayerBID = &authUserID
+		if guestID != "" {
+			match.PlayerAGuestID = &guestID
+		}
+		if guestName != "" {
+			match.PlayerAGuestName = &guestName
+		}
+		if guestAvatarURL != "" {
+			match.PlayerAGuestAvatarURL = &guestAvatarURL
+		}
+	}
+
+	if authWon {
+		match.WinnerID = authUserID
+	} else {
+		match.WinnerID = 0
+	}
+
+	if err := db.Create(match).Error; err != nil {
+		return "", err
+	}
+	return match.MatchID.String(), nil
+}
+
 func GetReplayAvailabilityByMatchIDs(db *gorm.DB, matchIDs []string) (map[string]bool, error) {
 	availability := make(map[string]bool, len(matchIDs))
 	if len(matchIDs) == 0 {
@@ -215,6 +288,9 @@ func GetReplayAvailabilityByMatchIDs(db *gorm.DB, matchIDs []string) (map[string
 func GetRecentKeystrokesForPlayers(db *gorm.DB, playerIDs []string, limit int) ([]models.MatchKeystroke, error) {
 	if limit <= 0 {
 		limit = 20
+	}
+	if len(playerIDs) == 0 {
+		return []models.MatchKeystroke{}, nil
 	}
 
 	var keystrokes []models.MatchKeystroke

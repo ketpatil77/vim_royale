@@ -120,6 +120,12 @@ func (h *Hub) handleDisconnectWin(match *Match, winner *Client, loser *Client) {
 	match.WinnerID = winner.ID
 
 	var winnerDelta, loserDelta, winnerNewRating, loserNewRating float64
+	winnerNewRating = float64(winner.Rating)
+	loserNewRating = float64(loser.Rating)
+
+	shouldPersistRankedMatch := match.TournamentID == nil &&
+		providerIDLike.MatchString(winner.ID) &&
+		providerIDLike.MatchString(loser.ID)
 
 	dbConn, err := database.GetPostgresConnection()
 	if err == nil {
@@ -129,9 +135,7 @@ func (h *Hub) handleDisconnectWin(match *Match, winner *Client, loser *Client) {
 			} else {
 				PublishTournamentEvent(*match.TournamentID, "match_completed")
 			}
-			winnerNewRating = float64(winner.Rating)
-			loserNewRating = float64(loser.Rating)
-		} else {
+		} else if shouldPersistRankedMatch {
 			_, wd, ld, wnr, lnr, mErr := database.CreateMatchAndSendRatingDelta(
 				dbConn, winner.ID, loser.ID, match.TargetCode, match.PollutedCode,
 			)
@@ -140,6 +144,52 @@ func (h *Hub) handleDisconnectWin(match *Match, winner *Client, loser *Client) {
 				loserDelta = ld
 				winnerNewRating = wnr
 				loserNewRating = lnr
+			}
+		} else {
+			winnerIsAuthenticated := providerIDLike.MatchString(winner.ID)
+			loserIsAuthenticated := providerIDLike.MatchString(loser.ID)
+
+			switch {
+			case winnerIsAuthenticated && !loserIsAuthenticated:
+				delta, newRating, mixedErr := database.ApplyMixedMatchRatingDelta(dbConn, winner.ID, float64(loser.Rating), true)
+				if mixedErr == nil {
+					winnerDelta = delta
+					winnerNewRating = newRating
+					winner.Rating = int(newRating)
+				}
+				if winner.UserID > 0 {
+					_, _ = database.CreateMixedMatchForReplay(
+						dbConn,
+						winner.UserID,
+						true,
+						loser.ID,
+						loser.DisplayName,
+						loser.AvatarURL,
+						true,
+						match.TargetCode,
+						match.PollutedCode,
+					)
+				}
+			case !winnerIsAuthenticated && loserIsAuthenticated:
+				delta, newRating, mixedErr := database.ApplyMixedMatchRatingDelta(dbConn, loser.ID, float64(winner.Rating), false)
+				if mixedErr == nil {
+					loserDelta = delta
+					loserNewRating = newRating
+					loser.Rating = int(newRating)
+				}
+				if loser.UserID > 0 {
+					_, _ = database.CreateMixedMatchForReplay(
+						dbConn,
+						loser.UserID,
+						false,
+						winner.ID,
+						winner.DisplayName,
+						winner.AvatarURL,
+						false,
+						match.TargetCode,
+						match.PollutedCode,
+					)
+				}
 			}
 		}
 	}

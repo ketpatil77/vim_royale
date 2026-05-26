@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { TerminalLayout } from '../../components/TerminalLayout/TerminalLayout'
 import { useAuth } from '../../contexts/AuthContext'
 import './AuthCallback.css'
@@ -18,6 +18,7 @@ function getCookie(name: string): string | null {
 export default function AuthCallback() {
   const navigate = useNavigate()
   const { checkAuth } = useAuth()
+  const [searchParams] = useSearchParams()
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -32,14 +33,15 @@ export default function AuthCallback() {
 
       try {
         await checkAuth()
-        navigate('/')
+        const next = searchParams.get('next')
+        navigate(next || '/')
       } catch {
         setError('Authentication failed. Please try again.')
       }
     }
 
     verifyAuth()
-  }, [checkAuth, navigate])
+  }, [checkAuth, navigate, searchParams])
 
   if (error) {
     return (

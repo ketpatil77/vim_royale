@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"vim_royale/backend/config"
@@ -27,6 +28,7 @@ var providerIDLike = regexp.MustCompile(`^[a-z]+:.+$`)
 
 type Client struct {
 	ID                           string
+	UserID                       uint
 	DisplayName                  string
 	AvatarURL                    string
 	Rating                       int
@@ -127,42 +129,61 @@ func (c *Client) expectHello() error {
 	}
 
 	var playerID string
+	var guestDisplayName string
 
 	if c.ForcedPlayerID != "" {
 		playerID = c.ForcedPlayerID
 	} else {
-		if hello.Token != "" {
-			claims := &middleware.Claims{}
-			token, err := jwt.ParseWithClaims(hello.Token, claims, func(token *jwt.Token) (interface{}, error) {
-				return []byte(config.JWTSecret), nil
-			})
-
-			if err != nil || !token.Valid {
-				c.Hub.sendError(c, "invalid_token", "invalid or expired token")
+		if c.PublicConnection {
+			if hello.TournamentID > 0 && hello.TournamentSessionToken != "" {
+				guestPlayerID, err := resolveGuestPlayerIDFromTournamentSession(hello.TournamentID, hello.TournamentSessionToken)
+				if err != nil {
+					c.Hub.sendError(c, "invalid_tournament_session", "invalid tournament session")
+					return errProtocol
+				}
+				playerID = guestPlayerID
+			} else if strings.TrimSpace(hello.GuestSessionToken) != "" {
+				guestPlayerID, guestName, err := resolveGuestPlayerIdentityFromSessionToken(hello.GuestSessionToken)
+				if err != nil {
+					c.Hub.sendError(c, "invalid_guest_session", "invalid guest session")
+					return errProtocol
+				}
+				playerID = guestPlayerID
+				guestDisplayName = guestName
+			} else {
+				c.Hub.sendError(c, "missing_guest_session", "guestSessionToken is required on public websocket")
 				return errProtocol
 			}
-
-			playerID = claims.Provider + ":" + claims.ProviderID
-		} else if hello.PlayerID != "" {
-			if !uuidV4Like.MatchString(hello.PlayerID) && !providerIDLike.MatchString(hello.PlayerID) {
-				c.Hub.sendError(c, "invalid_player_id", "playerId must be a valid UUID or provider:id")
-				return errProtocol
-			}
-			if c.PublicConnection && providerIDLike.MatchString(hello.PlayerID) {
-				c.Hub.sendError(c, "invalid_player_id", "authenticated identities are not allowed on public websocket")
-				return errProtocol
-			}
-			playerID = hello.PlayerID
-		} else if hello.TournamentID > 0 && hello.TournamentSessionToken != "" {
-			guestPlayerID, err := resolveGuestPlayerIDFromTournamentSession(hello.TournamentID, hello.TournamentSessionToken)
-			if err != nil {
-				c.Hub.sendError(c, "invalid_tournament_session", "invalid tournament session")
-				return errProtocol
-			}
-			playerID = guestPlayerID
 		} else {
-			c.Hub.sendError(c, "missing_credentials", "provide token or playerId")
-			return errProtocol
+			if hello.Token != "" {
+				claims := &middleware.Claims{}
+				token, err := jwt.ParseWithClaims(hello.Token, claims, func(token *jwt.Token) (interface{}, error) {
+					return []byte(config.JWTSecret), nil
+				}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
+
+				if err != nil || !token.Valid {
+					c.Hub.sendError(c, "invalid_token", "invalid or expired token")
+					return errProtocol
+				}
+
+				playerID = claims.Provider + ":" + claims.ProviderID
+			} else if hello.PlayerID != "" {
+				if !uuidV4Like.MatchString(hello.PlayerID) && !providerIDLike.MatchString(hello.PlayerID) {
+					c.Hub.sendError(c, "invalid_player_id", "playerId must be a valid UUID or provider:id")
+					return errProtocol
+				}
+				playerID = hello.PlayerID
+			} else if hello.TournamentID > 0 && hello.TournamentSessionToken != "" {
+				guestPlayerID, err := resolveGuestPlayerIDFromTournamentSession(hello.TournamentID, hello.TournamentSessionToken)
+				if err != nil {
+					c.Hub.sendError(c, "invalid_tournament_session", "invalid tournament session")
+					return errProtocol
+				}
+				playerID = guestPlayerID
+			} else {
+				c.Hub.sendError(c, "missing_credentials", "provide token or playerId")
+				return errProtocol
+			}
 		}
 	}
 
@@ -181,6 +202,13 @@ func (c *Client) expectHello() error {
 	if err := c.Hub.AttachIdentity(c, playerID); err != nil {
 		c.Hub.sendError(c, "duplicate_player", "player already connected")
 		return err
+	}
+
+	if guestDisplayName != "" && !providerIDLike.MatchString(playerID) {
+		c.DisplayName = normalizeDisplayName(guestDisplayName)
+	}
+	if strings.TrimSpace(c.DisplayName) == "" && !providerIDLike.MatchString(playerID) {
+		c.DisplayName = "Guest"
 	}
 
 	ack := HelloAckPayload{PlayerID: c.ID}
@@ -237,4 +265,20 @@ func resolveGuestPlayerIDFromTournamentSession(tournamentID uint, sessionToken s
 	}
 
 	return *participant.GuestID, nil
+}
+
+func resolveGuestPlayerIdentityFromSessionToken(sessionToken string) (string, string, error) {
+	db, err := database.GetPostgresConnection()
+	if err != nil {
+		return "", "", err
+	}
+
+	session, err := database.FindGuestSessionByToken(db, sessionToken)
+	if err != nil {
+		return "", "", err
+	}
+	_ = database.TouchGuestSession(db, session.ID)
+
+	displayName := normalizeDisplayName(session.DisplayName)
+	return strings.TrimSpace(session.GuestID), displayName, nil
 }

@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import { API_URL } from "../config";
+import { clearPendingTimedScore, readPendingTimedScore, saveTimedScore } from "../utils/timedScores";
 
 export type User = {
   id: number;
@@ -61,6 +62,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const pendingScore = readPendingTimedScore();
+    if (!pendingScore) return;
+
+    saveTimedScore(pendingScore.runToken, pendingScore.guestSessionToken)
+      .finally(() => {
+        clearPendingTimedScore();
+      });
+  }, [user]);
 
   const login = (provider: "google" | "github") => {
     window.location.href = `${API_URL}/auth/${provider}`;

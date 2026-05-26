@@ -32,6 +32,8 @@ type Envelope struct {
 type HelloPayload struct {
 	Token                  string `json:"token,omitempty"`
 	PlayerID               string `json:"playerId,omitempty"`
+	GuestName              string `json:"guestName,omitempty"`
+	GuestSessionToken      string `json:"guestSessionToken,omitempty"`
 	TournamentID           uint   `json:"tournamentId,omitempty"`
 	TournamentSessionToken string `json:"tournamentSessionToken,omitempty"`
 }

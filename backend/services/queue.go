@@ -106,7 +106,7 @@ func (h *Hub) enqueueForTournamentMatch(client *Client, payload QueueJoinPayload
 	}
 
 	if strings.TrimSpace(client.DisplayName) == "" {
-		client.DisplayName = participant.DisplayName
+		client.DisplayName = normalizeDisplayName(participant.DisplayName)
 	}
 	if strings.TrimSpace(client.AvatarURL) == "" {
 		client.AvatarURL = participant.AvatarURL

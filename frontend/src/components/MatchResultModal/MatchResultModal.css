@@ -7,7 +7,6 @@
   justify-content: center;
   z-index: 1000;
 }
-
 .result-modal {
   background: linear-gradient(
     to bottom,
@@ -24,7 +23,6 @@
   width: 520px;
   min-width: 320px;
 }
-
 .result-modal-header {
   background: var(--bg-raised);
   padding: 10px 16px;
@@ -33,18 +31,15 @@
   justify-content: space-between;
   align-items: center;
 }
-
 .result-modal-filename {
   color: var(--text-dim);
   font-size: 11px;
   letter-spacing: 0.06em;
 }
-
 .result-modal-body {
   padding: 32px 24px;
   text-align: center;
 }
-
 .result-modal-title {
   font-size: 28px;
   font-weight: 700;
@@ -52,19 +47,15 @@
   text-transform: uppercase;
   margin: 0 0 12px;
 }
-
 .result-modal-title.victory {
   color: green;
 }
-
 .result-modal-title.defeat {
   color: red;
 }
-
 .result-modal-title.draw {
   color: var(--yellow);
 }
-
 .result-modal-description {
   color: var(--text-dim);
   font-size: 13px;
@@ -72,12 +63,23 @@
   letter-spacing: 0.04em;
 }
 
+.result-modal-context-tag {
+  display: inline-block;
+  margin: 0 0 20px;
+  padding: 6px 10px;
+  border: 1px solid rgba(229, 192, 123, 0.45);
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--yellow);
+  background: rgba(229, 192, 123, 0.08);
+}
 .result-modal-players {
   display: flex;
   gap: 16px;
   justify-content: center;
 }
-
 .player-card {
   display: flex;
   flex-direction: column;
@@ -88,29 +90,24 @@
   flex: 1;
   max-width: 200px;
 }
-
 .player-card--winner {
   border: 2px solid #39ff14;
   background: rgba(57, 255, 20, 0.04);
 }
-
 .player-card--loser {
   border: 2px solid #ff3b30;
   background: rgba(255, 59, 48, 0.04);
 }
-
 .player-card--draw {
   border: 2px solid rgba(229, 192, 123, 0.45);
   background: rgba(229, 192, 123, 0.08);
 }
-
 .player-card-avatar {
   width: 48px;
   height: 48px;
   border-radius: 50%;
   object-fit: cover;
 }
-
 .player-card-name {
   font-family: var(--mono);
   font-size: 13px;
@@ -121,14 +118,12 @@
   white-space: nowrap;
   max-width: 100%;
 }
-
 .player-card-rating {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
 }
-
 .player-card-rating-new {
   font-family: var(--mono);
   font-size: 18px;
@@ -136,22 +131,18 @@
   letter-spacing: 0.04em;
   color: var(--text-main);
 }
-
 .player-card-rating-delta {
   font-family: var(--mono);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
-
 .player-card-rating-delta.positive {
   color: #39ff14;
 }
-
 .player-card-rating-delta.negative {
   color: #ff3b30;
 }
-
 .result-modal-footer {
   padding: 16px 24px;
   border-top: 1px solid var(--border);
@@ -159,12 +150,10 @@
   gap: 16px;
   justify-content: center;
 }
-
 .result-modal-new {
   background: green;
   color: white;
 }
-
 .result-modal-btn {
   background: transparent;
   border: 1px solid var(--border);
@@ -179,24 +168,47 @@
   gap: 8px;
   transition: all 0.15s ease;
 }
-
 .result-modal-btn:hover {
   background: var(--bg-raised);
   color: var(--accent-green);
   border-color: var(--accent-green);
 }
-
 .result-modal-btn.primary {
   border-color: rgba(57, 255, 20, 0.3);
 }
-
 .result-modal-btn.primary:hover {
   border-color: var(--accent-green);
   box-shadow: 0 0 12px rgba(57, 255, 20, 0.15);
 }
-
 .result-modal-key {
   color: var(--accent-green);
   font-size: 11px;
   opacity: 0.8;
+}
+.result-modal-login-nudge {
+  padding: 0 24px 16px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.result-modal-login-link {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent-green);
+  opacity: 0.75;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.result-modal-login-link:hover {
+  opacity: 1;
 }

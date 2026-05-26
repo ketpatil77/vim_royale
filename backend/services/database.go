@@ -8,7 +8,8 @@ import (
 
 func (h *Hub) AttachIdentity(client *Client, playerID string) error {
 	var displayName, avatarURL string
-	var rating int
+	rating := 1500
+	var userID uint
 
 	provider, providerID := splitProviderID(playerID)
 	if provider != "" && providerID != "" {
@@ -16,6 +17,7 @@ func (h *Hub) AttachIdentity(client *Client, playerID string) error {
 		if err == nil {
 			user, err := database.GetUserFromProvider(db, provider, providerID)
 			if err == nil {
+				userID = user.ID
 				displayName = user.DisplayName
 				avatarURL = user.AvatarURL
 				rating = int(user.Rating)
@@ -46,6 +48,7 @@ func (h *Hub) AttachIdentity(client *Client, playerID string) error {
 	}
 
 	client.ID = playerID
+	client.UserID = userID
 	client.DisplayName = displayName
 	client.AvatarURL = avatarURL
 	client.Rating = rating

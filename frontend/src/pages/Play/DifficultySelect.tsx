@@ -1,8 +1,12 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TerminalLayout } from '../../components/TerminalLayout/TerminalLayout'
+import { useAuth } from '../../contexts/AuthContext'
 import { useCRT } from '../../contexts/CRTContext'
+import { useGuest } from '../../contexts/GuestContext'
 import { useTimedGame } from '../../contexts/TimedGameContext'
 import type { Difficulty } from '../../utils/challenges'
+import { startTimedRun } from '../../utils/timedScores'
 import './DifficultySelect.css'
 
 const difficulties: { id: Difficulty; label: string; description: string; color: string }[] = [
@@ -15,11 +19,33 @@ const difficulties: { id: Difficulty; label: string; description: string; color:
 export default function DifficultySelect() {
   const navigate = useNavigate()
   const { crtEnabled, toggleCrt } = useCRT()
+  const { user } = useAuth()
+  const { ensureGuest } = useGuest()
   const { startGame, getBestScore } = useTimedGame()
+  const [startingDifficulty, setStartingDifficulty] = useState<Difficulty | null>(null)
 
-  const handleSelect = (difficulty: Difficulty) => {
-    startGame(difficulty)
-    navigate('/match/timed')
+  const handleSelect = async (difficulty: Difficulty) => {
+    if (startingDifficulty) return
+    setStartingDifficulty(difficulty)
+    try {
+      let guestSessionToken: string | undefined
+      if (!user) {
+        const guest = await ensureGuest()
+        guestSessionToken = guest.sessionToken
+      }
+
+      let runToken = ''
+      try {
+        runToken = await startTimedRun(difficulty, guestSessionToken)
+      } catch {
+        runToken = ''
+      }
+
+      startGame(difficulty, runToken)
+      navigate('/match/timed')
+    } finally {
+      setStartingDifficulty(null)
+    }
   }
 
   const formatTime = (seconds: number): string => {
@@ -40,7 +66,8 @@ export default function DifficultySelect() {
                 key={d.id}
                 className="difficulty-btn"
                 style={{ '--difficulty-color': d.color } as React.CSSProperties}
-                onClick={() => handleSelect(d.id)}
+                onClick={() => { void handleSelect(d.id) }}
+                disabled={startingDifficulty !== null}
               >
                 <span className="difficulty-label">{d.label}</span>
                 <span className="difficulty-desc">{d.description}</span>
