@@ -1,71 +1,197 @@
+.game-shell {
+  min-height: calc(100vh - 52px);
+}
+
 .play-select-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   min-height: calc(100vh - 52px);
-  padding: 32px;
+  padding: 40px 24px 60px;
 }
 
 .play-title {
   font-family: var(--mono, monospace);
   font-size: 24px;
   color: var(--green, #5bb387);
-  margin-bottom: 48px;
+  margin-bottom: 12px;
   text-shadow: 0 0 10px rgba(91, 179, 135, 0.5);
+  text-align: center;
+}
+
+.play-subtitle {
+  margin: 0 0 30px;
+  font-family: var(--mono, monospace);
+  color: #9ac79f;
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  text-align: center;
 }
 
 .play-modes {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
   width: 100%;
-  max-width: 400px;
+  max-width: 860px;
 }
 
 .play-mode-btn {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
   padding: 24px;
-  background: transparent;
-  border: 1px solid var(--green, #5bb387);
+  background: rgba(10, 24, 10, 0.68);
+  border: 1px solid rgba(91, 179, 135, 0.38);
   cursor: pointer;
   text-align: left;
-  transition: all 0.15s ease;
+  transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease, box-shadow 0.16s ease;
+  min-height: 150px;
+  border-radius: 4px;
 }
 
 .play-mode-btn:hover {
-  background: var(--green, #5bb387);
-  color: #0d0d0d;
+  background: rgba(91, 179, 135, 0.13);
+  border-color: var(--green, #5bb387);
+  box-shadow: 0 0 0 1px rgba(91, 179, 135, 0.25);
+  transform: translateY(-2px);
 }
 
-.play-mode-btn:hover .play-mode-label,
-.play-mode-btn:hover .play-mode-desc {
-  color: #0d0d0d;
+.play-mode-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.play-mode-btn:focus-visible {
+  outline: 2px solid #c5ef9e;
+  outline-offset: 2px;
 }
 
 .play-mode-btn--dim {
-  border-color: #333;
+  border-color: #3f3f3f;
+  background: rgba(17, 17, 17, 0.62);
 }
 
-.play-mode-btn--dim:hover {
-  background: #333;
+.play-mode-btn--dim,
+.play-mode-btn--dim .play-mode-label,
+.play-mode-btn--dim .play-mode-desc,
+.play-mode-btn--dim .play-mode-meta,
+.play-mode-btn--dim .play-mode-hotkey {
+  color: #6b6b6b;
+}
+
+.play-mode-btn--dim:hover,
+.play-mode-btn--dim:focus-visible {
+  border-color: #4a4a4a;
+  background: rgba(24, 24, 24, 0.75);
+  box-shadow: none;
+  transform: none;
+  outline: none;
   cursor: not-allowed;
+}
+
+.play-mode-top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .play-mode-label {
   font-family: var(--mono, monospace);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   color: var(--green, #5bb387);
-  letter-spacing: 2px;
+  letter-spacing: 1px;
 }
 
 .play-mode-desc {
   font-family: var(--mono, monospace);
   font-size: 12px;
-  font-weight: bold;
-  color: #666;
+  color: #bfdac2;
+  line-height: 1.55;
+}
+
+.play-mode-hotkey {
+  font-family: var(--mono, monospace);
+  font-size: 11px;
+  color: #f5a623;
+  border: 1px solid rgba(245, 166, 35, 0.35);
+  padding: 2px 7px;
+  letter-spacing: 0.5px;
+}
+
+.play-mode-meta {
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--mono, monospace);
+  font-size: 11px;
+  color: #8fb896;
+  border-top: 1px solid rgba(91, 179, 135, 0.2);
+  padding-top: 10px;
+}
+
+.play-actions {
+  width: 100%;
+  max-width: 860px;
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 18px;
+}
+
+.play-back-btn {
+  background: transparent;
+  border: 1px solid #3f6f3f;
+  color: #9ac79f;
+  padding: 10px 14px;
+  font-family: var(--mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.play-back-btn:hover {
+  border-color: var(--green, #5bb387);
+  color: var(--green, #5bb387);
+  background: rgba(91, 179, 135, 0.08);
+}
+
+@media (max-width: 820px) {
+  .play-modes {
+    grid-template-columns: 1fr;
+    max-width: 560px;
+  }
+
+  .play-actions {
+    max-width: 560px;
+  }
+}
+
+@media (max-width: 540px) {
+  .play-select-container {
+    padding: 28px 14px 48px;
+  }
+
+  .play-title {
+    font-size: 20px;
+  }
+
+  .play-mode-btn {
+    min-height: 0;
+    padding: 18px 16px;
+  }
+
+  .play-mode-meta {
+    flex-direction: column;
+    gap: 6px;
+  }
 }
