@@ -1,12 +1,16 @@
 import { type FormEvent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AuroraBackground from '../components/AnimatedBackgrounds/AuroraBackground'
+import { AerialUpdateBanner } from '../components/AerialUpdateBanner/AerialUpdateBanner'
 import VimRoyaleDuel from '../components/HeroEditors'
 import { TerminalLayout } from '../components/TerminalLayout/TerminalLayout'
 import { VimRoyaleHero } from '../components/VimRoyaleHero/VimRoyaleHero'
 import { VT100TitleBar } from '../components/VT100TitleBar/VT100TitleBar'
 import { useCRT } from '../contexts/CRTContext'
 import './Landing.css'
+import '../components/AerialUpdateBanner/AerialUpdateBanner.css'
+
+const RELEASE_BANNER_MESSAGE = 'v0.2.0: Spectator mode, improved matchmaking, Create custom tournaments and play with your friends!'
 
 const GAME_MODES = [
   { cmd: ':vs',       title: '1V1',           desc: '2 Players, Split Screen' },
@@ -144,6 +148,10 @@ export default function Landing() {
 
         {/* ── Hero ── */}
         <section className="vr-hero">
+          <AerialUpdateBanner
+            label="release"
+            message={RELEASE_BANNER_MESSAGE}
+          />
           <VimRoyaleHero />
           <p className="vr-tagline">&gt; one shall lose, one shall vim</p>
           <div className="vr-ctas">

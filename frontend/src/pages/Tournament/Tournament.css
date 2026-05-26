@@ -134,6 +134,15 @@
   margin-bottom: 14px;
 }
 
+.tournament-share-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
 .tournament-code {
   display: block;
   overflow-x: auto;
@@ -142,6 +151,17 @@
   border: 1px solid #274127;
   color: #c5efc5;
   padding: 8px 10px;
+}
+
+.tournament-copy-feedback {
+  margin-top: 8px;
+  margin-bottom: 0;
+  font-size: 12px;
+  color: #a7d79e;
+}
+
+.tournament-copy-feedback--error {
+  color: #ff9a9a;
 }
 
 .tournament-section {
