@@ -67,11 +67,15 @@
 }
 
 .vr-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-family: var(--mono);
   font-size: 13px;
   letter-spacing: 2px;
   cursor: pointer;
   transition: all 0.08s;
+  width: min(100%, 320px);
   padding: 12px 36px;
   border: 2px solid var(--green);
   background: var(--green);
@@ -664,7 +668,7 @@
 /* ---------- Responsive ---------- */
 @media (max-width: 768px) {
   .vr-hero      { padding: 40px 16px 48px; }
-  .vr-ascii     { font-size: 6px; }
+  .vr-ascii     { font-size: 8px; }
   .vr-ctas      { flex-direction: column; align-items: center; }
   .features     { padding: 48px 16px 64px; }
   .vr-features  { grid-template-columns: repeat(2, 1fr); }
@@ -677,7 +681,7 @@
 }
 
 @media (max-width: 480px) {
-  .vr-ascii    { font-size: 4.5px; }
+  .vr-ascii    { font-size: 6.5px; }
   .vr-features { grid-template-columns: 1fr; }
   .htp-grid    { grid-template-columns: 1fr; }
 }
