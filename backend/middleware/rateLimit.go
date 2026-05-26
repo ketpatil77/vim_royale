@@ -8,35 +8,47 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-type visitor struct {
-	Count int
-}
-
 func RateLimitMiddleware(limit int, window time.Duration) gin.HandlerFunc {
 	store := cache.New(window, 10*time.Minute)
 
 	return func(c *gin.Context) {
-		ip := c.ClientIP()
-
-		v, found := store.Get(ip)
-
-		if !found {
-			store.Set(ip, &visitor{Count: 1}, window)
+		if limit <= 0 {
 			c.Next()
 			return
 		}
 
-		visitor := v.(*visitor)
+		key := rateLimitKey(c)
 
-		if visitor.Count >= limit {
+		// Fast path for first hit in the window.
+		if err := store.Add(key, 1, window); err == nil {
+			c.Next()
+			return
+		}
+
+		count, err := store.IncrementInt(key, 1)
+		if err != nil {
+			// Fallback to a safe reset if the key expired between operations
+			// or had an unexpected value type.
+			store.Set(key, 1, window)
+			c.Next()
+			return
+		}
+
+		if count > limit {
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
 				"error": "too many requests",
 			})
 			return
 		}
 
-		visitor.Count++
-
 		c.Next()
 	}
+}
+
+func rateLimitKey(c *gin.Context) string {
+	route := c.FullPath()
+	if route == "" {
+		route = c.Request.URL.Path
+	}
+	return c.ClientIP() + "|" + c.Request.Method + "|" + route
 }
