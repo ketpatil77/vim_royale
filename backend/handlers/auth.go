@@ -40,7 +40,7 @@ func AuthMeHandler(c *gin.Context) {
 		return
 	}
 	userResponse := gin.H{
-		"id":           user.ID,
+		"id":          user.ID,
 		"provider":    user.Provider,
 		"providerId":  user.ProviderID,
 		"email":       user.Email,
@@ -61,7 +61,7 @@ func AuthMeHandler(c *gin.Context) {
 }
 
 func AuthLogoutHandler(c *gin.Context) {
-	c.SetCookie("token", "", -1, "/", "", false, true)
+	auth.ClearAuthCookie(c)
 	c.JSON(200, gin.H{"message": "logged out"})
 }
 

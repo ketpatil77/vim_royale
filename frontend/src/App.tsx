@@ -22,6 +22,8 @@ import MatchReplayPage from './pages/MatchReplay/MatchReplay'
 import Walkthrough from './pages/Walkthrough'
 import { VimiumWarningModal } from './components/VimiumWarningModal/VimiumWarningModal'
 import LiveSpectate from './pages/LiveSpectate/LiveSpectate'
+import TournamentCreate from './pages/Tournament/TournamentCreate'
+import TournamentLobby from './pages/Tournament/TournamentLobby'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()
@@ -99,6 +101,22 @@ function AppRoutes() {
             <TimedMatchPage />
           </ProtectedRoute>
         }
+      />
+      <Route
+        path="/match/tournament"
+        element={<MatchPage mode="tournament" />}
+      />
+      <Route
+        path="/play/tournament/create"
+        element={
+          <ProtectedRoute>
+            <TournamentCreate />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/t/:slug"
+        element={<TournamentLobby />}
       />
       <Route 
         path="/docs/vimtutor"

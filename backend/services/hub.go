@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"sync"
 	"time"
 
@@ -12,28 +13,35 @@ type ratingBucket struct {
 	players []*Client
 }
 
+type tournamentQueue struct {
+	mu      sync.Mutex
+	players []*Client
+}
+
 const numBuckets = 41
 
 type Hub struct {
-	mu             sync.Mutex
-	clients        map[*Client]struct{}
-	clientsByID    map[string]*Client
-	matches        map[string]*Match
-	waitingBuckets [numBuckets]*ratingBucket
-	Register       chan *Client
-	Unregister     chan *Client
-	incoming       chan InboundMessage
+	mu               sync.Mutex
+	clients          map[*Client]struct{}
+	clientsByID      map[string]*Client
+	matches          map[string]*Match
+	waitingBuckets   [numBuckets]*ratingBucket
+	tournamentQueues map[uint]*tournamentQueue
+	Register         chan *Client
+	Unregister       chan *Client
+	incoming         chan InboundMessage
 }
 
 func NewHub() *Hub {
 	h := &Hub{
-		clients:        make(map[*Client]struct{}),
-		clientsByID:    make(map[string]*Client),
-		matches:        make(map[string]*Match),
-		waitingBuckets: [numBuckets]*ratingBucket{},
-		Register:       make(chan *Client, 256),
-		Unregister:     make(chan *Client, 256),
-		incoming:       make(chan InboundMessage, 256),
+		clients:          make(map[*Client]struct{}),
+		clientsByID:      make(map[string]*Client),
+		matches:          make(map[string]*Match),
+		waitingBuckets:   [numBuckets]*ratingBucket{},
+		tournamentQueues: make(map[uint]*tournamentQueue),
+		Register:         make(chan *Client, 256),
+		Unregister:       make(chan *Client, 256),
+		incoming:         make(chan InboundMessage, 256),
 	}
 	for i := range h.waitingBuckets {
 		h.waitingBuckets[i] = &ratingBucket{}
@@ -115,14 +123,24 @@ func (h *Hub) handleDisconnectWin(match *Match, winner *Client, loser *Client) {
 
 	dbConn, err := database.GetPostgresConnection()
 	if err == nil {
-		_, wd, ld, wnr, lnr, mErr := database.CreateMatchAndSendRatingDelta(
-			dbConn, winner.ID, loser.ID, match.TargetCode, match.PollutedCode,
-		)
-		if mErr == nil {
-			winnerDelta = wd
-			loserDelta = ld
-			winnerNewRating = wnr
-			loserNewRating = lnr
+		if match.TournamentID != nil {
+			if err := database.ReportTournamentLiveMatchResult(dbConn, *match.TournamentID, match.ID, winner.ID, loser.ID); err != nil {
+				// Keep websocket flow alive even if persistence fails.
+			} else {
+				PublishTournamentEvent(*match.TournamentID, "match_completed")
+			}
+			winnerNewRating = float64(winner.Rating)
+			loserNewRating = float64(loser.Rating)
+		} else {
+			_, wd, ld, wnr, lnr, mErr := database.CreateMatchAndSendRatingDelta(
+				dbConn, winner.ID, loser.ID, match.TargetCode, match.PollutedCode,
+			)
+			if mErr == nil {
+				winnerDelta = wd
+				loserDelta = ld
+				winnerNewRating = wnr
+				loserNewRating = lnr
+			}
 		}
 	}
 
@@ -156,11 +174,23 @@ func (h *Hub) EnqueueIncoming(inbound InboundMessage) {
 func (h *Hub) handleIncoming(inbound InboundMessage) {
 	switch inbound.Message.Type {
 	case MsgQueueJoin:
+		var payload QueueJoinPayload
+		if len(inbound.Message.Payload) > 0 {
+			if err := json.Unmarshal(inbound.Message.Payload, &payload); err != nil {
+				h.sendError(inbound.Client, "invalid_queue_join", "invalid queue payload")
+				return
+			}
+		}
+
 		if inbound.Client.BotID != "" {
+			if payload.TournamentID > 0 || payload.QueueType == "tournament" {
+				h.sendError(inbound.Client, "unsupported_queue", "bot mode does not support tournament queues")
+				return
+			}
 			h.startBotGame(inbound.Client, inbound.Client.BotID)
 			return
 		}
-		h.enqueueForMatch(inbound.Client)
+		h.enqueueForMatch(inbound.Client, payload)
 	case MsgBufferUpdate:
 		h.relayBufferUpdate(inbound.Client, inbound.Message)
 	case MsgPlayerFinished:

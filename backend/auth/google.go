@@ -37,7 +37,13 @@ func GoogleLogin(c *gin.Context) {
 		initGoogleOAuth()
 	}
 
-	url := googleOAuthConfig.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	state, err := issueOAuthState(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to initialize oauth state"})
+		return
+	}
+
+	url := googleOAuthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	c.Redirect(http.StatusFound, url)
 }
 
@@ -49,6 +55,10 @@ func GoogleCallback(c *gin.Context) {
 	code := c.Query("code")
 	if code == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing code"})
+		return
+	}
+	if !verifyAndClearOAuthState(c) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid oauth state"})
 		return
 	}
 
@@ -80,11 +90,7 @@ func GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	c.Header("Set-Cookie", fmt.Sprintf(
-		"token=%s; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=%d",
-		jwtToken,
-		86400*30,
-	))
+	setAuthCookie(c, jwtToken)
 	c.Redirect(http.StatusFound, config.FrontendURL)
 }
 
@@ -96,11 +102,22 @@ type GoogleUserInfo struct {
 }
 
 func getGoogleUserInfo(accessToken string) (map[string]interface{}, error) {
-	resp, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + accessToken)
+	req, err := http.NewRequest(http.MethodGet, "https://www.googleapis.com/oauth2/v2/userinfo", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return nil, fmt.Errorf("google user info request failed with status %d", resp.StatusCode)
+	}
 
 	var userInfo map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { TerminalLayout } from "../components/TerminalLayout/TerminalLayout"
 import { API_URL } from "../config"
 import { useCRT } from "../contexts/CRTContext"
+import { useAuth } from "../contexts/AuthContext"
 import "./leaderboard.css"
 
 type LeaderboardEntry = {
@@ -20,6 +21,7 @@ const MEDALS = ['◈', '◇', '△']
 
 export default function Leaderboard() {
     const { crtEnabled, toggleCrt } = useCRT()
+    const { user } = useAuth()
     const navigate = useNavigate()
     const [entries, setEntries] = useState<LeaderboardEntry[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -61,12 +63,13 @@ export default function Leaderboard() {
                             {entries.map((entry, i) => {
                                 const rank = i + 1
                                 const isTop3 = rank <= 3
+                                const isSelf = user?.id === entry.user_id
                                 const liveMatchId = entry.liveMatchId
                                 const showLiveEye = Boolean(entry.isLive && liveMatchId)
                                 return (
                                     <div
                                         key={entry.user_id}
-                                        className={`lb-row ${isTop3 ? `lb-row--${rank}` : ''}`}
+                                        className={`lb-row ${isTop3 ? `lb-row--${rank}` : ''} ${isSelf ? 'lb-row--self' : ''}`}
                                         style={{ animationDelay: `${i * 0.06}s` }}
                                         onClick={() => navigate(`/users/${entry.username}`)}
                                     >
@@ -83,6 +86,7 @@ export default function Leaderboard() {
                                             <span className={`lb-row-name ${isTop3 ? `lb-row-name--${rank}` : ''}`}>
                                                 {entry.displayName || 'Anonymous'}
                                             </span>
+                                            {isSelf && <span className="lb-you-tag">YOU</span>}
                                             {showLiveEye && (
                                                 <button
                                                     type="button"

@@ -10,7 +10,8 @@ import type { MatchState, ViewState, GameOverPayload, KeystrokeEntry } from '../
 import { useEditors } from '../typingChallenge/useEditors'
 import { useGameSocket } from '../typingChallenge/useGameSocket'
 import { sounds } from '../../utils/sound'
-import { WS_URL } from '../../config'
+import { readTournamentSessionToken } from '../../utils/tournamentApi'
+import { WS_PUBLIC_URL, WS_URL } from '../../config'
 import './MatchPage.css'
 
 const initialMatchState: MatchState = {
@@ -53,7 +54,7 @@ const formatRoundClock = (seconds: number): string => {
 }
 
 type MatchPageProps = {
-  mode?: 'multiplayer' | 'computer'
+  mode?: 'multiplayer' | 'computer' | 'tournament'
 }
 
 export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
@@ -71,7 +72,16 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const selectedBotId = searchParams.get('botId') || ''
+  const tournamentIdParam = searchParams.get('tournamentId') || ''
+  const parsedTournamentId = Number(tournamentIdParam)
+  const tournamentSessionToken = useMemo(() => {
+    const tokenFromQuery = searchParams.get('sessionToken') || ''
+    if (tokenFromQuery) return tokenFromQuery
+    if (!Number.isFinite(parsedTournamentId) || parsedTournamentId <= 0) return ''
+    return readTournamentSessionToken(parsedTournamentId)
+  }, [parsedTournamentId, searchParams])
   const isComputerMode = mode === 'computer'
+  const isTournamentMode = mode === 'tournament'
 
   const targetCodeRef = useRef('')
   const pollutedCodeRef = useRef('')
@@ -138,6 +148,11 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
       navigate('/play/computer')
       return
     }
+    if (isTournamentMode && !tournamentIdParam) {
+      setStatusText('Missing tournament id. Returning to home...')
+      navigate('/')
+      return
+    }
 
     disconnect()
     cleanupEditors()
@@ -152,7 +167,13 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
     setSpectatorCount(0)
     setRoundSecondsLeft(defaultRoundDurationSec)
     setPlayerContent('')
-    setStatusText(isComputerMode ? 'Connecting to bot server...' : 'Connecting to matchmaking server...')
+    setStatusText(
+      isComputerMode
+        ? 'Connecting to bot server...'
+        : isTournamentMode
+          ? 'Connecting to tournament server...'
+          : 'Connecting to matchmaking server...'
+    )
     setViewState('matchmaking')
 
     const callbacks = createSocketCallbacks(
@@ -181,12 +202,30 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
 
     const wsUrl = isComputerMode
       ? `${WS_URL}?botId=${encodeURIComponent(selectedBotId)}`
+      : isTournamentMode
+        ? (user ? WS_URL : WS_PUBLIC_URL)
       : WS_URL
 
-    connect(callbacks, { wsUrl })
+    const isTournamentQueue = isTournamentMode && Number.isFinite(parsedTournamentId) && parsedTournamentId > 0
+
+    connect(callbacks, {
+      wsUrl,
+      queueJoinPayload: isTournamentQueue
+        ? { queueType: 'tournament', tournamentId: parsedTournamentId }
+        : {},
+      helloOverrides: isTournamentQueue
+        ? {
+            tournamentId: parsedTournamentId,
+            tournamentSessionToken: tournamentSessionToken || undefined,
+          }
+        : {},
+    })
   }, [
     isComputerMode,
+    isTournamentMode,
     selectedBotId,
+    tournamentIdParam,
+    tournamentSessionToken,
     navigate,
     disconnect,
     cleanupEditors,
@@ -197,6 +236,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
     recordReceivedKeystroke,
     getViewState,
     connect,
+    user,
   ])
 
   useEffect(() => {
@@ -309,7 +349,20 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   const cancelMatchmaking = () => {
     disconnect()
     cleanupEditors()
-    navigate(isComputerMode ? '/play/computer' : '/play')
+    if (isComputerMode) {
+      navigate('/play/computer')
+      return
+    }
+    if (isTournamentMode && tournamentIdParam) {
+      const slug = searchParams.get('slug')
+      if (slug) {
+        navigate(`/t/${slug}`)
+        return
+      }
+      navigate(-1)
+      return
+    }
+    navigate('/play')
   }
 
   const isMatchmaking = viewState === 'matchmaking'
@@ -335,6 +388,10 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   const completionPercent = Math.round(completionRatio * 100)
 
   const handleMainMenu = () => {
+    if (isTournamentMode && tournamentIdParam) {
+      navigate(-1)
+      return
+    }
     navigate('/play')
   }
 
