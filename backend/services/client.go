@@ -2,11 +2,13 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"regexp"
 	"time"
 
 	"vim_royale/backend/config"
+	database "vim_royale/backend/db"
 	"vim_royale/backend/middleware"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -24,25 +26,38 @@ var uuidV4Like = regexp.MustCompile(`^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F
 var providerIDLike = regexp.MustCompile(`^[a-z]+:.+$`)
 
 type Client struct {
-	ID          string
-	DisplayName string
-	AvatarURL   string
-	Rating      int
-	BotID       string
-	EnqueuedAt  time.Time
-	Conn        *websocket.Conn
-	Hub         *Hub
-	send        chan []byte
-	closed      bool
-	MatchID     string
+	ID                           string
+	DisplayName                  string
+	AvatarURL                    string
+	Rating                       int
+	BotID                        string
+	ForcedPlayerID               string
+	PublicConnection             bool
+	QueueType                    string
+	TournamentID                 uint
+	TournamentParticipantID      uint
+	TournamentExpectedOpponentID string
+	EnqueuedAt                   time.Time
+	Conn                         *websocket.Conn
+	Hub                          *Hub
+	send                         chan []byte
+	closed                       bool
+	MatchID                      string
 }
 
-func NewClient(conn *websocket.Conn, hub *Hub, botID string) *Client {
+type ClientOptions struct {
+	ForcedPlayerID   string
+	PublicConnection bool
+}
+
+func NewClient(conn *websocket.Conn, hub *Hub, botID string, opts ClientOptions) *Client {
 	return &Client{
-		Conn:  conn,
-		Hub:   hub,
-		BotID: botID,
-		send:  make(chan []byte, 256),
+		Conn:             conn,
+		Hub:              hub,
+		BotID:            botID,
+		ForcedPlayerID:   opts.ForcedPlayerID,
+		PublicConnection: opts.PublicConnection,
+		send:             make(chan []byte, 256),
 	}
 }
 
@@ -113,27 +128,54 @@ func (c *Client) expectHello() error {
 
 	var playerID string
 
-	if hello.Token != "" {
-		claims := &middleware.Claims{}
-		token, err := jwt.ParseWithClaims(hello.Token, claims, func(token *jwt.Token) (interface{}, error) {
-			return []byte(config.JWTSecret), nil
-		})
-
-		if err != nil || !token.Valid {
-			c.Hub.sendError(c, "invalid_token", "invalid or expired token")
-			return errProtocol
-		}
-
-		playerID = claims.Provider + ":" + claims.ProviderID
-	} else if hello.PlayerID != "" {
-		if !uuidV4Like.MatchString(hello.PlayerID) && !providerIDLike.MatchString(hello.PlayerID) {
-			c.Hub.sendError(c, "invalid_player_id", "playerId must be a valid UUID or provider:id")
-			return errProtocol
-		}
-		playerID = hello.PlayerID
+	if c.ForcedPlayerID != "" {
+		playerID = c.ForcedPlayerID
 	} else {
-		c.Hub.sendError(c, "missing_credentials", "provide token or playerId")
-		return errProtocol
+		if hello.Token != "" {
+			claims := &middleware.Claims{}
+			token, err := jwt.ParseWithClaims(hello.Token, claims, func(token *jwt.Token) (interface{}, error) {
+				return []byte(config.JWTSecret), nil
+			})
+
+			if err != nil || !token.Valid {
+				c.Hub.sendError(c, "invalid_token", "invalid or expired token")
+				return errProtocol
+			}
+
+			playerID = claims.Provider + ":" + claims.ProviderID
+		} else if hello.PlayerID != "" {
+			if !uuidV4Like.MatchString(hello.PlayerID) && !providerIDLike.MatchString(hello.PlayerID) {
+				c.Hub.sendError(c, "invalid_player_id", "playerId must be a valid UUID or provider:id")
+				return errProtocol
+			}
+			if c.PublicConnection && providerIDLike.MatchString(hello.PlayerID) {
+				c.Hub.sendError(c, "invalid_player_id", "authenticated identities are not allowed on public websocket")
+				return errProtocol
+			}
+			playerID = hello.PlayerID
+		} else if hello.TournamentID > 0 && hello.TournamentSessionToken != "" {
+			guestPlayerID, err := resolveGuestPlayerIDFromTournamentSession(hello.TournamentID, hello.TournamentSessionToken)
+			if err != nil {
+				c.Hub.sendError(c, "invalid_tournament_session", "invalid tournament session")
+				return errProtocol
+			}
+			playerID = guestPlayerID
+		} else {
+			c.Hub.sendError(c, "missing_credentials", "provide token or playerId")
+			return errProtocol
+		}
+	}
+
+	if hello.TournamentID > 0 && hello.TournamentSessionToken != "" {
+		guestPlayerID, err := resolveGuestPlayerIDFromTournamentSession(hello.TournamentID, hello.TournamentSessionToken)
+		if err != nil {
+			c.Hub.sendError(c, "invalid_tournament_session", "invalid tournament session")
+			return errProtocol
+		}
+		if playerID != guestPlayerID {
+			c.Hub.sendError(c, "session_player_mismatch", "tournament session does not match player identity")
+			return errProtocol
+		}
 	}
 
 	if err := c.Hub.AttachIdentity(c, playerID); err != nil {
@@ -178,4 +220,21 @@ func (c *Client) WritePump() {
 func (c *Client) close() {
 	c.Hub.Unregister <- c
 	_ = c.Conn.Close()
+}
+
+func resolveGuestPlayerIDFromTournamentSession(tournamentID uint, sessionToken string) (string, error) {
+	db, err := database.GetPostgresConnection()
+	if err != nil {
+		return "", err
+	}
+
+	participant, err := database.FindTournamentParticipantForAccess(db, tournamentID, nil, sessionToken)
+	if err != nil {
+		return "", err
+	}
+	if participant.GuestID == nil || *participant.GuestID == "" {
+		return "", fmt.Errorf("session token is not for a guest participant")
+	}
+
+	return *participant.GuestID, nil
 }

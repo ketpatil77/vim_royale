@@ -1,5 +1,5 @@
 import { useRef, useCallback } from 'react'
-import type { Envelope, MatchState, GameStartPayload, BotGameStartPayload, BufferUpdatePayload, GameOverPayload, SpectatorCountPayload, BufferDelta, KeystrokesData, PlayerFinishedPayload } from './types'
+import type { Envelope, MatchState, GameStartPayload, BotGameStartPayload, BufferUpdatePayload, GameOverPayload, SpectatorCountPayload, BufferDelta, KeystrokesData, PlayerFinishedPayload, QueueJoinPayload } from './types'
 import { WS_URL, getOrCreatePlayerId } from './player'
 import {
   parseHelloAckPayload,
@@ -25,6 +25,19 @@ type GameSocketCallbacks = {
   onConnectionClosed: () => void
 }
 
+type HelloPayload = {
+  token?: string
+  playerId?: string
+  tournamentId?: number
+  tournamentSessionToken?: string
+}
+
+type ConnectOptions = {
+  wsUrl?: string
+  queueJoinPayload?: QueueJoinPayload
+  helloOverrides?: Partial<HelloPayload>
+}
+
 export function useGameSocket() {
   const wsRef = useRef<WebSocket | null>(null)
   const seqRef = useRef(1)
@@ -41,6 +54,7 @@ export function useGameSocket() {
       roundDurationSec: 180,
   })
   const { user } = useAuth()
+  const queueJoinPayloadRef = useRef<QueueJoinPayload>({})
 
   const setMatchStateRef = useCallback((state: Partial<MatchState>) => {
     matchStateRef.current = { ...matchStateRef.current, ...state }
@@ -96,12 +110,21 @@ export function useGameSocket() {
     [sendEnvelope]
   )
 
-  const buildHelloPayload = useCallback(() => {
+  const buildHelloPayload = useCallback((overrides?: Partial<HelloPayload>) => {
+    const base: HelloPayload = {}
+    const isGuestTournamentSession =
+      !user &&
+      !!overrides?.tournamentId &&
+      !!overrides?.tournamentSessionToken
+
     if (user) {
-      return { playerId: user.provider + ':' + user.providerId }
+      base.playerId = user.provider + ':' + user.providerId
+    } else if (!isGuestTournamentSession) {
+      const playerId = getOrCreatePlayerId()
+      base.playerId = playerId
     }
-    const playerId = getOrCreatePlayerId()
-    return { playerId }
+
+    return { ...base, ...(overrides || {}) }
   }, [user])
 
   const handleMessage = useCallback(
@@ -125,7 +148,7 @@ export function useGameSocket() {
           }
           setMatchStateRef({ playerId: payload.playerId })
           callbacks.onHelloAck(payload.playerId)
-          sendEnvelope({ type: 'QUEUE_JOIN', payload: {} })
+          sendEnvelope({ type: 'QUEUE_JOIN', payload: queueJoinPayloadRef.current })
           break
         }
         case 'GAME_START': {
@@ -215,11 +238,13 @@ export function useGameSocket() {
   )
 
   const connect = useCallback(
-    (callbacks: GameSocketCallbacks, options?: { wsUrl?: string }) => {
+    (callbacks: GameSocketCallbacks, options?: ConnectOptions) => {
       disconnect()
       shouldIgnoreCloseRef.current = false
 
-      const playerId = buildHelloPayload()
+      queueJoinPayloadRef.current = options?.queueJoinPayload || {}
+
+      const playerId = buildHelloPayload(options?.helloOverrides)
       setMatchStateRef({ playerId: playerId.playerId || 'pending', opponentId: '', opponentName: '', opponentAvatar: '', opponentRating: 0, opponentIsBot: false, matchId: '', roundDurationSec: 180 })
       seqRef.current = 1
       viewStateRef.current = 'matchmaking'

@@ -30,15 +30,20 @@ type Envelope struct {
 }
 
 type HelloPayload struct {
-	Token    string `json:"token,omitempty"`
-	PlayerID string `json:"playerId,omitempty"`
+	Token                  string `json:"token,omitempty"`
+	PlayerID               string `json:"playerId,omitempty"`
+	TournamentID           uint   `json:"tournamentId,omitempty"`
+	TournamentSessionToken string `json:"tournamentSessionToken,omitempty"`
 }
 
 type HelloAckPayload struct {
 	PlayerID string `json:"playerId"`
 }
 
-type QueueJoinPayload struct{}
+type QueueJoinPayload struct {
+	QueueType    string `json:"queueType,omitempty"`
+	TournamentID uint   `json:"tournamentId,omitempty"`
+}
 
 type GameStartPayload struct {
 	MatchID        string `json:"matchId"`
@@ -139,6 +144,7 @@ type Match struct {
 	ID            string
 	PlayerA       *Client
 	PlayerB       *Client
+	TournamentID  *uint
 	BotID         string
 	Bot           *Bot
 	Status        MatchStatus

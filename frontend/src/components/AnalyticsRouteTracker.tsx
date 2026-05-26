@@ -15,12 +15,13 @@ export function AnalyticsRouteTracker() {
   useEffect(() => {
     if (!window.gtag) return
 
+    const cleanPath = location.pathname
     window.gtag('config', GA_ID, {
-      page_path: location.pathname + location.search,
-      page_location: window.location.href,
+      page_path: cleanPath,
+      page_location: `${window.location.origin}${cleanPath}`,
       page_title: document.title,
     })
-  }, [location.pathname, location.search])
+  }, [location.pathname])
 
   return null
 }

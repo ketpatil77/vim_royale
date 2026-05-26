@@ -19,6 +19,11 @@ export type Envelope = {
   payload?: unknown
 }
 
+export type QueueJoinPayload = {
+  queueType?: 'ranked' | 'tournament'
+  tournamentId?: number
+}
+
 export type HelloAckPayload = {
   playerId: string
 }

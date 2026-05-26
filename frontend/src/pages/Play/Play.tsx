@@ -35,6 +35,13 @@ export default function Play() {
             <span className="play-mode-desc">Race AI bots across four skill tiers</span>
           </button>
           <button
+            className="play-mode-btn"
+            onClick={() => navigate('/play/tournament/create')}
+          >
+            <span className="play-mode-label">PRIVATE TOURNAMENT</span>
+            <span className="play-mode-desc">Create and share invite-only event lobbies</span>
+          </button>
+          <button
             className="play-mode-btn play-mode-btn--dim"
           >
             <span className="play-mode-label">MINI GAMES</span>

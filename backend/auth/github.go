@@ -49,7 +49,12 @@ func getOAuthConfig() *oauth2Config {
 
 func GitHubLogin(c *gin.Context) {
 	cfg := getOAuthConfig()
-	url := cfg.AuthCodeURL("state")
+	state, err := issueOAuthState(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to initialize oauth state"})
+		return
+	}
+	url := cfg.AuthCodeURL(state)
 	c.Redirect(http.StatusFound, url)
 }
 
@@ -59,6 +64,10 @@ func GitHubCallback(c *gin.Context) {
 	code := c.Query("code")
 	if code == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing code"})
+		return
+	}
+	if !verifyAndClearOAuthState(c) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid oauth state"})
 		return
 	}
 
@@ -112,10 +121,7 @@ func GitHubCallback(c *gin.Context) {
 		return
 	}
 
-	c.Header(
-		"Set-Cookie",
-		fmt.Sprintf("token=%s; Path=/; HttpOnly; SameSite=Lax; Max-Age=%d", jwtToken, 86400*30),
-	)
+	setAuthCookie(c, jwtToken)
 	c.Redirect(http.StatusFound, config.FrontendURL)
 }
 

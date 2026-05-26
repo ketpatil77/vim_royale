@@ -121,25 +121,39 @@ func (h *Hub) finishMatch(client *Client, message Envelope) {
 	if err != nil {
 		log.Printf("failed to get postgres connection: %v", err)
 	} else {
-		persistedMatchID, wd, ld, wnr, lnr, mErr := database.CreateMatchAndSendRatingDelta(
-			dbConn,
-			client.ID,
-			loserID,
-			match.TargetCode,
-			match.PollutedCode,
-		)
-		if mErr != nil {
-			log.Printf("failed to create match: %v", mErr)
+		if match.TournamentID != nil {
+			if loserID != "" {
+				if err := database.ReportTournamentLiveMatchResult(dbConn, *match.TournamentID, match.ID, client.ID, loserID); err != nil {
+					log.Printf("failed to report tournament match result: %v", err)
+				} else {
+					PublishTournamentEvent(*match.TournamentID, "match_completed")
+				}
+			}
+			winnerNewRating = float64(client.Rating)
+			if opponent != nil {
+				loserNewRating = float64(opponent.Rating)
+			}
 		} else {
-			winnerDelta = wd
-			loserDelta = ld
-			winnerNewRating = wnr
-			loserNewRating = lnr
-			if keystrokesData != nil && len(keystrokesData.PlayerA) > 0 {
-				playerAData, _ := json.Marshal(keystrokesData.PlayerA)
-				playerBData, _ := json.Marshal(keystrokesData.PlayerB)
-				if err := database.SaveMatchKeystrokes(dbConn, persistedMatchID, client.ID, playerAData, playerBData); err != nil {
-					log.Printf("failed to save match keystrokes: %v", err)
+			persistedMatchID, wd, ld, wnr, lnr, mErr := database.CreateMatchAndSendRatingDelta(
+				dbConn,
+				client.ID,
+				loserID,
+				match.TargetCode,
+				match.PollutedCode,
+			)
+			if mErr != nil {
+				log.Printf("failed to create match: %v", mErr)
+			} else {
+				winnerDelta = wd
+				loserDelta = ld
+				winnerNewRating = wnr
+				loserNewRating = lnr
+				if keystrokesData != nil && len(keystrokesData.PlayerA) > 0 {
+					playerAData, _ := json.Marshal(keystrokesData.PlayerA)
+					playerBData, _ := json.Marshal(keystrokesData.PlayerB)
+					if err := database.SaveMatchKeystrokes(dbConn, persistedMatchID, client.ID, playerAData, playerBData); err != nil {
+						log.Printf("failed to save match keystrokes: %v", err)
+					}
 				}
 			}
 		}
@@ -268,6 +282,12 @@ func (h *Hub) finishMatchAsDraw(matchID, reason string) {
 		dbConn, err := database.GetPostgresConnection()
 		if err != nil {
 			log.Printf("failed to get postgres connection: %v", err)
+		} else if match.TournamentID != nil {
+			if err := database.RequeueTournamentLiveMatch(dbConn, *match.TournamentID, match.ID); err != nil {
+				log.Printf("failed to requeue drawn tournament match: %v", err)
+			} else {
+				PublishTournamentEvent(*match.TournamentID, "match_requeued")
+			}
 		} else if _, err := database.CreateDrawMatch(dbConn, playerA.ID, playerB.ID, match.TargetCode, match.PollutedCode); err != nil {
 			log.Printf("failed to persist drawn match: %v", err)
 		}

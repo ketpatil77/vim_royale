@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"sync"
 
@@ -25,7 +26,7 @@ func GetPostgresConnection() (*gorm.DB, error) {
 			dsn = "postgres://postgres:postgres@localhost:5432/vim_royale?sslmode=disable"
 		}
 
-		log.Printf("Connecting to database: %s", dsn)
+		log.Printf("Connecting to database: %s", redactDSN(dsn))
 
 		db, dbErr = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if dbErr != nil {
@@ -35,11 +36,34 @@ func GetPostgresConnection() (*gorm.DB, error) {
 
 		log.Println("Database connection established")
 
-		if err := db.AutoMigrate(&models.User{}, &models.Match{}, &models.MatchKeystroke{}); err != nil {
+		if err := db.AutoMigrate(
+			&models.User{},
+			&models.Match{},
+			&models.MatchKeystroke{},
+			&models.Tournament{},
+			&models.TournamentParticipant{},
+			&models.TournamentMatch{},
+		); err != nil {
 			log.Printf("AutoMigrate error: %v", err)
 		} else {
 			log.Println("Database migration complete")
 		}
 	})
 	return db, dbErr
+}
+
+func redactDSN(raw string) string {
+	parsed, err := url.Parse(raw)
+	if err != nil {
+		return "<invalid-dsn>"
+	}
+	if parsed.User != nil {
+		username := parsed.User.Username()
+		if username != "" {
+			parsed.User = url.UserPassword(username, "REDACTED")
+		} else {
+			parsed.User = nil
+		}
+	}
+	return parsed.String()
 }

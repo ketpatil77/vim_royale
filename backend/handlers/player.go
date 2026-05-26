@@ -50,7 +50,6 @@ func GetUserFromUsername(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"id":          user.ID,
-		"email":       user.Email,
 		"displayName": user.DisplayName,
 		"avatarUrl":   user.AvatarURL,
 		"githubId":    user.GithubID,
