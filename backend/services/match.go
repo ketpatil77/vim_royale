@@ -29,6 +29,34 @@ func (h *Hub) relayBufferUpdate(sender *Client, message Envelope) {
 	}
 	match.LastSeqByID[sender.ID] = message.Seq
 
+	var payload BufferUpdatePayload
+	if err := json.Unmarshal(message.Payload, &payload); err == nil {
+		if payload.Delta != nil {
+			if sender == match.PlayerA {
+				match.PlayerABuffer = applyBufferDelta(match.PlayerABuffer, payload.Delta)
+			} else if sender == match.PlayerB {
+				match.PlayerBBuffer = applyBufferDelta(match.PlayerBBuffer, payload.Delta)
+			}
+		} else if payload.Content != nil {
+			if sender == match.PlayerA {
+				match.PlayerABuffer = *payload.Content
+			} else if sender == match.PlayerB {
+				match.PlayerBBuffer = *payload.Content
+			}
+		}
+	}
+
+	timestamp := time.Now().UTC().Unix()
+	message.PlayerID = sender.ID
+	message.Timestamp = timestamp
+	h.broadcastSpectatorEventLocked(match, "delta", SpectatorDeltaPayload{
+		PlayerID:  sender.ID,
+		Seq:       message.Seq,
+		Timestamp: timestamp,
+		Delta:     payload.Delta,
+		Content:   payload.Content,
+	})
+
 	if match.BotID != "" {
 		// Bot games don't relay player deltas to another websocket peer.
 		return
@@ -40,8 +68,6 @@ func (h *Hub) relayBufferUpdate(sender *Client, message Envelope) {
 		return
 	}
 
-	message.PlayerID = sender.ID
-	message.Timestamp = time.Now().UTC().Unix()
 	h.sendEnvelopeLocked(opponent, message)
 }
 
@@ -143,6 +169,7 @@ func (h *Hub) finishMatch(client *Client, message Envelope) {
 	}
 
 	client.MatchID = ""
+	h.closeSpectatorsLocked(match, "player_finished")
 	delete(h.matches, match.ID)
 }
 
@@ -208,6 +235,7 @@ func (h *Hub) finishBotMatch(match *Match, client *Client) {
 
 	h.sendLocked(client, MsgGameOver, match.ID, client.ID, 0, result)
 	client.MatchID = ""
+	h.closeSpectatorsLocked(match, "player_finished")
 	delete(h.matches, match.ID)
 }
 
@@ -232,6 +260,7 @@ func (h *Hub) finishMatchAsDraw(matchID, reason string) {
 	if playerB != nil {
 		playerB.MatchID = ""
 	}
+	h.closeSpectatorsLocked(match, reason)
 	delete(h.matches, match.ID)
 	h.mu.Unlock()
 

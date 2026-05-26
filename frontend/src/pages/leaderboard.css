@@ -272,6 +272,30 @@
     text-overflow: ellipsis;
 }
 
+.lb-live-btn {
+    width: 24px;
+    height: 24px;
+    border: 1px solid rgba(57, 255, 20, 0.35);
+    background: rgba(57, 255, 20, 0.08);
+    color: var(--green);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.lb-live-btn:hover {
+    background: var(--green);
+    color: #000;
+}
+
+.lb-live-btn svg {
+    width: 13px;
+    height: 13px;
+}
+
 .lb-row-elo {
     font-family: var(--mono);
     font-size: 13px;

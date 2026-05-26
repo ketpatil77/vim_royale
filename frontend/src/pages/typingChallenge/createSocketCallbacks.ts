@@ -2,6 +2,7 @@ import type {
   GameStartPayload,
   BotGameStartPayload,
   GameOverPayload,
+  SpectatorCountPayload,
   MatchState,
   BufferDelta,
 } from './types'
@@ -12,6 +13,7 @@ type Setters = {
   setStatusText: (text: string) => void
   setResultText: (text: string) => void
   setVimMode: (mode: string) => void
+  setSpectatorCount: (count: number) => void
   setGameOverPayload: (payload: GameOverPayload | null) => void
   playSound: (type: 'win' | 'lose') => void
 }
@@ -38,6 +40,7 @@ export function createSocketCallbacks(
     setStatusText,
     setResultText,
     setVimMode,
+    setSpectatorCount,
     setGameOverPayload,
     playSound,
   } = setters
@@ -71,6 +74,7 @@ export function createSocketCallbacks(
       })
       setVimMode('NORMAL')
       setResultText('')
+      setSpectatorCount(0)
       setStatusText('Match started')
       setViewState('countdown')
     },
@@ -92,6 +96,7 @@ export function createSocketCallbacks(
       })
       setVimMode('NORMAL')
       setResultText('')
+      setSpectatorCount(0)
       setStatusText('Bot duel started')
       setViewState('countdown')
     },
@@ -126,6 +131,10 @@ export function createSocketCallbacks(
       playSound(youWon ? 'win' : 'lose')
       setStatusText('Match finished')
       setViewState('finished')
+    },
+
+    onSpectatorCount: (payload: SpectatorCountPayload) => {
+      setSpectatorCount(Math.max(0, payload.count))
     },
 
     onError: (code: string, message: string) => {

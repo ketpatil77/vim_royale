@@ -16,6 +16,7 @@ const (
 	MsgBufferUpdate   MessageType = "BUFFER_UPDATE"
 	MsgPlayerFinished MessageType = "PLAYER_FINISHED"
 	MsgGameOver       MessageType = "GAME_OVER"
+	MsgSpectatorCount MessageType = "SPECTATOR_COUNT"
 	MsgError          MessageType = "ERROR"
 )
 
@@ -66,8 +67,21 @@ type BotGameStartPayload struct {
 }
 
 type BufferUpdatePayload struct {
-	Content string `json:"content"`
-	Cursor  int    `json:"cursor,omitempty"`
+	Content *string      `json:"content,omitempty"`
+	Delta   *BufferDelta `json:"delta,omitempty"`
+	Cursor  int          `json:"cursor,omitempty"`
+}
+
+type BufferDelta struct {
+	Ops []BufferDeltaOp `json:"ops"`
+}
+
+type BufferDeltaOp struct {
+	Type string `json:"type"`
+	Pos  int    `json:"pos,omitempty"`
+	Text string `json:"text,omitempty"`
+	From int    `json:"from,omitempty"`
+	To   int    `json:"to,omitempty"`
 }
 
 type KeystrokeEntry struct {
@@ -104,6 +118,10 @@ type GameOverPayload struct {
 	FinishedAt      int64   `json:"finishedAt"`
 }
 
+type SpectatorCountPayload struct {
+	Count int `json:"count"`
+}
+
 type ErrorPayload struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
@@ -118,19 +136,63 @@ const (
 )
 
 type Match struct {
-	ID           string
-	PlayerA      *Client
-	PlayerB      *Client
-	BotID        string
-	Bot          *Bot
-	Status       MatchStatus
-	TargetCode   string
-	PollutedCode string
-	StartedAt    time.Time
-	FinishedAt   *time.Time
-	WinnerID     string
-	LastSeqByID  map[string]int64
-	BotMatch     *BotMatch
+	ID            string
+	PlayerA       *Client
+	PlayerB       *Client
+	BotID         string
+	Bot           *Bot
+	Status        MatchStatus
+	TargetCode    string
+	PollutedCode  string
+	StartedAt     time.Time
+	FinishedAt    *time.Time
+	WinnerID      string
+	LastSeqByID   map[string]int64
+	BotMatch      *BotMatch
+	PlayerABuffer string
+	PlayerBBuffer string
+	spectators    map[int]chan SpectatorEvent
+	nextSpectator int
+}
+
+type SpectatorPlayerSnapshot struct {
+	PlayerID    string `json:"playerId"`
+	DisplayName string `json:"displayName"`
+	AvatarURL   string `json:"avatarUrl"`
+}
+
+type SpectatorSnapshotPayload struct {
+	MatchID       string                  `json:"matchId"`
+	StartedAt     int64                   `json:"startedAt"`
+	TargetCode    string                  `json:"targetCode"`
+	PollutedCode  string                  `json:"pollutedCode"`
+	PlayerA       SpectatorPlayerSnapshot `json:"playerA"`
+	PlayerB       SpectatorPlayerSnapshot `json:"playerB"`
+	PlayerABuffer string                  `json:"playerABuffer"`
+	PlayerBBuffer string                  `json:"playerBBuffer"`
+}
+
+type SpectatorDeltaPayload struct {
+	PlayerID  string       `json:"playerId"`
+	Seq       int64        `json:"seq"`
+	Timestamp int64        `json:"timestamp"`
+	Delta     *BufferDelta `json:"delta,omitempty"`
+	Content   *string      `json:"content,omitempty"`
+}
+
+type SpectatorStatusPayload struct {
+	State   string `json:"state"`
+	Reason  string `json:"reason,omitempty"`
+	MatchID string `json:"matchId,omitempty"`
+}
+
+type SpectatorHeartbeatPayload struct {
+	TS int64 `json:"ts"`
+}
+
+type SpectatorEvent struct {
+	Name string
+	Data any
 }
 
 type InboundMessage struct {

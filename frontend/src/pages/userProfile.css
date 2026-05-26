@@ -27,7 +27,7 @@
 .profile-avatar-section {
   position: relative;
   flex-shrink: 0;
-  max-height: fit-content ;
+  max-height: fit-content;
 }
 
 .profile-avatar {
@@ -109,6 +109,51 @@
   font-size: 12px;
   color: var(--text-dim);
   margin-top: 4px;
+}
+
+.profile-live-btn {
+  margin-top: 8px;
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--green);
+  background: rgba(152, 195, 121, 0.08);
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  animation: eye-animation 2s infinite ease-in-out;
+}
+
+.profile-live-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.profile-live-btn:hover {
+  background: var(--green);
+  color: #000;
+}
+
+@keyframes eye-animation {
+  0% {
+    border: 1px solid var(--green);
+    opacity: 1;
+  }
+
+  50% {
+    border: 1px solid rgba(152, 195, 121, 0.5);
+    opacity: 0.5;
+  }
+
+  100% {
+    border: 1px solid var(--green);
+    opacity: 1;
+  }
+
 }
 
 .profile-stats {

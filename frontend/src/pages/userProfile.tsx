@@ -41,6 +41,12 @@ type MatchesResponse = {
   totalPages: number;
 };
 
+type LiveStatusResponse = {
+  isLive: boolean;
+  liveMatchId: string | null;
+  liveMode: string | null;
+};
+
 function getHoursAgo(isoDate: string | null | undefined): string {
   if (!isoDate || isoDate.startsWith("0001-01-01")) return "never";
 
@@ -68,6 +74,7 @@ export default function UserProfile() {
   const [matchesError, setMatchesError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+  const [liveStatus, setLiveStatus] = useState<LiveStatusResponse>({ isLive: false, liveMatchId: null, liveMode: null });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -134,6 +141,40 @@ export default function UserProfile() {
       .finally(() => setMatchesLoading(false));
   }, [username, currentPage]);
 
+  useEffect(() => {
+    if (!username) return;
+
+    let isActive = true;
+
+    const loadLiveStatus = () => {
+      fetch(`${API_URL}/users/${username}/live`, { credentials: "include" })
+        .then(async (res) => {
+          if (!res.ok) {
+            throw new Error("Failed to load live status");
+          }
+          const payload = await res.json() as LiveStatusResponse;
+          if (!isActive) return;
+          setLiveStatus({
+            isLive: Boolean(payload?.isLive),
+            liveMatchId: payload?.liveMatchId || null,
+            liveMode: payload?.liveMode || null,
+          });
+        })
+        .catch(() => {
+          if (!isActive) return;
+          setLiveStatus({ isLive: false, liveMatchId: null, liveMode: null });
+        });
+    };
+
+    loadLiveStatus();
+    const intervalId = window.setInterval(loadLiveStatus, 7000);
+
+    return () => {
+      isActive = false;
+      window.clearInterval(intervalId);
+    };
+  }, [username]);
+
   if (isLoading) {
     return (
       <TerminalLayout
@@ -190,6 +231,20 @@ export default function UserProfile() {
             </h1>
             <p className="profile-username">@{username}</p>
             <p className="profile-last-active">last_active: {getHoursAgo(userData.lastActive)}</p>
+            {liveStatus.isLive && liveStatus.liveMatchId && (
+              <button
+                className="profile-live-btn"
+                onClick={() => navigate(`/match/${liveStatus.liveMatchId}/live`)}
+                type="button"
+                title="Watch live match"
+              >
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M1.5 12s3.8-7 10.5-7 10.5 7 10.5 7-3.8 7-10.5 7S1.5 12 1.5 12z" stroke="currentColor" strokeWidth="1.6"/>
+                  <circle cx="12" cy="12" r="3.2" stroke="currentColor" strokeWidth="1.6"/>
+                </svg>
+                WATCH LIVE
+              </button>
+            )}
 
             <div className="profile-stats">
               <div className="stat-box">

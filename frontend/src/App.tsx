@@ -21,6 +21,7 @@ import UserProfile from './pages/userProfile'
 import MatchReplayPage from './pages/MatchReplay/MatchReplay'
 import Walkthrough from './pages/Walkthrough'
 import { VimiumWarningModal } from './components/VimiumWarningModal/VimiumWarningModal'
+import LiveSpectate from './pages/LiveSpectate/LiveSpectate'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()
@@ -124,6 +125,10 @@ function AppRoutes() {
       <Route
         path="/match/:matchId/replay"
         element={<MatchReplayPage />}
+      />
+      <Route
+        path="/match/:matchId/live"
+        element={<LiveSpectate />}
       />
       <Route path="/walkthrough" element={<Walkthrough />} />
     </Routes>

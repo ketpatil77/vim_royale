@@ -22,3 +22,9 @@ export interface LeaderboardEntry {
 }
 
 export type EditableProfileFields = Pick<UserProfile, "displayName" | "avatarUrl" | "githubId" | "twitterId" | "discordId">;
+
+export interface UserLiveStatus {
+  isLive: boolean
+  liveMatchId: string | null
+  liveMode: string | null
+}

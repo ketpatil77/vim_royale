@@ -155,6 +155,39 @@
   background: var(--green);
 }
 
+.match-hud-spectators {
+  min-width: 78px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.match-hud-spectators-label {
+  color: var(--text-dim);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  font-family: var(--mono);
+  line-height: 1;
+  text-align: right;
+}
+
+.match-hud-spectators-value {
+  color: var(--green);
+  font-size: 12px;
+  font-family: var(--mono);
+  line-height: 1;
+  text-align: right;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.match-hud-spectators-value svg {
+  width: 13px;
+  height: 13px;
+}
+
 .editor-grid {
   gap: 24px;
 }

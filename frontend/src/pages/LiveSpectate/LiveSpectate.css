@@ -1,0 +1,46 @@
+.live-spectate-match-page {
+  max-width: 1600px;
+}
+
+.live-spectate-finish-banner {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-raised);
+  color: var(--yellow);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+.live-spectate-hud-actions {
+  display: flex;
+  align-items: flex-end;
+}
+
+.live-spectate-hud-back-btn {
+  border: 1px solid var(--green);
+  background: transparent;
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.live-spectate-hud-back-btn:hover {
+  background: var(--green);
+  color: #000;
+}
+
+.live-spectate-progress-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.live-spectate-progress-fill--secondary {
+  background: var(--yellow);
+}

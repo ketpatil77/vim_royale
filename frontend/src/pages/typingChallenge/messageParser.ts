@@ -5,6 +5,7 @@ import type {
   BufferUpdatePayload,
   BufferDelta,
   GameOverPayload,
+  SpectatorCountPayload,
   ErrorPayload,
 } from './types'
 
@@ -121,6 +122,12 @@ export function parseGameOverPayload(payload: unknown): GameOverPayload | null {
     reason: payload.reason,
     finishedAt: payload.finishedAt,
   }
+}
+
+export function parseSpectatorCountPayload(payload: unknown): SpectatorCountPayload | null {
+  if (!isRecord(payload)) return null
+  if (typeof payload.count !== 'number') return null
+  return { count: payload.count }
 }
 
 export function parseErrorPayload(payload: unknown): ErrorPayload | null {
