@@ -18,9 +18,16 @@ import (
 )
 
 type createTournamentRequest struct {
-	Name       string `json:"name"`
-	MaxPlayers int    `json:"maxPlayers"`
-	Format     string `json:"format"`
+	Name       string                           `json:"name"`
+	MaxPlayers int                              `json:"maxPlayers"`
+	Format     string                           `json:"format"`
+	Settings   *createTournamentSettingsRequest `json:"settings"`
+}
+
+type createTournamentSettingsRequest struct {
+	GrandFinalReset *bool `json:"grandFinalReset"`
+	GroupSize       *int  `json:"groupSize"`
+	AdvancePerGroup *int  `json:"advancePerGroup"`
 }
 
 type joinTournamentRequest struct {
@@ -71,10 +78,13 @@ func CreateTournament(c *gin.Context) {
 	}
 
 	tournament, inviteToken, err := database.CreateTournament(db, database.CreateTournamentInput{
-		HostUserID: hostUserID,
-		Name:       req.Name,
-		MaxPlayers: req.MaxPlayers,
-		Format:     format,
+		HostUserID:      hostUserID,
+		Name:            req.Name,
+		MaxPlayers:      req.MaxPlayers,
+		Format:          format,
+		GrandFinalReset: tournamentSettingGrandFinalReset(req.Settings),
+		GroupSize:       tournamentSettingGroupSize(req.Settings),
+		AdvancePerGroup: tournamentSettingAdvancePerGroup(req.Settings),
 	})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -610,6 +620,11 @@ func tournamentResponse(tournament *models.Tournament) gin.H {
 		"hostUserId": tournament.HostUserID,
 		"status":     tournament.Status,
 		"format":     tournament.Format,
+		"settings": gin.H{
+			"grandFinalReset": tournament.GrandFinalReset,
+			"groupSize":       tournament.GroupSize,
+			"advancePerGroup": tournament.AdvancePerGroup,
+		},
 		"maxPlayers": tournament.MaxPlayers,
 		"isLocked":   tournament.IsLocked,
 		"startedAt":  tournament.StartedAt,
@@ -617,6 +632,27 @@ func tournamentResponse(tournament *models.Tournament) gin.H {
 		"createdAt":  tournament.CreatedAt,
 		"updatedAt":  tournament.UpdatedAt,
 	}
+}
+
+func tournamentSettingGrandFinalReset(settings *createTournamentSettingsRequest) *bool {
+	if settings == nil {
+		return nil
+	}
+	return settings.GrandFinalReset
+}
+
+func tournamentSettingGroupSize(settings *createTournamentSettingsRequest) *int {
+	if settings == nil {
+		return nil
+	}
+	return settings.GroupSize
+}
+
+func tournamentSettingAdvancePerGroup(settings *createTournamentSettingsRequest) *int {
+	if settings == nil {
+		return nil
+	}
+	return settings.AdvancePerGroup
 }
 
 func participantResponse(participant *models.TournamentParticipant) gin.H {
@@ -632,6 +668,7 @@ func participantResponse(participant *models.TournamentParticipant) gin.H {
 		"avatarUrl":    participant.AvatarURL,
 		"seed":         participant.Seed,
 		"joinedAt":     participant.JoinedAt,
+		"eliminatedAt": participant.EliminatedAt,
 		"isHost":       participant.IsHost,
 	}
 }

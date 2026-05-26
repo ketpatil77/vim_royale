@@ -18,10 +18,13 @@ import (
 )
 
 type CreateTournamentInput struct {
-	HostUserID uint
-	Name       string
-	MaxPlayers int
-	Format     models.TournamentFormat
+	HostUserID      uint
+	Name            string
+	MaxPlayers      int
+	Format          models.TournamentFormat
+	GrandFinalReset *bool
+	GroupSize       *int
+	AdvancePerGroup *int
 }
 
 type JoinTournamentInput struct {
@@ -70,6 +73,9 @@ func CreateTournament(db *gorm.DB, input CreateTournamentInput) (*models.Tournam
 	if input.Format == "" {
 		input.Format = models.TournamentFormatSingleElimination
 	}
+	if err := validateCreateTournamentInput(&input); err != nil {
+		return nil, "", err
+	}
 
 	var host models.User
 	if err := db.First(&host, input.HostUserID).Error; err != nil {
@@ -91,6 +97,9 @@ func CreateTournament(db *gorm.DB, input CreateTournamentInput) (*models.Tournam
 		HostUserID:      input.HostUserID,
 		Status:          models.TournamentStatusLobby,
 		Format:          input.Format,
+		GrandFinalReset: input.GrandFinalReset,
+		GroupSize:       input.GroupSize,
+		AdvancePerGroup: input.AdvancePerGroup,
 		MaxPlayers:      input.MaxPlayers,
 		IsLocked:        false,
 		InviteTokenHash: hashToken(inviteToken),
@@ -121,6 +130,42 @@ func CreateTournament(db *gorm.DB, input CreateTournamentInput) (*models.Tournam
 	}
 
 	return tournament, inviteToken, nil
+}
+
+func validateCreateTournamentInput(input *CreateTournamentInput) error {
+	if input == nil {
+		return fmt.Errorf("invalid tournament input")
+	}
+
+	switch input.Format {
+	case models.TournamentFormatSingleElimination:
+		input.GrandFinalReset = nil
+		input.GroupSize = nil
+		input.AdvancePerGroup = nil
+		return nil
+	case models.TournamentFormatDoubleElimination:
+		if input.GrandFinalReset == nil {
+			defaultReset := true
+			input.GrandFinalReset = &defaultReset
+		}
+		input.GroupSize = nil
+		input.AdvancePerGroup = nil
+		return nil
+	case models.TournamentFormatGroupKnockout:
+		if input.GroupSize == nil || *input.GroupSize < 2 {
+			return fmt.Errorf("groupSize must be at least 2 for group_knockout")
+		}
+		if input.AdvancePerGroup == nil || *input.AdvancePerGroup < 1 {
+			return fmt.Errorf("advancePerGroup must be at least 1 for group_knockout")
+		}
+		if *input.AdvancePerGroup >= *input.GroupSize {
+			return fmt.Errorf("advancePerGroup must be less than groupSize for group_knockout")
+		}
+		input.GrandFinalReset = nil
+		return nil
+	default:
+		return fmt.Errorf("unsupported tournament format: %s", input.Format)
+	}
 }
 
 func GetTournamentByID(db *gorm.DB, tournamentID uint) (*models.Tournament, error) {
@@ -508,7 +553,7 @@ func SeedTournament(db *gorm.DB, tournamentID uint, participantIDs []uint) error
 }
 
 func StartTournament(db *gorm.DB, tournamentID uint) error {
-	_, err := GetTournamentByID(db, tournamentID)
+	tournament, err := GetTournamentByID(db, tournamentID)
 	if err != nil {
 		return err
 	}
@@ -548,66 +593,29 @@ func StartTournament(db *gorm.DB, tournamentID uint) error {
 			return err
 		}
 
-		bracketSize := nextPowerOfTwo(len(participants))
-		totalRounds := numberOfRounds(bracketSize)
-		ids := make([]*uint, bracketSize)
-		for i := 0; i < len(participants); i++ {
-			participantID := participants[i].ID
-			ids[i] = &participantID
-		}
-
-		now := time.Now().UTC()
-		for slot := 0; slot < bracketSize/2; slot++ {
-			a := ids[slot*2]
-			b := ids[slot*2+1]
-
-			match := models.TournamentMatch{
-				TournamentID:         tournamentID,
-				Round:                1,
-				Slot:                 slot + 1,
-				PlayerAParticipantID: a,
-				PlayerBParticipantID: b,
-				Status:               models.TournamentMatchPending,
-			}
-
-			// Auto-advance for byes in the initial bracket.
-			if (a != nil && b == nil) || (a == nil && b != nil) {
-				if a != nil {
-					match.WinnerParticipantID = a
-				} else {
-					match.WinnerParticipantID = b
-				}
-				match.Status = models.TournamentMatchCompleted
-				match.FinishedAt = &now
-			} else if a == nil && b == nil {
-				match.Status = models.TournamentMatchCompleted
-				match.FinishedAt = &now
-			}
-
-			if err := tx.Create(&match).Error; err != nil {
+		switch tournament.Format {
+		case models.TournamentFormatSingleElimination:
+			if err := buildSingleEliminationBracket(tx, tournamentID, participants); err != nil {
 				return err
 			}
-		}
-
-		for round := 2; round <= totalRounds; round++ {
-			roundMatches := bracketSize >> round
-			for slot := 1; slot <= roundMatches; slot++ {
-				match := models.TournamentMatch{
-					TournamentID: tournamentID,
-					Round:        round,
-					Slot:         slot,
-					Status:       models.TournamentMatchPending,
-				}
-				if err := tx.Create(&match).Error; err != nil {
-					return err
-				}
+		case models.TournamentFormatDoubleElimination:
+			if len(participants) < 4 {
+				return fmt.Errorf("at least four participants are required for double_elimination")
 			}
+			if err := buildDoubleEliminationBracket(tx, tournament, participants); err != nil {
+				return err
+			}
+		case models.TournamentFormatGroupKnockout:
+			return fmt.Errorf("format %s is not yet supported for start", tournament.Format)
+		default:
+			return fmt.Errorf("unsupported tournament format: %s", tournament.Format)
 		}
 
 		if err := advanceTournamentBracket(tx, tournamentID); err != nil {
 			return err
 		}
 
+		now := time.Now().UTC()
 		return tx.Model(&models.Tournament{}).
 			Where("id = ?", tournamentID).
 			Updates(map[string]any{
@@ -617,6 +625,179 @@ func StartTournament(db *gorm.DB, tournamentID uint) error {
 				"is_locked":  true,
 			}).Error
 	})
+}
+
+func buildSingleEliminationBracket(tx *gorm.DB, tournamentID uint, participants []models.TournamentParticipant) error {
+	bracketSize := nextPowerOfTwo(len(participants))
+	totalRounds := numberOfRounds(bracketSize)
+	ids := make([]*uint, bracketSize)
+	for i := 0; i < len(participants); i++ {
+		participantID := participants[i].ID
+		ids[i] = &participantID
+	}
+
+	now := time.Now().UTC()
+	for slot := 0; slot < bracketSize/2; slot++ {
+		a := ids[slot*2]
+		b := ids[slot*2+1]
+
+		match := models.TournamentMatch{
+			TournamentID:         tournamentID,
+			Round:                1,
+			Slot:                 slot + 1,
+			StageType:            models.TournamentStageTypeKnockout,
+			BracketType:          models.TournamentBracketTypeMain,
+			StageRound:           intPtr(1),
+			PlayerAParticipantID: a,
+			PlayerBParticipantID: b,
+			Status:               models.TournamentMatchPending,
+		}
+
+		// Auto-advance for byes in the initial bracket.
+		if (a != nil && b == nil) || (a == nil && b != nil) {
+			if a != nil {
+				match.WinnerParticipantID = a
+			} else {
+				match.WinnerParticipantID = b
+			}
+			match.Status = models.TournamentMatchCompleted
+			match.FinishedAt = &now
+		} else if a == nil && b == nil {
+			match.Status = models.TournamentMatchCompleted
+			match.FinishedAt = &now
+		}
+
+		if err := tx.Create(&match).Error; err != nil {
+			return err
+		}
+	}
+
+	for round := 2; round <= totalRounds; round++ {
+		roundMatches := bracketSize >> round
+		for slot := 1; slot <= roundMatches; slot++ {
+			match := models.TournamentMatch{
+				TournamentID: tournamentID,
+				Round:        round,
+				Slot:         slot,
+				StageType:    models.TournamentStageTypeKnockout,
+				BracketType:  models.TournamentBracketTypeMain,
+				StageRound:   intPtr(round),
+				Status:       models.TournamentMatchPending,
+			}
+			if err := tx.Create(&match).Error; err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func buildDoubleEliminationBracket(tx *gorm.DB, tournament *models.Tournament, participants []models.TournamentParticipant) error {
+	if tournament == nil {
+		return fmt.Errorf("tournament is required")
+	}
+
+	bracketSize := nextPowerOfTwo(len(participants))
+	winnersRounds := numberOfRounds(bracketSize)
+	ids := make([]*uint, bracketSize)
+	for i := 0; i < len(participants); i++ {
+		participantID := participants[i].ID
+		ids[i] = &participantID
+	}
+
+	roundCounter := 1
+	now := time.Now().UTC()
+
+	for wr := 1; wr <= winnersRounds; wr++ {
+		matchesInRound := bracketSize >> wr
+		for slot := 1; slot <= matchesInRound; slot++ {
+			match := models.TournamentMatch{
+				TournamentID: tournament.ID,
+				Round:        roundCounter,
+				Slot:         slot,
+				StageType:    models.TournamentStageTypeKnockout,
+				BracketType:  models.TournamentBracketTypeWinners,
+				StageRound:   intPtr(wr),
+				Status:       models.TournamentMatchPending,
+			}
+
+			if wr == 1 {
+				a := ids[(slot-1)*2]
+				b := ids[(slot-1)*2+1]
+				match.PlayerAParticipantID = a
+				match.PlayerBParticipantID = b
+				if (a != nil && b == nil) || (a == nil && b != nil) {
+					if a != nil {
+						match.WinnerParticipantID = a
+					} else {
+						match.WinnerParticipantID = b
+					}
+					match.Status = models.TournamentMatchCompleted
+					match.FinishedAt = &now
+				} else if a == nil && b == nil {
+					match.Status = models.TournamentMatchCompleted
+					match.FinishedAt = &now
+				}
+			}
+
+			if err := tx.Create(&match).Error; err != nil {
+				return err
+			}
+		}
+		roundCounter++
+	}
+
+	losersRounds := (winnersRounds - 1) * 2
+	for lr := 1; lr <= losersRounds; lr++ {
+		matchesInRound := doubleEliminationLosersRoundMatchCount(bracketSize, lr)
+		for slot := 1; slot <= matchesInRound; slot++ {
+			match := models.TournamentMatch{
+				TournamentID: tournament.ID,
+				Round:        roundCounter,
+				Slot:         slot,
+				StageType:    models.TournamentStageTypeKnockout,
+				BracketType:  models.TournamentBracketTypeLosers,
+				StageRound:   intPtr(lr),
+				Status:       models.TournamentMatchPending,
+			}
+			if err := tx.Create(&match).Error; err != nil {
+				return err
+			}
+		}
+		roundCounter++
+	}
+
+	grandFinal := models.TournamentMatch{
+		TournamentID: tournament.ID,
+		Round:        roundCounter,
+		Slot:         1,
+		StageType:    models.TournamentStageTypeGrandFinal,
+		BracketType:  models.TournamentBracketTypeMain,
+		StageRound:   intPtr(1),
+		Status:       models.TournamentMatchPending,
+	}
+	if err := tx.Create(&grandFinal).Error; err != nil {
+		return err
+	}
+	roundCounter++
+
+	if tournament.GrandFinalReset != nil && *tournament.GrandFinalReset {
+		reset := models.TournamentMatch{
+			TournamentID: tournament.ID,
+			Round:        roundCounter,
+			Slot:         1,
+			StageType:    models.TournamentStageTypeGrandFinal,
+			BracketType:  models.TournamentBracketTypeMain,
+			StageRound:   intPtr(2),
+			Status:       models.TournamentMatchPending,
+		}
+		if err := tx.Create(&reset).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func GetTournamentLeaderboard(db *gorm.DB, tournamentID uint) ([]TournamentLeaderboardEntry, error) {
@@ -722,13 +903,6 @@ func ReportTournamentMatchWinner(db *gorm.DB, tournamentID, matchID, winnerParti
 			return err
 		}
 
-		loserParticipantID := opponentOfWinner(&match, winnerParticipantID)
-		if loserParticipantID != nil {
-			if err := markParticipantEliminated(tx, *loserParticipantID, now); err != nil {
-				return err
-			}
-		}
-
 		return advanceTournamentBracket(tx, tournamentID)
 	})
 }
@@ -774,13 +948,6 @@ func ReportTournamentLiveMatchResult(db *gorm.DB, tournamentID uint, liveMatchID
 				"finished_at":           now,
 			}).Error; err != nil {
 			return err
-		}
-
-		loserParticipantID := opponentOfWinner(&match, winnerParticipant.ID)
-		if loserParticipantID != nil {
-			if err := markParticipantEliminated(tx, *loserParticipantID, now); err != nil {
-				return err
-			}
 		}
 
 		return advanceTournamentBracket(tx, tournamentID)
@@ -859,6 +1026,27 @@ func isTournamentFull(db *gorm.DB, tournamentID uint, maxPlayers int) (bool, err
 }
 
 func advanceTournamentBracket(tx *gorm.DB, tournamentID uint) error {
+	var tournament models.Tournament
+	if err := tx.First(&tournament, tournamentID).Error; err != nil {
+		return err
+	}
+
+	switch tournament.Format {
+	case models.TournamentFormatSingleElimination:
+		return advanceSingleEliminationBracket(tx, &tournament)
+	case models.TournamentFormatDoubleElimination:
+		return advanceDoubleEliminationBracket(tx, &tournament)
+	default:
+		return fmt.Errorf("unsupported tournament format for advancement: %s", tournament.Format)
+	}
+}
+
+func advanceSingleEliminationBracket(tx *gorm.DB, tournament *models.Tournament) error {
+	if tournament == nil {
+		return fmt.Errorf("tournament is required")
+	}
+
+	tournamentID := tournament.ID
 	var matches []models.TournamentMatch
 	if err := tx.Where("tournament_id = ?", tournamentID).
 		Order("round ASC, slot ASC").
@@ -965,7 +1153,302 @@ func advanceTournamentBracket(tx *gorm.DB, tournamentID uint) error {
 		}
 	}
 
+	if err := syncParticipantEliminationState(tx, tournamentID, matches, 1); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func advanceDoubleEliminationBracket(tx *gorm.DB, tournament *models.Tournament) error {
+	if tournament == nil {
+		return fmt.Errorf("tournament is required")
+	}
+
+	var matches []models.TournamentMatch
+	if err := tx.Where("tournament_id = ?", tournament.ID).
+		Order("round ASC, slot ASC, id ASC").
+		Find(&matches).Error; err != nil {
+		return err
+	}
+	if len(matches) == 0 {
+		return nil
+	}
+
+	winners := make(map[int]map[int]*models.TournamentMatch)
+	losers := make(map[int]map[int]*models.TournamentMatch)
+	grandFinal := make(map[int]*models.TournamentMatch)
+	maxWinnersRound := 0
+	maxLosersRound := 0
+
+	for i := range matches {
+		m := &matches[i]
+		stageRound := 0
+		if m.StageRound != nil {
+			stageRound = *m.StageRound
+		}
+		if stageRound < 1 {
+			stageRound = m.Round
+		}
+
+		switch m.BracketType {
+		case models.TournamentBracketTypeWinners:
+			if _, ok := winners[stageRound]; !ok {
+				winners[stageRound] = make(map[int]*models.TournamentMatch)
+			}
+			winners[stageRound][m.Slot] = m
+			if stageRound > maxWinnersRound {
+				maxWinnersRound = stageRound
+			}
+		case models.TournamentBracketTypeLosers:
+			if _, ok := losers[stageRound]; !ok {
+				losers[stageRound] = make(map[int]*models.TournamentMatch)
+			}
+			losers[stageRound][m.Slot] = m
+			if stageRound > maxLosersRound {
+				maxLosersRound = stageRound
+			}
+		default:
+			grandFinal[stageRound] = m
+		}
+	}
+
+	changed := true
+	for changed {
+		changed = false
+
+		for wr := 2; wr <= maxWinnersRound; wr++ {
+			targetRound, ok := winners[wr]
+			if !ok {
+				continue
+			}
+			prevRound := winners[wr-1]
+			for slot, match := range targetRound {
+				left := prevRound[slot*2-1]
+				right := prevRound[slot*2]
+				if left == nil || right == nil {
+					continue
+				}
+				if left.Status != models.TournamentMatchCompleted || right.Status != models.TournamentMatchCompleted {
+					continue
+				}
+				if winnerIDChanged(&match.PlayerAParticipantID, left.WinnerParticipantID) {
+					changed = true
+				}
+				if winnerIDChanged(&match.PlayerBParticipantID, right.WinnerParticipantID) {
+					changed = true
+				}
+				if autoCompletePendingMatch(match) {
+					changed = true
+				}
+			}
+		}
+
+		for phase := 1; phase <= maxWinnersRound-1; phase++ {
+			lrA := phase*2 - 1
+			lrB := phase * 2
+			roundA := losers[lrA]
+			roundB := losers[lrB]
+			if roundA == nil || roundB == nil {
+				continue
+			}
+
+			for slot, match := range roundA {
+				if phase == 1 {
+					sourceLeft := winners[1][slot*2-1]
+					sourceRight := winners[1][slot*2]
+					if sourceLeft == nil || sourceRight == nil {
+						continue
+					}
+					if sourceLeft.Status != models.TournamentMatchCompleted || sourceRight.Status != models.TournamentMatchCompleted {
+						continue
+					}
+					leftLoser := loserParticipantID(sourceLeft)
+					rightLoser := loserParticipantID(sourceRight)
+					if winnerIDChanged(&match.PlayerAParticipantID, leftLoser) {
+						changed = true
+					}
+					if winnerIDChanged(&match.PlayerBParticipantID, rightLoser) {
+						changed = true
+					}
+				} else {
+					sourceLeft := losers[lrA-1][slot*2-1]
+					sourceRight := losers[lrA-1][slot*2]
+					if sourceLeft == nil || sourceRight == nil {
+						continue
+					}
+					if sourceLeft.Status != models.TournamentMatchCompleted || sourceRight.Status != models.TournamentMatchCompleted {
+						continue
+					}
+					leftWinner := matchWinnerParticipantID(sourceLeft)
+					rightWinner := matchWinnerParticipantID(sourceRight)
+					if winnerIDChanged(&match.PlayerAParticipantID, leftWinner) {
+						changed = true
+					}
+					if winnerIDChanged(&match.PlayerBParticipantID, rightWinner) {
+						changed = true
+					}
+				}
+				if autoCompletePendingMatch(match) {
+					changed = true
+				}
+			}
+
+			for slot, match := range roundB {
+				sourceA := roundA[slot]
+				sourceB := winners[phase+1][slot]
+				if sourceA == nil || sourceB == nil {
+					continue
+				}
+				if sourceA.Status != models.TournamentMatchCompleted || sourceB.Status != models.TournamentMatchCompleted {
+					continue
+				}
+				a := matchWinnerParticipantID(sourceA)
+				b := loserParticipantID(sourceB)
+				if winnerIDChanged(&match.PlayerAParticipantID, a) {
+					changed = true
+				}
+				if winnerIDChanged(&match.PlayerBParticipantID, b) {
+					changed = true
+				}
+				if autoCompletePendingMatch(match) {
+					changed = true
+				}
+			}
+		}
+
+		if maxWinnersRound > 0 && maxLosersRound > 0 {
+			gf1 := grandFinal[1]
+			if gf1 != nil {
+				wbFinal := winners[maxWinnersRound][1]
+				lbFinal := losers[maxLosersRound][1]
+				if wbFinal != nil && lbFinal != nil &&
+					wbFinal.Status == models.TournamentMatchCompleted &&
+					lbFinal.Status == models.TournamentMatchCompleted {
+					wbChampion := matchWinnerParticipantID(wbFinal)
+					lbChampion := matchWinnerParticipantID(lbFinal)
+
+					if winnerIDChanged(&gf1.PlayerAParticipantID, wbChampion) {
+						changed = true
+					}
+					if winnerIDChanged(&gf1.PlayerBParticipantID, lbChampion) {
+						changed = true
+					}
+					if autoCompletePendingMatch(gf1) {
+						changed = true
+					}
+				}
+
+				gf2 := grandFinal[2]
+				if gf2 != nil {
+					wbChampion := matchWinnerParticipantID(winners[maxWinnersRound][1])
+					lbChampion := matchWinnerParticipantID(losers[maxLosersRound][1])
+					shouldEnableReset := gf1.Status == models.TournamentMatchCompleted &&
+						gf1.WinnerParticipantID != nil &&
+						wbChampion != nil &&
+						*gf1.WinnerParticipantID != *wbChampion
+
+					if shouldEnableReset {
+						if winnerIDChanged(&gf2.PlayerAParticipantID, wbChampion) {
+							changed = true
+						}
+						if winnerIDChanged(&gf2.PlayerBParticipantID, lbChampion) {
+							changed = true
+						}
+						if autoCompletePendingMatch(gf2) {
+							changed = true
+						}
+					} else {
+						if winnerIDChanged(&gf2.PlayerAParticipantID, nil) {
+							changed = true
+						}
+						if winnerIDChanged(&gf2.PlayerBParticipantID, nil) {
+							changed = true
+						}
+						if gf2.WinnerParticipantID != nil {
+							gf2.WinnerParticipantID = nil
+							changed = true
+						}
+						if gf2.LiveMatchID != nil {
+							gf2.LiveMatchID = nil
+							changed = true
+						}
+						if gf2.StartedAt != nil {
+							gf2.StartedAt = nil
+							changed = true
+						}
+						if gf2.FinishedAt != nil {
+							gf2.FinishedAt = nil
+							changed = true
+						}
+						if gf2.Status != models.TournamentMatchPending {
+							gf2.Status = models.TournamentMatchPending
+							changed = true
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for i := range matches {
+		match := matches[i]
+		updates := map[string]any{
+			"player_a_participant_id": match.PlayerAParticipantID,
+			"player_b_participant_id": match.PlayerBParticipantID,
+			"winner_participant_id":   match.WinnerParticipantID,
+			"status":                  match.Status,
+			"finished_at":             match.FinishedAt,
+			"started_at":              match.StartedAt,
+		}
+		if match.Status == models.TournamentMatchCompleted {
+			updates["live_match_id"] = nil
+		} else {
+			updates["live_match_id"] = match.LiveMatchID
+		}
+		if err := tx.Model(&models.TournamentMatch{}).
+			Where("id = ?", match.ID).
+			Updates(updates).Error; err != nil {
+			return err
+		}
+	}
+
+	shouldFinish := false
+	gf1 := grandFinal[1]
+	gf2 := grandFinal[2]
+	if gf1 != nil && gf1.Status == models.TournamentMatchCompleted {
+		wbChampion := matchWinnerParticipantID(winners[maxWinnersRound][1])
+		if gf2 == nil {
+			shouldFinish = true
+		} else if gf1.WinnerParticipantID != nil && wbChampion != nil && *gf1.WinnerParticipantID == *wbChampion {
+			shouldFinish = true
+		} else if gf2.Status == models.TournamentMatchCompleted {
+			shouldFinish = true
+		}
+	}
+
+	now := time.Now().UTC()
+	if shouldFinish {
+		if err := tx.Model(&models.Tournament{}).
+			Where("id = ?", tournament.ID).
+			Updates(map[string]any{
+				"status":   models.TournamentStatusFinished,
+				"ended_at": now,
+			}).Error; err != nil {
+			return err
+		}
+	} else if tournament.Status == models.TournamentStatusFinished {
+		if err := tx.Model(&models.Tournament{}).
+			Where("id = ?", tournament.ID).
+			Updates(map[string]any{
+				"status":   models.TournamentStatusActive,
+				"ended_at": nil,
+			}).Error; err != nil {
+			return err
+		}
+	}
+
+	return syncParticipantEliminationState(tx, tournament.ID, matches, 2)
 }
 
 func winnerIDChanged(dst **uint, src *uint) bool {
@@ -990,6 +1473,93 @@ func roundSlotKey(round, slot int) string {
 	return fmt.Sprintf("%d:%d", round, slot)
 }
 
+func autoCompletePendingMatch(match *models.TournamentMatch) bool {
+	if match == nil || match.Status != models.TournamentMatchPending {
+		return false
+	}
+
+	left := match.PlayerAParticipantID
+	right := match.PlayerBParticipantID
+	now := time.Now().UTC()
+
+	switch {
+	case left != nil && right == nil:
+		match.WinnerParticipantID = left
+		match.Status = models.TournamentMatchCompleted
+		match.FinishedAt = &now
+		match.LiveMatchID = nil
+		return true
+	case left == nil && right != nil:
+		match.WinnerParticipantID = right
+		match.Status = models.TournamentMatchCompleted
+		match.FinishedAt = &now
+		match.LiveMatchID = nil
+		return true
+	case left == nil && right == nil:
+		match.WinnerParticipantID = nil
+		match.Status = models.TournamentMatchCompleted
+		match.FinishedAt = &now
+		match.LiveMatchID = nil
+		return true
+	default:
+		return false
+	}
+}
+
+func matchWinnerParticipantID(match *models.TournamentMatch) *uint {
+	if match == nil || match.Status != models.TournamentMatchCompleted || match.WinnerParticipantID == nil {
+		return nil
+	}
+	value := *match.WinnerParticipantID
+	return &value
+}
+
+func loserParticipantID(match *models.TournamentMatch) *uint {
+	if match == nil || match.Status != models.TournamentMatchCompleted || match.WinnerParticipantID == nil {
+		return nil
+	}
+	return opponentOfWinner(match, *match.WinnerParticipantID)
+}
+
+func syncParticipantEliminationState(tx *gorm.DB, tournamentID uint, matches []models.TournamentMatch, eliminateAfterLosses int) error {
+	if eliminateAfterLosses < 1 {
+		eliminateAfterLosses = 1
+	}
+
+	lossesByParticipant := make(map[uint]int)
+	for _, match := range matches {
+		if match.Status != models.TournamentMatchCompleted || match.WinnerParticipantID == nil {
+			continue
+		}
+		if match.PlayerAParticipantID != nil && *match.PlayerAParticipantID != *match.WinnerParticipantID {
+			lossesByParticipant[*match.PlayerAParticipantID]++
+		}
+		if match.PlayerBParticipantID != nil && *match.PlayerBParticipantID != *match.WinnerParticipantID {
+			lossesByParticipant[*match.PlayerBParticipantID]++
+		}
+	}
+
+	if err := tx.Model(&models.TournamentParticipant{}).
+		Where("tournament_id = ?", tournamentID).
+		Update("eliminated_at", nil).Error; err != nil {
+		return err
+	}
+
+	now := time.Now().UTC()
+	for participantID, losses := range lossesByParticipant {
+		if losses < eliminateAfterLosses {
+			continue
+		}
+		if err := tx.Model(&models.TournamentParticipant{}).
+			Where("id = ? AND tournament_id = ?", participantID, tournamentID).
+			Update("eliminated_at", now).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func numberOfRounds(bracketSize int) int {
 	rounds := 0
 	for bracketSize > 1 {
@@ -1000,6 +1570,25 @@ func numberOfRounds(bracketSize int) int {
 		return 1
 	}
 	return rounds
+}
+
+func doubleEliminationLosersRoundMatchCount(bracketSize, losersRound int) int {
+	if bracketSize <= 1 || losersRound <= 0 {
+		return 0
+	}
+	// Odd/even loser rounds in each phase have the same number of matches:
+	// R1/R2 -> N/4, R3/R4 -> N/8, ...
+	divisorPower := (losersRound + 3) / 2
+	matches := bracketSize >> divisorPower
+	if matches < 1 {
+		return 1
+	}
+	return matches
+}
+
+func intPtr(v int) *int {
+	value := v
+	return &value
 }
 
 func splitProviderID(playerID string) (string, string) {
@@ -1021,12 +1610,6 @@ func opponentOfWinner(match *models.TournamentMatch, winnerParticipantID uint) *
 		return match.PlayerAParticipantID
 	}
 	return nil
-}
-
-func markParticipantEliminated(tx *gorm.DB, participantID uint, eliminatedAt time.Time) error {
-	return tx.Model(&models.TournamentParticipant{}).
-		Where("id = ? AND eliminated_at IS NULL", participantID).
-		Update("eliminated_at", eliminatedAt).Error
 }
 
 func generateUniqueTournamentSlug(db *gorm.DB) (string, error) {

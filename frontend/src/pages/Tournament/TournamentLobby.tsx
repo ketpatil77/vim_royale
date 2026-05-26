@@ -79,6 +79,18 @@ function compareLeaderboardRows(a: TournamentLeaderboardEntry, b: TournamentLead
   return new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime()
 }
 
+function formatLabel(format?: string): string {
+  switch (format) {
+    case 'double_elimination':
+      return 'Second Chance'
+    case 'group_knockout':
+      return 'Championship'
+    case 'single_elimination':
+    default:
+      return 'Quick Cup'
+  }
+}
+
 export default function TournamentLobby() {
   const { slug = '' } = useParams()
   const [searchParams] = useSearchParams()
@@ -360,9 +372,13 @@ export default function TournamentLobby() {
 
   const participantStatus = useMemo(() => {
     const statusMap = new Map<number, string>()
+    const eliminatedParticipants = new Set<number>()
 
     for (const participant of state.participants) {
       statusMap.set(participant.id, 'Waiting')
+      if (participant.eliminatedAt) {
+        eliminatedParticipants.add(participant.id)
+      }
     }
 
     for (const rawMatch of state.matches) {
@@ -374,10 +390,18 @@ export default function TournamentLobby() {
         } else if (match.status === 'completed') {
           if (match.winnerId === id) {
             statusMap.set(id, 'Advanced')
-          } else {
+          } else if (eliminatedParticipants.has(id)) {
             statusMap.set(id, 'Eliminated')
+          } else {
+            statusMap.set(id, 'Waiting')
           }
         }
+      }
+    }
+
+    for (const participantID of eliminatedParticipants) {
+      if (statusMap.get(participantID) !== 'In Match') {
+        statusMap.set(participantID, 'Eliminated')
       }
     }
 
@@ -586,6 +610,21 @@ export default function TournamentLobby() {
       <div className="tournament-shell">
         <div className="tournament-card">
           <h1 className="tournament-title">&gt;&gt; {state.tournament?.name || 'TOURNAMENT'}</h1>
+          {state.tournament && (
+            <div className="tournament-meta-row">
+              <span className="tournament-format-pill">{formatLabel(state.tournament.format)}</span>
+              {state.tournament.format === 'double_elimination' && (
+                <span className="tournament-meta-note">
+                  Grand Final Reset: {state.tournament.settings?.grandFinalReset ? 'ON' : 'OFF'}
+                </span>
+              )}
+              {state.tournament.format === 'group_knockout' && (
+                <span className="tournament-meta-note">
+                  Groups: {state.tournament.settings?.groupSize || '--'} / Advance: {state.tournament.settings?.advancePerGroup || '--'}
+                </span>
+              )}
+            </div>
+          )}
           {error && <p className="tournament-error">{error}</p>}
 
           {state.requiresJoin ? (

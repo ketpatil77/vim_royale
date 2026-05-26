@@ -1,5 +1,11 @@
 export type TournamentStatus = 'lobby' | 'active' | 'finished'
-export type TournamentFormat = 'single_elimination'
+export type TournamentFormat = 'single_elimination' | 'double_elimination' | 'group_knockout'
+
+export type TournamentSettings = {
+  grandFinalReset?: boolean | null
+  groupSize?: number | null
+  advancePerGroup?: number | null
+}
 
 export type TournamentSummary = {
   id: number
@@ -8,6 +14,7 @@ export type TournamentSummary = {
   hostUserId: number
   status: TournamentStatus
   format: TournamentFormat
+  settings?: TournamentSettings
   maxPlayers: number
   isLocked: boolean
   startedAt?: string | null
@@ -24,6 +31,7 @@ export type TournamentParticipant = {
   avatarUrl: string
   seed?: number | null
   joinedAt: string
+  eliminatedAt?: string | null
   isHost: boolean
 }
 
@@ -32,6 +40,10 @@ export type TournamentMatch = {
   tournamentId: number
   round: number
   slot: number
+  stageType?: 'knockout' | 'group' | 'grand_final'
+  bracketType?: 'main' | 'winners' | 'losers'
+  groupNumber?: number | null
+  stageRound?: number | null
   playerAParticipantId?: number | null
   playerBParticipantId?: number | null
   winnerParticipantId?: number | null
@@ -56,6 +68,7 @@ export type CreateTournamentRequest = {
   name: string
   maxPlayers: number
   format?: TournamentFormat
+  settings?: TournamentSettings
 }
 
 export type CreateTournamentResponse = {
