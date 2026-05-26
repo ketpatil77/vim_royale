@@ -18,6 +18,8 @@ type TournamentFormat string
 
 const (
 	TournamentFormatSingleElimination TournamentFormat = "single_elimination"
+	TournamentFormatDoubleElimination TournamentFormat = "double_elimination"
+	TournamentFormatGroupKnockout     TournamentFormat = "group_knockout"
 )
 
 type Tournament struct {
@@ -28,6 +30,9 @@ type Tournament struct {
 	HostUser        User             `json:"hostUser"`
 	Status          TournamentStatus `json:"status" gorm:"type:varchar(24);default:'lobby';index"`
 	Format          TournamentFormat `json:"format" gorm:"type:varchar(32);default:'single_elimination'"`
+	GrandFinalReset *bool            `json:"grandFinalReset,omitempty"`
+	GroupSize       *int             `json:"groupSize,omitempty"`
+	AdvancePerGroup *int             `json:"advancePerGroup,omitempty"`
 	MaxPlayers      int              `json:"maxPlayers" gorm:"default:16"`
 	IsLocked        bool             `json:"isLocked" gorm:"default:false"`
 	InviteTokenHash string           `json:"-" gorm:"type:char(64);index"`
