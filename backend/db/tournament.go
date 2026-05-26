@@ -583,6 +583,7 @@ func StartTournament(db *gorm.DB, tournamentID uint) error {
 
 	return db.Transaction(func(tx *gorm.DB) error {
 		// Clear elimination markers so the same room can be reused for a fresh run.
+		// run the actions
 		if err := tx.Model(&models.TournamentParticipant{}).
 			Where("tournament_id = ?", tournamentID).
 			Update("eliminated_at", nil).Error; err != nil {

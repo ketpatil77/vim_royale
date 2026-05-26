@@ -16,7 +16,7 @@ const GAME_MODES = [
   { cmd: ':vs',       title: '1V1',           desc: '2 Players, Split Screen' },
   { cmd: ':timer',    title: 'Single Player', desc: 'Timed challenges against yourself' },
   { cmd: ':ai',      title: 'Play with Bot',   desc: 'Compete against AI bot' },
-  { cmd: ':vimtutor', title: 'VimTutor',      desc: 'Learn vim the way it was meant to be' },
+  { cmd: ':tournament', title: 'Tournaments', desc: 'Create private lobbies to compete against your friends!' },
 ]
 
 const HOW_TO_PLAY_STEPS = [
@@ -158,8 +158,8 @@ export default function Landing() {
             <button className="vr-cta" onClick={() => navigate('/play')}>
               [&nbsp;&nbsp;PLAY NOW&nbsp;&nbsp;]
             </button>
-            <button className="vr-cta vr-cta--dim" onClick={() => navigate('/docs/vimtutor')}>
-              [&nbsp;&nbsp;LEARN VIM&nbsp;&nbsp;]
+            <button className="vr-cta vr-cta--dim" onClick={() => navigate('/play/tournament/create')}>
+              [&nbsp;&nbsp;CREATE TOURNAMENT&nbsp;&nbsp;]
             </button>
           </div>
           <VimRoyaleDuel />
