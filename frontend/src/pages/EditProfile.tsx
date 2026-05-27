@@ -127,6 +127,12 @@ export default function EditProfile() {
               >
                 {isEditing ? "./SAVE.sh" : "vi profile"}
               </button>
+              <button
+                className="edit-toggle-btn"
+                onClick={() => navigate("/settings/keybindings")}
+              >
+                :keybindings
+              </button>
             </div>
           </div>
 

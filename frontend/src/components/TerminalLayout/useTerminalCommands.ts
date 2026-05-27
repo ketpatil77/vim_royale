@@ -103,6 +103,14 @@ export function useTerminalCommands({
         navigate("/docs/vimtutor");
         clearCommand();
       },
+      keybindings: () => {
+        navigate("/settings/keybindings");
+        clearCommand();
+      },
+      bindings: () => {
+        navigate("/settings/keybindings");
+        clearCommand();
+      },
       profile: () => {
         if (user) {
           navigate("/editprofile");

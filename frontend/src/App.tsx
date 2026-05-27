@@ -6,6 +6,7 @@ import { WalkthroughPrompt } from './components/Walkthrough/WalkthroughPrompt'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { CRTProvider, useCRT } from './contexts/CRTContext'
 import { GuestProvider } from './contexts/GuestContext'
+import { KeybindingsProvider } from './contexts/KeybindingsContext'
 import { TimedGameProvider } from './contexts/TimedGameContext'
 import { VimTutor } from './pages/docs/vimTutor'
 import EditProfile from './pages/EditProfile'
@@ -25,6 +26,7 @@ import { VimiumWarningModal } from './components/VimiumWarningModal/VimiumWarnin
 import LiveSpectate from './pages/LiveSpectate/LiveSpectate'
 import TournamentCreate from './pages/Tournament/TournamentCreate'
 import TournamentLobby from './pages/Tournament/TournamentLobby'
+import KeybindingsSettings from './pages/KeybindingsSettings'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth()
@@ -117,6 +119,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route path="/settings/keybindings" element={<KeybindingsSettings />} />
       <Route
         path="/match/:matchId/replay"
         element={<MatchReplayPage />}
@@ -155,9 +158,11 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <CRTProvider>
-          <AppContent />
-        </CRTProvider>
+        <KeybindingsProvider>
+          <CRTProvider>
+            <AppContent />
+          </CRTProvider>
+        </KeybindingsProvider>
       </AuthProvider>
     </BrowserRouter>
   )

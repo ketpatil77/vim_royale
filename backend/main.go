@@ -69,8 +69,10 @@ func main() {
 		authRoutes.GET("/github", handlers.AuthGitHubHandler)
 		authRoutes.GET("/github/callback", handlers.AuthGitHubCallbackHandler)
 		authRoutes.GET("/me", handlers.AuthMiddleware(), handlers.AuthMeHandler)
+		authRoutes.GET("/me/keybindings", handlers.AuthMiddleware(), handlers.GetMyVimKeybindings)
 		authRoutes.POST("/logout", csrfProtected, handlers.AuthLogoutHandler)
 		authRoutes.PATCH("/me", writeLimit, handlers.AuthMiddleware(), csrfProtected, handlers.UpdateUserProfile)
+		authRoutes.PATCH("/me/keybindings", writeLimit, handlers.AuthMiddleware(), csrfProtected, handlers.UpdateMyVimKeybindings)
 		authRoutes.GET("/timed-scores/best", handlers.AuthMiddleware(), handlers.GetTimedScoreBests)
 		authRoutes.POST("/timed-scores/save", writeLimit, handlers.AuthMiddleware(), csrfProtected, handlers.SaveTimedScore)
 	}
