@@ -1,6 +1,7 @@
 package database
 
 import (
+	"encoding/json"
 	"time"
 
 	"vim_royale/backend/models"
@@ -99,6 +100,14 @@ func UpdateUserProfilePartial(db *gorm.DB, user *models.User, req *models.Update
 	}
 
 	return db.Model(user).Updates(updates).Error
+}
+
+func UpdateUserVimKeybindings(db *gorm.DB, user *models.User, mappings []models.VimKeybindingMapping) error {
+	payload, err := json.Marshal(mappings)
+	if err != nil {
+		return err
+	}
+	return db.Model(user).Update("vim_keybindings_json", string(payload)).Error
 }
 
 func GetLeaderboard(db *gorm.DB) ([]models.User, error) {

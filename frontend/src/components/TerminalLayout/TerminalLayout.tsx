@@ -90,6 +90,12 @@ export function TerminalLayout({
             :guide
           </span>
           <span onClick={() => {navigate("/docs/vimtutor")}} className="terminal-nav-link">:tutor</span>
+          <span
+            onClick={() => { navigate("/settings/keybindings"); closeMenu(); }}
+            className="terminal-nav-link"
+          >
+            :keybindings
+          </span>
 
           {user ? (
             <span

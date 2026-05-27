@@ -1,0 +1,298 @@
+.keybindings-main {
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 32px 20px;
+  display: grid;
+  gap: 18px;
+  color: var(--text-bright);
+}
+
+.keybindings-loading {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  padding: 12px;
+}
+
+.keybindings-header h1 {
+  margin: 0 0 8px;
+  color: var(--green);
+  font-family: var(--display);
+  font-size: 28px;
+  letter-spacing: 0.05em;
+}
+
+.keybindings-header p {
+  margin: 0;
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.keybindings-header-actions {
+  margin-top: 14px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.keybindings-editor,
+.keybindings-preview {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  padding: 20px;
+}
+
+.keybindings-preview h2,
+.keybindings-preview h3 {
+  margin: 0 0 10px;
+  font-family: var(--mono);
+  color: var(--green);
+  letter-spacing: 0.06em;
+  font-size: 13px;
+}
+
+.keybindings-preview p {
+  margin: 0;
+  font-family: var(--mono);
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.keybindings-hud {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-raised);
+  padding: 10px;
+}
+
+.keybindings-hud-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.keybindings-hud-pill {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  border: 1px solid rgba(152, 195, 121, 0.2);
+  background: rgba(152, 195, 121, 0.06);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 4px 8px;
+  text-transform: lowercase;
+}
+
+.keybindings-hud-pill b {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.keybindings-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.keybindings-editor label {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--green);
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+}
+
+.keybindings-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.keybindings-upload-name {
+  font-family: var(--mono);
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.keybindings-file-input {
+  display: none;
+}
+
+.keybindings-editor textarea {
+  width: 100%;
+  min-height: 180px;
+  resize: vertical;
+  background: var(--bg-raised);
+  color: var(--text-bright);
+  border: 1px solid var(--border);
+  padding: 12px;
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.keybindings-editor textarea:focus {
+  outline: 1px solid var(--green);
+  border-color: var(--green);
+}
+
+.keybindings-inline-warnings {
+  margin-top: 8px;
+  border: 1px solid rgba(255, 49, 49, 0.35);
+  background: rgba(255, 49, 49, 0.08);
+  padding: 8px 10px;
+}
+
+.keybindings-inline-warnings p {
+  margin: 0;
+  color: var(--red);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.keybindings-inline-warnings p + p {
+  margin-top: 4px;
+}
+
+.keybindings-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.keybindings-btn {
+  border: 1px solid var(--border);
+  color: var(--text-bright);
+  background: var(--bg-raised);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-family: var(--mono);
+  letter-spacing: 0.07em;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.keybindings-btn:hover {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.keybindings-btn--primary {
+  border-color: rgba(152, 195, 121, 0.35);
+  background: rgba(152, 195, 121, 0.08);
+  color: var(--green);
+}
+
+.keybindings-btn--secondary {
+  background: var(--bg-raised);
+}
+
+.keybindings-btn--danger {
+  background: rgba(255, 49, 49, 0.1);
+  border-color: rgba(255, 49, 49, 0.35);
+  color: var(--red);
+}
+
+.keybindings-status {
+  margin-top: 12px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: var(--mono);
+}
+
+.keybindings-status--ok {
+  background: rgba(152, 195, 121, 0.08);
+  border: 1px solid rgba(152, 195, 121, 0.35);
+  color: var(--green);
+}
+
+.keybindings-status--info {
+  background: rgba(245, 166, 35, 0.1);
+  border: 1px solid rgba(245, 166, 35, 0.4);
+  color: var(--yellow);
+}
+
+.keybindings-status--error {
+  background: rgba(255, 49, 49, 0.1);
+  border: 1px solid rgba(255, 49, 49, 0.35);
+  color: var(--red);
+}
+
+.keybindings-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.keybindings-list li {
+  margin-bottom: 6px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-bright);
+  line-height: 1.4;
+}
+
+.keybindings-list--warnings li {
+  color: var(--red);
+}
+
+.keybindings-live-editor {
+  margin-top: 12px;
+}
+
+.keybindings-live-editor .editor-panel {
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: #1e1e1e;
+}
+
+.keybindings-live-editor .editor-mount {
+  min-height: 320px;
+  height: 320px;
+  background-color: #1e1e1e !important;
+}
+
+.keybindings-live-editor .editor-mount .cm-editor {
+  height: 100%;
+  background-color: #1e1e1e !important;
+}
+
+.keybindings-live-editor .editor-mount .cm-scroller {
+  height: 100% !important;
+  overflow: auto !important;
+  background-color: #1e1e1e !important;
+}
+
+.keybindings-live-editor .editor-mount .cm-gutters {
+  min-height: 100%;
+  background-color: #1e1e1e !important;
+}
+
+.keybindings-live-editor .editor-mount .cm-content {
+  min-height: 100% !important;
+  max-height: none !important;
+  background-color: #1e1e1e !important;
+}
+
+@media (max-width: 720px) {
+  .keybindings-main {
+    padding: 22px 12px;
+    gap: 14px;
+  }
+
+  .keybindings-editor,
+  .keybindings-preview {
+    padding: 14px;
+  }
+}
