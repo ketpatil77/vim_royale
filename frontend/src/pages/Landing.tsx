@@ -10,7 +10,7 @@ import { useCRT } from '../contexts/CRTContext'
 import './Landing.css'
 import '../components/AerialUpdateBanner/AerialUpdateBanner.css'
 
-const RELEASE_BANNER_MESSAGE = 'v0.2.0: Spectator mode, improved matchmaking, Create custom tournaments and play with your friends!'
+const RELEASE_BANNER_MESSAGE = 'v0.3.0: Custom keybindings, Guest sessions, Create tournaments and play with your friends!'
 
 const GAME_MODES = [
   { cmd: ':vs',       title: '1V1',           desc: '2 Players, Split Screen' },
