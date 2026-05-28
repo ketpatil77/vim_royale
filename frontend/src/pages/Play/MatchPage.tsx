@@ -6,6 +6,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { EditorPanel } from '../../components/EditorPanel/EditorPanel'
 import { TerminalLayout } from '../../components/TerminalLayout/TerminalLayout'
 import MatchResultModal, { parseResult } from '../../components/MatchResultModal/MatchResultModal'
+import { AtariBreakout } from '../../components/MiniGames/AtariBreakout'
+import { VimSnake } from '../../components/MiniGames/VimSnake'
 import { createSocketCallbacks } from '../typingChallenge/createSocketCallbacks'
 import type { MatchState, ViewState, GameOverPayload, KeystrokeEntry } from '../typingChallenge/types'
 import { useEditors } from '../typingChallenge/useEditors'
@@ -55,6 +57,10 @@ const formatRoundClock = (seconds: number): string => {
 }
 
 const isAuthenticatedIdentity = (id: string): boolean => /^[a-z]+:.+$/.test(id)
+type WaitingMiniGame = 'breakout' | 'snake'
+
+const pickRandomWaitingMiniGame = (): WaitingMiniGame =>
+  (Math.random() < 0.5 ? 'breakout' : 'snake')
 
 type MatchPageProps = {
   mode?: 'multiplayer' | 'computer' | 'tournament'
@@ -71,6 +77,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   const [spectatorCount, setSpectatorCount] = useState(0)
   const [roundSecondsLeft, setRoundSecondsLeft] = useState(defaultRoundDurationSec)
   const [playerContent, setPlayerContent] = useState('')
+  const [waitingMiniGame, setWaitingMiniGame] = useState<WaitingMiniGame>(() => pickRandomWaitingMiniGame())
   const navigate = useNavigate()
   const { user } = useAuth()
   const { ensureGuest } = useGuest()
@@ -133,6 +140,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   } = useEditors()
 
   const finishSentRef = useRef(false)
+  const matchmakingRunRef = useRef(0)
 
   const recordReceivedKeystroke = useCallback((delta: { ops: any[] }) => {
     if (viewStateRef.current !== 'playing') return
@@ -146,7 +154,13 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
     sounds[type].play()
   }, [])
 
-  const beginMatchmaking = useCallback(async () => {
+  const beginMatchmaking = useCallback(async (providedRunId?: number) => {
+    const runId = providedRunId ?? (matchmakingRunRef.current + 1)
+    if (providedRunId === undefined) {
+      matchmakingRunRef.current = runId
+    }
+    let guestIdentityOverride: { playerId: string; guestSessionToken: string } | null = null
+
     if (isComputerMode && !selectedBotId) {
       setStatusText('Missing bot selection. Redirecting...')
       navigate('/play/computer')
@@ -161,12 +175,26 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
     const requiresStandardGuestSession = !user && !(isTournamentMode && tournamentSessionToken)
     if (requiresStandardGuestSession) {
       try {
-        await ensureGuest()
+        const guestProfile = await ensureGuest()
+        guestIdentityOverride = {
+          playerId: guestProfile.guestId,
+          guestSessionToken: guestProfile.sessionToken,
+        }
+        if (matchmakingRunRef.current !== runId) {
+          return
+        }
       } catch {
+        if (matchmakingRunRef.current !== runId) {
+          return
+        }
         setStatusText('Failed to create guest session. Please retry.')
         setViewState('error')
         return
       }
+    }
+
+    if (matchmakingRunRef.current !== runId) {
+      return
     }
 
     disconnect()
@@ -189,6 +217,9 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
           ? 'Connecting to tournament server...'
           : 'Connecting to matchmaking server...'
     )
+    if (!isComputerMode && !isTournamentMode) {
+      setWaitingMiniGame(pickRandomWaitingMiniGame())
+    }
     setViewState('matchmaking')
 
     const callbacks = createSocketCallbacks(
@@ -229,12 +260,15 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
       queueJoinPayload: isTournamentQueue
         ? { queueType: 'tournament', tournamentId: parsedTournamentId }
         : {},
-      helloOverrides: isTournamentQueue
-        ? {
-            tournamentId: parsedTournamentId,
-            tournamentSessionToken: tournamentSessionToken || undefined,
-          }
-        : {},
+      helloOverrides: {
+        ...(guestIdentityOverride || {}),
+        ...(isTournamentQueue
+          ? {
+              tournamentId: parsedTournamentId,
+              tournamentSessionToken: tournamentSessionToken || undefined,
+            }
+          : {}),
+      },
     })
   }, [
     isComputerMode,
@@ -257,12 +291,15 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   ])
 
   useEffect(() => {
-    void beginMatchmaking()
+    const runId = matchmakingRunRef.current + 1
+    matchmakingRunRef.current = runId
+    void beginMatchmaking(runId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
     return () => {
+      matchmakingRunRef.current += 1
       disconnect()
       cleanupEditors()
     }
@@ -364,6 +401,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   }, [viewState, setEditors, handleContentChange, cleanupEditors])
 
   const cancelMatchmaking = () => {
+    matchmakingRunRef.current += 1
     disconnect()
     cleanupEditors()
     if (isComputerMode) {
@@ -383,6 +421,8 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   }
 
   const isMatchmaking = viewState === 'matchmaking'
+  const showMatchmakingMiniGame = isMatchmaking && !isComputerMode && !isTournamentMode
+  const waitingMiniGameTitle = waitingMiniGame === 'breakout' ? 'ATARI BREAKOUT' : 'VIM SNAKE'
   const showMatchHud = !isComputerMode && (viewState === 'playing' || viewState === 'countdown')
   const currentPlayerBuffer = (viewState === 'playing' || viewState === 'finished')
     ? playerContent
@@ -465,6 +505,12 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
                 </svg>
               </div>
               <p className="matchmaking-status">{statusText}</p>
+              {showMatchmakingMiniGame && (
+                <div className="matchmaking-minigame">
+                  <p className="matchmaking-minigame-label">WHILE YOU WAIT · RANDOM MINI GAME: {waitingMiniGameTitle}</p>
+                  {waitingMiniGame === 'breakout' ? <AtariBreakout /> : <VimSnake />}
+                </div>
+              )}
               <button className="cancel-btn" onClick={cancelMatchmaking}>
                 ./CANCEL.sh
               </button>

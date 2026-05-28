@@ -64,6 +64,7 @@ func (h *Hub) enqueueForRankedMatch(client *Client) {
 	client.TournamentParticipantID = 0
 	client.TournamentExpectedOpponentID = ""
 	client.EnqueuedAt = time.Now()
+	client.markAwaitingQueuePong()
 
 	h.tryMatchBucket(bucket)
 }
@@ -133,6 +134,7 @@ func (h *Hub) enqueueForTournamentMatch(client *Client, payload QueueJoinPayload
 	client.TournamentParticipantID = participant.ID
 	client.TournamentExpectedOpponentID = eligibility.OpponentPlayerID
 	client.EnqueuedAt = time.Now()
+	client.markAwaitingQueuePong()
 
 	h.tryMatchTournamentQueue(queue, tournamentID)
 }
@@ -163,6 +165,15 @@ func (h *Hub) tryMatchBucket(bucket *ratingBucket) {
 
 		validA := h.isClientActiveLocked(pA) && pA.ID != ""
 		validB := h.isClientActiveLocked(pB) && pB.ID != ""
+		if (validA && pA.isAwaitingQueuePong()) || (validB && pB.isAwaitingQueuePong()) {
+			if validB && pA != pB {
+				bucket.players = append([]*Client{pB}, bucket.players...)
+			}
+			if validA {
+				bucket.players = append([]*Client{pA}, bucket.players...)
+			}
+			return
+		}
 		if pA == pB || !validA || !validB {
 			if validB && pA != pB {
 				bucket.players = append([]*Client{pB}, bucket.players...)
@@ -175,8 +186,10 @@ func (h *Hub) tryMatchBucket(bucket *ratingBucket) {
 
 		pA.QueueType = ""
 		pA.TournamentID = 0
+		pA.clearAwaitingQueuePong()
 		pB.QueueType = ""
 		pB.TournamentID = 0
+		pB.clearAwaitingQueuePong()
 		h.startMatchLocked(pA, pB, nil)
 	}
 }
@@ -190,6 +203,9 @@ func (h *Hub) tryMatchTournamentQueue(queue *tournamentQueue, tournamentID uint)
 			if pA == nil || !h.isClientActiveLocked(pA) || pA.ID == "" {
 				queue.players = append(queue.players[:i], queue.players[i+1:]...)
 				i--
+				continue
+			}
+			if pA.isAwaitingQueuePong() {
 				continue
 			}
 			if pA.TournamentID != tournamentID || strings.TrimSpace(pA.TournamentExpectedOpponentID) == "" {
@@ -214,6 +230,9 @@ func (h *Hub) tryMatchTournamentQueue(queue *tournamentQueue, tournamentID uint)
 			if !h.isClientActiveLocked(pB) || pB.ID == "" || pB.TournamentID != tournamentID {
 				continue
 			}
+			if pB.isAwaitingQueuePong() {
+				continue
+			}
 			if pB.TournamentExpectedOpponentID != pA.ID {
 				continue
 			}
@@ -229,11 +248,13 @@ func (h *Hub) tryMatchTournamentQueue(queue *tournamentQueue, tournamentID uint)
 			pA.TournamentID = 0
 			pA.TournamentParticipantID = 0
 			pA.TournamentExpectedOpponentID = ""
+			pA.clearAwaitingQueuePong()
 
 			pB.QueueType = ""
 			pB.TournamentID = 0
 			pB.TournamentParticipantID = 0
 			pB.TournamentExpectedOpponentID = ""
+			pB.clearAwaitingQueuePong()
 
 			h.startMatchLocked(pA, pB, &tournamentID)
 			matched = true
@@ -337,6 +358,7 @@ func (h *Hub) removeFromQueueLocked(target *Client) {
 		target.TournamentID = 0
 		target.TournamentParticipantID = 0
 		target.TournamentExpectedOpponentID = ""
+		target.clearAwaitingQueuePong()
 		return
 	}
 
@@ -363,6 +385,7 @@ func (h *Hub) removeFromQueueLocked(target *Client) {
 	target.TournamentID = 0
 	target.TournamentParticipantID = 0
 	target.TournamentExpectedOpponentID = ""
+	target.clearAwaitingQueuePong()
 }
 
 func (h *Hub) isClientActiveLocked(client *Client) bool {
@@ -370,11 +393,14 @@ func (h *Hub) isClientActiveLocked(client *Client) bool {
 		return false
 	}
 	_, ok := h.clients[client]
-	return ok
+	if !ok {
+		return false
+	}
+	return client.isHeartbeatFresh()
 }
 
 func (h *Hub) runMatchExpansion() {
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
 	for range ticker.C {
@@ -404,6 +430,14 @@ func (h *Hub) expandStaleMatches() {
 		}
 
 		src.mu.Lock()
+		if len(src.players) == 0 {
+			src.mu.Unlock()
+			continue
+		}
+
+		// Re-attempt local bucket matching on every sweep so clients that just
+		// became eligible (e.g. post-queue pong) do not wait for a new enqueue.
+		h.tryMatchBucket(src)
 		if len(src.players) == 0 {
 			src.mu.Unlock()
 			continue
