@@ -55,11 +55,11 @@ const GAME_MODES: GameMode[] = [
   {
     id: 'mini-games',
     title: 'Mini Games',
-    description: 'Arcade micro-challenges are on the way!',
+    description: 'Play Atari Breakout and Vim Snake now!',
     hotkey: '5',
-    eta: 'Coming soon',
+    eta: 'Live now',
     audience: 'Best for: Quick warmups',
-    isComingSoon: true,
+    route: '/play/minigames',
   },
 ]
 
@@ -90,7 +90,7 @@ export default function Play() {
       <div className="game-shell">
         <div className="play-select-container">
           <h1 className="play-title">&gt;&gt; SELECT GAME MODE</h1>
-          <p className="play-subtitle">Choose your next run. Tip: press keys `1-4` for quick launch.</p>
+          <p className="play-subtitle">Choose your next run. Tip: press keys `1-5` for quick launch.</p>
 
           <div className="play-modes" role="list" aria-label="Game mode options">
             {GAME_MODES.map((mode) => (

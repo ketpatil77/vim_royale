@@ -1,0 +1,111 @@
+.mini-games-shell {
+  min-height: calc(100vh - 52px);
+}
+
+.mini-games-content {
+  min-height: calc(100vh - 52px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 36px 16px 52px;
+}
+
+.mini-games-title {
+  font-family: var(--mono, monospace);
+  color: var(--green, #39ff14);
+  font-size: 24px;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-shadow: 0 0 12px rgba(57, 255, 20, 0.35);
+}
+
+.mini-games-subtitle {
+  font-family: var(--mono, monospace);
+  color: #9ac79f;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.mini-games-grid {
+  width: min(96vw, 920px);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.mini-game-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(8, 12, 8, 0.78);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.mini-game-tile:hover {
+  border-color: var(--mini-game-color, var(--green, #39ff14));
+  transform: translateY(-2px);
+}
+
+.mini-game-tile-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.mini-game-tile-label {
+  font-family: var(--mono, monospace);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: var(--mini-game-color, var(--green, #39ff14));
+}
+
+.mini-game-tile-hotkey {
+  font-family: var(--mono, monospace);
+  font-size: 11px;
+  color: #f5d27a;
+  border: 1px solid rgba(245, 210, 122, 0.4);
+  padding: 2px 7px;
+}
+
+.mini-game-tile-desc {
+  font-family: var(--mono, monospace);
+  font-size: 11px;
+  color: #bdd7c1;
+  line-height: 1.5;
+}
+
+.mini-games-actions {
+  width: min(96vw, 920px);
+  display: flex;
+  justify-content: flex-start;
+}
+
+.mini-games-back-btn {
+  background: transparent;
+  border: 1px solid #3f6f3f;
+  color: #9ac79f;
+  padding: 10px 14px;
+  font-family: var(--mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+}
+
+.mini-games-back-btn:hover {
+  border-color: var(--green, #39ff14);
+  color: var(--green, #39ff14);
+  background: rgba(57, 255, 20, 0.1);
+}
+
+@media (max-width: 760px) {
+  .mini-games-grid {
+    grid-template-columns: 1fr;
+  }
+}

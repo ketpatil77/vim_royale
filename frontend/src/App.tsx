@@ -18,6 +18,8 @@ import DifficultySelect from './pages/Play/DifficultySelect'
 import ComputerSelect from './pages/Play/ComputerSelect'
 import MatchPage from './pages/Play/MatchPage'
 import Play from './pages/Play/Play'
+import MiniGames from './pages/Play/MiniGames'
+import MiniGameArena from './pages/Play/MiniGameArena'
 import TimedMatchPage from './pages/Play/TimedMatchPage'
 import UserProfile from './pages/userProfile'
 import MatchReplayPage from './pages/MatchReplay/MatchReplay'
@@ -68,6 +70,14 @@ function AppRoutes() {
       <Route
         path="/play/computer"
         element={<ComputerSelect />}
+      />
+      <Route
+        path="/play/minigames"
+        element={<MiniGames />}
+      />
+      <Route
+        path="/play/minigames/:gameId"
+        element={<MiniGameArena />}
       />
       <Route
         path="/match/multiplayer"

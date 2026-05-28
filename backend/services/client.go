@@ -6,6 +6,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"vim_royale/backend/config"
@@ -18,7 +19,7 @@ import (
 
 const (
 	writeWait      = 10 * time.Second
-	pongWait       = 60 * time.Second
+	pongWait       = 20 * time.Second
 	pingPeriod     = (pongWait * 9) / 10
 	maxMessageSize = 1024 * 1024
 )
@@ -45,6 +46,8 @@ type Client struct {
 	send                         chan []byte
 	closed                       bool
 	MatchID                      string
+	lastPongUnix                 int64
+	awaitingQueuePong            uint32
 }
 
 type ClientOptions struct {
@@ -53,6 +56,7 @@ type ClientOptions struct {
 }
 
 func NewClient(conn *websocket.Conn, hub *Hub, botID string, opts ClientOptions) *Client {
+	now := time.Now().UTC().Unix()
 	return &Client{
 		Conn:             conn,
 		Hub:              hub,
@@ -60,6 +64,7 @@ func NewClient(conn *websocket.Conn, hub *Hub, botID string, opts ClientOptions)
 		ForcedPlayerID:   opts.ForcedPlayerID,
 		PublicConnection: opts.PublicConnection,
 		send:             make(chan []byte, 256),
+		lastPongUnix:     now,
 	}
 }
 
@@ -72,6 +77,8 @@ func (c *Client) ReadPump() {
 	c.Conn.SetReadLimit(maxMessageSize)
 	_ = c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.Conn.SetPongHandler(func(string) error {
+		atomic.StoreInt64(&c.lastPongUnix, time.Now().UTC().Unix())
+		atomic.StoreUint32(&c.awaitingQueuePong, 0)
 		return c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 	})
 
@@ -225,6 +232,11 @@ func (c *Client) WritePump() {
 		_ = c.Conn.Close()
 	}()
 
+	_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+	if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+		return
+	}
+
 	for {
 		select {
 		case message, ok := <-c.send:
@@ -248,6 +260,45 @@ func (c *Client) WritePump() {
 func (c *Client) close() {
 	c.Hub.Unregister <- c
 	_ = c.Conn.Close()
+}
+
+func (c *Client) isHeartbeatFresh() bool {
+	if c == nil || c.closed {
+		return false
+	}
+	last := atomic.LoadInt64(&c.lastPongUnix)
+	if last <= 0 {
+		return false
+	}
+	lastAt := time.Unix(last, 0).UTC()
+	return time.Since(lastAt) <= pongWait+5*time.Second
+}
+
+func (c *Client) markAwaitingQueuePong() {
+	if c == nil {
+		return
+	}
+	now := time.Now().UTC().Unix()
+	last := atomic.LoadInt64(&c.lastPongUnix)
+	if last > 0 && now-last <= 2 {
+		atomic.StoreUint32(&c.awaitingQueuePong, 0)
+		return
+	}
+	atomic.StoreUint32(&c.awaitingQueuePong, 1)
+}
+
+func (c *Client) clearAwaitingQueuePong() {
+	if c == nil {
+		return
+	}
+	atomic.StoreUint32(&c.awaitingQueuePong, 0)
+}
+
+func (c *Client) isAwaitingQueuePong() bool {
+	if c == nil {
+		return true
+	}
+	return atomic.LoadUint32(&c.awaitingQueuePong) == 1
 }
 
 func resolveGuestPlayerIDFromTournamentSession(tournamentID uint, sessionToken string) (string, error) {

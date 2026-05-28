@@ -30,20 +30,18 @@ func (h *Hub) AttachIdentity(client *Client, playerID string) error {
 
 	if existing, exists := h.clientsByID[playerID]; exists && existing != client {
 		// Stale connection still registered — evict it and let the new one in.
-		// This happens when a client reconnects before the hub has processed
-		// the previous Unregister (common on 1 vCPU under any load).
+		// Mark it inactive and remove it from queue immediately so it cannot be
+		// matched during the reconnect window before Unregister is processed.
 		delete(h.clientsByID, existing.ID)
-		existing.ID = ""
+		h.removeFromQueueLocked(existing)
+		existing.closed = true
+		if existing.Conn != nil {
+			_ = existing.Conn.Close()
+		}
 		select {
 		case h.Unregister <- existing:
 		default:
-			// Unregister channel full — close the send channel directly
-			// so WritePump exits cleanly
-			select {
-			case <-existing.send:
-			default:
-				close(existing.send)
-			}
+			// ReadPump defer also enqueues Unregister after Conn.Close().
 		}
 	}
 
