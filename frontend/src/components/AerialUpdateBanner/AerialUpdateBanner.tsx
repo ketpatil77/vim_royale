@@ -8,6 +8,7 @@ export function AerialUpdateBanner({ message, label = "what's new" }: AerialUpda
   if (!trimmedMessage) {
     return null
   }
+
   return (
     <aside className="aerial-update" aria-live="polite" aria-label="Latest release update">
       <div className="aerial-update__flight">
