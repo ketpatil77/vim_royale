@@ -11,6 +11,7 @@ import './Landing.css'
 import '../components/AerialUpdateBanner/AerialUpdateBanner.css'
 
 const RELEASE_BANNER_MESSAGE = 'v0.4.0: Mini games, Custom keybindings, Guest sessions!'
+const JOB_BANNER_MESSAGE = 'open for work btw, socials in the footer'
 
 const GAME_MODES = [
   { cmd: ':vs',       title: '1V1',           desc: '2 Players, Split Screen' },
@@ -100,6 +101,28 @@ function XIcon() {
   )
 }
 
+function EmailIcon() {
+  return (
+    <svg className="vr-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm16.82 2H4.18L12 12.68 19.82 7ZM4 17h16V8.24l-7.43 5.4a1 1 0 0 1-1.14 0L4 8.24V17Z"
+      />
+    </svg>
+  )
+}
+
+function LinkedInIcon() {
+  return (
+    <svg className="vr-social-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M5.34 3.5a1.84 1.84 0 1 1 0 3.68 1.84 1.84 0 0 1 0-3.68ZM3.75 8.8h3.2V20h-3.2V8.8Zm5.2 0h3.07v1.53h.04c.43-.8 1.47-1.64 3.03-1.64 3.24 0 3.84 2.13 3.84 4.9V20h-3.2v-5.66c0-1.35-.02-3.08-1.88-3.08-1.89 0-2.18 1.48-2.18 2.98V20h-3.2V8.8Z"
+      />
+    </svg>
+  )
+}
+
 export default function Landing() {
   const { crtEnabled, toggleCrt } = useCRT()
   const navigate = useNavigate()
@@ -151,6 +174,13 @@ export default function Landing() {
           <AerialUpdateBanner
             label="release"
             message={RELEASE_BANNER_MESSAGE}
+            ariaLabel="Latest release update"
+          />
+          <AerialUpdateBanner
+            className="aerial-update--job"
+            label="status"
+            message={JOB_BANNER_MESSAGE}
+            ariaLabel="Availability update"
           />
           <VimRoyaleHero />
           <p className="vr-tagline">&gt; one shall lose, one shall vim</p>
@@ -258,6 +288,22 @@ export default function Landing() {
             <a className="vr-social-link" href="https://x.com/vim_royale" target="_blank" rel="noreferrer" aria-label="vim_royale on X">
               <XIcon />
               @vim_royale
+            </a>
+            <span className="vr-footer-sep">/</span>
+            <a className="vr-social-link" href="mailto:sahookumarjitesh@gmail.com" aria-label="Email Jitesh">
+              <EmailIcon />
+              email
+            </a>
+            <span className="vr-footer-sep">/</span>
+            <a
+              className="vr-social-link"
+              href="https://www.linkedin.com/in/Jitesh117/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Jitesh on LinkedIn"
+            >
+              <LinkedInIcon />
+              linkedin
             </a>
             <span className="vr-footer-sep">/</span>
             <a
