@@ -110,3 +110,53 @@
   white-space: nowrap;
   margin: 0;
 }
+
+/* ---- compact recruiting pass ---- */
+
+.aerial-update--job {
+  top: 44px;
+  opacity: 0.92;
+}
+
+.aerial-update--job .aerial-update__flight {
+  animation-duration: 145s;
+}
+
+.aerial-update--job .aerial-update__plane {
+  transform: scale(0.78);
+  transform-origin: center;
+}
+
+.aerial-update--job .aerial-update__rope {
+  margin-left: -5px;
+}
+
+.aerial-update--job .aerial-update__flag {
+  height: 20px;
+  background: #9e2a2b;
+}
+
+.aerial-update--job .aerial-update__label {
+  background: #d62828;
+  border-color: #6a040f;
+  font-size: 10px;
+  padding: 3px 7px;
+}
+
+.aerial-update--job .aerial-update__message {
+  background: #ffe5d9;
+  border-color: #e85d04;
+  color: #6a040f;
+  font-size: 10px;
+  padding: 3px 8px;
+}
+
+@media (max-width: 768px) {
+  .aerial-update--job {
+    top: 50px;
+  }
+
+  .aerial-update--job .aerial-update__plane {
+    transform: scale(0.7);
+  }
+}

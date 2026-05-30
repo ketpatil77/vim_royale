@@ -1,16 +1,25 @@
 type AerialUpdateBannerProps = {
   message: string
   label?: string
+  className?: string
+  ariaLabel?: string
 }
 
-export function AerialUpdateBanner({ message, label = "what's new" }: AerialUpdateBannerProps) {
+export function AerialUpdateBanner({
+  message,
+  label = "what's new",
+  className,
+  ariaLabel = 'Latest update banner',
+}: AerialUpdateBannerProps) {
   const trimmedMessage = message.trim()
   if (!trimmedMessage) {
     return null
   }
 
+  const rootClassName = className ? `aerial-update ${className}` : 'aerial-update'
+
   return (
-    <aside className="aerial-update" aria-live="polite" aria-label="Latest release update">
+    <aside className={rootClassName} aria-live="polite" aria-label={ariaLabel}>
       <div className="aerial-update__flight">
         <span className="aerial-update__plane" aria-hidden="true">
           <svg
