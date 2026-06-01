@@ -77,6 +77,7 @@ export function parseBufferUpdatePayload(payload: unknown): BufferUpdatePayload 
 
   const content = typeof payload.content === 'string' ? payload.content : undefined
   const cursor = typeof payload.cursor === 'number' ? payload.cursor : undefined
+  const replayObj = isRecord(payload.replay) ? payload.replay : undefined
 
   let delta: BufferDelta | undefined = undefined
   const deltaObj = payload.delta as Record<string, unknown> | undefined
@@ -86,7 +87,22 @@ export function parseBufferUpdatePayload(payload: unknown): BufferUpdatePayload 
 
   if (!content && !delta) return null
 
-  return { content, delta, cursor }
+  const replay = replayObj
+    ? {
+        keyRaw: typeof replayObj.keyRaw === 'string' ? replayObj.keyRaw : undefined,
+        keyDisplay: typeof replayObj.keyDisplay === 'string' ? replayObj.keyDisplay : undefined,
+        modeBefore: typeof replayObj.modeBefore === 'string' ? replayObj.modeBefore : undefined,
+        modeAfter: typeof replayObj.modeAfter === 'string' ? replayObj.modeAfter : undefined,
+        cursorOffset: typeof replayObj.cursorOffset === 'number' ? replayObj.cursorOffset : undefined,
+        cursorLine: typeof replayObj.cursorLine === 'number' ? replayObj.cursorLine : undefined,
+        cursorCol: typeof replayObj.cursorCol === 'number' ? replayObj.cursorCol : undefined,
+        bufferLineCount: typeof replayObj.bufferLineCount === 'number' ? replayObj.bufferLineCount : undefined,
+        viewportTopLine: typeof replayObj.viewportTopLine === 'number' ? replayObj.viewportTopLine : undefined,
+        viewportHeight: typeof replayObj.viewportHeight === 'number' ? replayObj.viewportHeight : undefined,
+      }
+    : undefined
+
+  return { content, delta, cursor, replay }
 }
 
 export function parseGameOverPayload(payload: unknown): GameOverPayload | null {

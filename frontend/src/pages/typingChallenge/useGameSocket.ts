@@ -1,5 +1,18 @@
 import { useRef, useCallback } from 'react'
-import type { Envelope, MatchState, GameStartPayload, BotGameStartPayload, BufferUpdatePayload, GameOverPayload, SpectatorCountPayload, BufferDelta, KeystrokesData, PlayerFinishedPayload, QueueJoinPayload } from './types'
+import type {
+  Envelope,
+  MatchState,
+  GameStartPayload,
+  BotGameStartPayload,
+  BufferUpdatePayload,
+  GameOverPayload,
+  SpectatorCountPayload,
+  BufferDelta,
+  KeystrokesData,
+  PlayerFinishedPayload,
+  QueueJoinPayload,
+  KeystrokeReplayMeta,
+} from './types'
 import { WS_URL, getOrCreatePlayerId } from './player'
 import {
   parseHelloAckPayload,
@@ -17,7 +30,12 @@ type GameSocketCallbacks = {
   onHelloAck: (playerId: string) => void
   onGameStart: (payload: GameStartPayload) => void
   onBotGameStart: (payload: BotGameStartPayload) => void
-  onBufferUpdate: (content: string | undefined, delta: BufferDelta | undefined) => void
+  onBufferUpdate: (
+    content: string | undefined,
+    delta: BufferDelta | undefined,
+    cursor: number | undefined,
+    replay: KeystrokeReplayMeta | undefined
+  ) => void
   onGameOver: (payload: GameOverPayload, playerId: string) => void
   onSpectatorCount: (payload: SpectatorCountPayload) => void
   onError: (code: string, message: string) => void
@@ -82,13 +100,13 @@ export function useGameSocket() {
   }, [])
 
   const sendBufferUpdate = useCallback(
-    (content?: string, delta?: BufferDelta) => {
+    (content?: string, delta?: BufferDelta, cursor?: number, replay?: KeystrokeReplayMeta) => {
       const seq = seqRef.current++
       sendEnvelope({
         type: 'BUFFER_UPDATE',
         matchId: matchStateRef.current.matchId,
         seq,
-        payload: { content, delta } as BufferUpdatePayload,
+        payload: { content, delta, cursor, replay } as BufferUpdatePayload,
       })
     },
     [sendEnvelope]
@@ -203,7 +221,7 @@ export function useGameSocket() {
             callbacks.onError('payload_error', 'Invalid BUFFER_UPDATE payload')
             return
           }
-          callbacks.onBufferUpdate(payload.content, payload.delta)
+          callbacks.onBufferUpdate(payload.content, payload.delta, payload.cursor, payload.replay)
           break
         }
         case 'GAME_OVER': {

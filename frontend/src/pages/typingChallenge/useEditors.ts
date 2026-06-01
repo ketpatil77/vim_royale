@@ -2,9 +2,22 @@ import { useRef, useCallback } from 'react'
 import { EditorView } from '@codemirror/view'
 import { ChangeSet } from '@codemirror/state'
 import { getCM } from '@replit/codemirror-vim'
-import { createEditorState } from './editorState'
+import { createEditorState, type EditorDocChangeContext } from './editorState'
 import { formatVimMode } from './vimMode'
 import type { BufferDelta } from './types'
+import { keyboardEventToReplayKeyMeta } from '../../utils/replayKeys'
+
+export type ReplayInputCapture = {
+  timestamp: number
+  keyRaw: string
+  keyDisplay: string
+}
+
+type SetEditorsOptions = {
+  pollutedCode: string
+  onContentChange?: (content: string, changes: ChangeSet, context: EditorDocChangeContext) => void
+  onInputCapture?: (input: ReplayInputCapture) => void
+}
 
 export function useEditors() {
   const leftRef = useRef<HTMLDivElement>(null)
@@ -22,7 +35,7 @@ export function useEditors() {
 
   const setEditors = useCallback(
     (
-      options: { pollutedCode: string; onContentChange?: (content: string, changes: ChangeSet) => void },
+      options: SetEditorsOptions,
       onVimModeChange: (mode: string) => void
     ) => {
       if (!leftRef.current || !rightRef.current) return cleanup()
@@ -54,15 +67,26 @@ export function useEditors() {
       rightViewRef.current = rightView
 
       const leftCM = getCM(leftView)
+      const handleKeydown = (event: KeyboardEvent) => {
+        if (!options.onInputCapture) return
+        const meta = keyboardEventToReplayKeyMeta(event)
+        options.onInputCapture({
+          timestamp: Date.now(),
+          keyRaw: meta.keyRaw,
+          keyDisplay: meta.keyDisplay,
+        })
+      }
       const handleVimModeChange = (event: { mode?: string; subMode?: string }) => {
         const mode = formatVimMode(event.mode, event.subMode)
         onVimModeChange(mode)
       }
 
+      leftView.dom.addEventListener('keydown', handleKeydown, true)
       leftCM?.on('vim-mode-change', handleVimModeChange)
       onVimModeChange('NORMAL')
 
       return () => {
+        leftView.dom.removeEventListener('keydown', handleKeydown, true)
         leftCM?.off('vim-mode-change', handleVimModeChange)
         cleanup()
       }

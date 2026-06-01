@@ -9,7 +9,7 @@ import { javascript } from '@codemirror/lang-javascript'
 import { defaultHighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { EditorState, type Extension, ChangeSet } from '@codemirror/state'
 import { vscodeDark } from '@uiw/codemirror-theme-vscode'
-import { EditorView, drawSelection, keymap, lineNumbers } from '@codemirror/view'
+import { EditorView, drawSelection, keymap, lineNumbers, ViewUpdate } from '@codemirror/view'
 import { vim } from '@replit/codemirror-vim'
 
 const editorTheme = EditorView.theme({
@@ -54,13 +54,44 @@ const editorTheme = EditorView.theme({
 type CreateEditorStateArgs = {
   content: string
   readOnly: boolean
-  onDocChanged?: (content: string, changes: ChangeSet) => void
+  onDocChanged?: (content: string, changes: ChangeSet, context: EditorDocChangeContext) => void
+  extraExtensions?: Extension[]
+}
+
+export type EditorDocChangeContext = {
+  timestamp: number
+  cursorOffset: number
+  cursorLine: number
+  cursorCol: number
+  bufferLineCount: number
+  viewportTopLine: number
+  viewportHeight: number
+}
+
+function buildEditorDocChangeContext(update: ViewUpdate): EditorDocChangeContext {
+  const head = update.state.selection.main.head
+  const cursorLineData = update.state.doc.lineAt(head)
+  const viewportFrom = update.view.viewport.from
+  const viewportTo = update.view.viewport.to
+  const viewportTopLine = update.state.doc.lineAt(viewportFrom).number
+  const viewportBottomLine = update.state.doc.lineAt(viewportTo).number
+
+  return {
+    timestamp: Date.now(),
+    cursorOffset: head,
+    cursorLine: cursorLineData.number,
+    cursorCol: head - cursorLineData.from + 1,
+    bufferLineCount: update.state.doc.lines,
+    viewportTopLine,
+    viewportHeight: Math.max(1, viewportBottomLine - viewportTopLine + 1),
+  }
 }
 
 export function createEditorState({
   content,
   readOnly,
   onDocChanged,
+  extraExtensions,
 }: CreateEditorStateArgs): EditorState {
   const editableKeymap = [
     ...closeBracketsKeymap,
@@ -86,9 +117,15 @@ export function createEditorState({
   if (onDocChanged) {
     extensions.push(
       EditorView.updateListener.of((update) => {
-        if (update.docChanged) onDocChanged(update.state.doc.toString(), update.changes)
+        if (update.docChanged) {
+          onDocChanged(update.state.doc.toString(), update.changes, buildEditorDocChangeContext(update))
+        }
       }),
     )
+  }
+
+  if (extraExtensions?.length) {
+    extensions.push(...extraExtensions)
   }
 
   return EditorState.create({
