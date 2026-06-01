@@ -77,6 +77,7 @@ type BufferUpdatePayload struct {
 	Content *string      `json:"content,omitempty"`
 	Delta   *BufferDelta `json:"delta,omitempty"`
 	Cursor  int          `json:"cursor,omitempty"`
+	Replay  *ReplayMeta  `json:"replay,omitempty"`
 }
 
 type BufferDelta struct {
@@ -92,8 +93,31 @@ type BufferDeltaOp struct {
 }
 
 type KeystrokeEntry struct {
-	Ops       json.RawMessage `json:"ops"`
-	Timestamp int64           `json:"timestamp"`
+	Ops             json.RawMessage `json:"ops"`
+	Timestamp       int64           `json:"timestamp"`
+	KeyRaw          string          `json:"keyRaw,omitempty"`
+	KeyDisplay      string          `json:"keyDisplay,omitempty"`
+	ModeBefore      string          `json:"modeBefore,omitempty"`
+	ModeAfter       string          `json:"modeAfter,omitempty"`
+	CursorOffset    int             `json:"cursorOffset,omitempty"`
+	CursorLine      int             `json:"cursorLine,omitempty"`
+	CursorCol       int             `json:"cursorCol,omitempty"`
+	BufferLineCount int             `json:"bufferLineCount,omitempty"`
+	ViewportTopLine int             `json:"viewportTopLine,omitempty"`
+	ViewportHeight  int             `json:"viewportHeight,omitempty"`
+}
+
+type ReplayMeta struct {
+	KeyRaw          string `json:"keyRaw,omitempty"`
+	KeyDisplay      string `json:"keyDisplay,omitempty"`
+	ModeBefore      string `json:"modeBefore,omitempty"`
+	ModeAfter       string `json:"modeAfter,omitempty"`
+	CursorOffset    int    `json:"cursorOffset,omitempty"`
+	CursorLine      int    `json:"cursorLine,omitempty"`
+	CursorCol       int    `json:"cursorCol,omitempty"`
+	BufferLineCount int    `json:"bufferLineCount,omitempty"`
+	ViewportTopLine int    `json:"viewportTopLine,omitempty"`
+	ViewportHeight  int    `json:"viewportHeight,omitempty"`
 }
 
 type KeystrokesData struct {

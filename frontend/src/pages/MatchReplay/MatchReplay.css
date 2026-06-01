@@ -194,6 +194,64 @@
   overflow: auto;
 }
 
+.replay-editor-mount .replay-cursor-widget {
+  display: inline-block;
+  width: 0;
+  height: 1em;
+  margin-left: -1px;
+  border-left: 2px solid var(--amber);
+  box-shadow: 0 0 6px rgba(255, 176, 0, 0.65);
+  vertical-align: -0.12em;
+  pointer-events: none;
+}
+
+.replay-editor-mount .replay-cursor-widget--normal {
+  width: 0.62ch;
+  margin-left: -0.62ch;
+  border-left: none;
+  background: rgba(57, 255, 20, 0.24);
+  box-shadow:
+    inset 0 0 0 1px rgba(57, 255, 20, 0.5),
+    0 0 6px rgba(57, 255, 20, 0.38);
+}
+
+.replay-editor-mount .replay-cursor-widget--insert {
+  width: 0;
+  margin-left: -1px;
+  border-left: 2px solid var(--amber);
+  background: transparent;
+  box-shadow: 0 0 6px rgba(255, 176, 0, 0.65);
+}
+
+.replay-editor-mount .replay-cursor-widget--visual,
+.replay-editor-mount .replay-cursor-widget--visual-line,
+.replay-editor-mount .replay-cursor-widget--visual-block {
+  width: 0.7ch;
+  margin-left: -0.7ch;
+  border-left: none;
+  border-bottom: 2px solid #66d9ff;
+  background: rgba(102, 217, 255, 0.15);
+  box-shadow:
+    inset 0 0 0 1px rgba(102, 217, 255, 0.4),
+    0 0 6px rgba(102, 217, 255, 0.42);
+}
+
+.replay-editor-mount .replay-cursor-widget--command {
+  width: 0;
+  margin-left: -1px;
+  border-left: 2px solid #ff8f66;
+  background: transparent;
+  box-shadow: 0 0 6px rgba(255, 143, 102, 0.65);
+}
+
+.replay-editor-mount .replay-cursor-widget--unknown {
+  width: 0;
+  margin-left: -1px;
+  border-left: 2px solid #9ca3af;
+  background: transparent;
+  box-shadow: 0 0 4px rgba(156, 163, 175, 0.5);
+}
+
 .replay-editor-stats {
   display: flex;
   justify-content: space-between;
@@ -208,6 +266,97 @@
 .replay-editor-stats b {
   color: var(--text-bright);
   font-weight: 500;
+}
+
+.replay-analysis-overlay {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(12, 16, 20, 0.94), rgba(10, 12, 15, 0.98));
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--mono);
+}
+
+.replay-analysis-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.replay-mode-pill {
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+}
+
+.replay-mode-pill--insert {
+  color: #ffe066;
+  border-color: rgba(255, 224, 102, 0.5);
+}
+
+.replay-mode-pill--normal {
+  color: #7dff8b;
+  border-color: rgba(125, 255, 139, 0.55);
+}
+
+.replay-mode-pill--visual,
+.replay-mode-pill--visual-line,
+.replay-mode-pill--visual-block {
+  color: #66d9ff;
+  border-color: rgba(102, 217, 255, 0.55);
+}
+
+.replay-mode-pill--command {
+  color: #ff8f66;
+  border-color: rgba(255, 143, 102, 0.5);
+}
+
+.replay-key-current {
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.replay-key-current b {
+  color: var(--text-bright);
+}
+
+.replay-key-raw {
+  margin-left: auto;
+  color: #8aa1b4;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.replay-key-tape {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.replay-key-chip {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #b8c2cc;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.replay-key-chip--active {
+  border-color: rgba(57, 255, 20, 0.45);
+  color: var(--green);
+  background: rgba(57, 255, 20, 0.08);
+}
+
+.replay-key-tape-empty {
+  color: #70818f;
+  font-size: 10px;
 }
 
 .match-replay-controls-wrap {

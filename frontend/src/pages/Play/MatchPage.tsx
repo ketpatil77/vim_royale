@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { ChangeSet } from '@codemirror/state'
 import { useCRT } from '../../contexts/CRTContext'
 import { useAuth } from '../../contexts/AuthContext'
 import { useGuest } from '../../contexts/GuestContext'
@@ -9,12 +10,22 @@ import MatchResultModal, { parseResult } from '../../components/MatchResultModal
 import { AtariBreakout } from '../../components/MiniGames/AtariBreakout'
 import { VimSnake } from '../../components/MiniGames/VimSnake'
 import { createSocketCallbacks } from '../typingChallenge/createSocketCallbacks'
-import type { MatchState, ViewState, GameOverPayload, KeystrokeEntry } from '../typingChallenge/types'
+import type {
+  MatchState,
+  ViewState,
+  GameOverPayload,
+  KeystrokeEntry,
+  BufferDelta,
+  KeystrokeReplayMeta,
+} from '../typingChallenge/types'
 import { useEditors } from '../typingChallenge/useEditors'
+import type { ReplayInputCapture } from '../typingChallenge/useEditors'
 import { useGameSocket } from '../typingChallenge/useGameSocket'
+import type { EditorDocChangeContext } from '../typingChallenge/editorState'
 import { sounds } from '../../utils/sound'
 import { readTournamentSessionToken } from '../../utils/tournamentApi'
 import { WS_PUBLIC_URL, WS_URL } from '../../config'
+import { replayKeyDisplayLabel } from '../../utils/replayKeys'
 import './MatchPage.css'
 
 const initialMatchState: MatchState = {
@@ -96,11 +107,18 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
 
   const targetCodeRef = useRef('')
   const pollutedCodeRef = useRef('')
+  const vimModeRef = useRef('NORMAL')
+  const pendingInputsRef = useRef<Array<ReplayInputCapture & { modeBefore: string }>>([])
 
   const keystrokesRef = useRef<{ sent: KeystrokeEntry[]; received: KeystrokeEntry[] }>({
     sent: [],
     received: [],
   })
+
+  const setVimModeAndRef = useCallback((mode: string) => {
+    vimModeRef.current = mode
+    setVimMode(mode)
+  }, [])
 
   const viewStateRef = useRef(viewState)
   useLayoutEffect(() => {
@@ -142,13 +160,59 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   const finishSentRef = useRef(false)
   const matchmakingRunRef = useRef(0)
 
-  const recordReceivedKeystroke = useCallback((delta: { ops: any[] }) => {
+  const consumePendingInput = useCallback((eventTimestamp: number) => {
+    const queue = pendingInputsRef.current
+    if (!queue.length) return null
+
+    while (queue.length > 0 && eventTimestamp - queue[0].timestamp > 2000) {
+      queue.shift()
+    }
+
+    if (!queue.length) return null
+
+    const consumed = queue[queue.length - 1]
+    queue.length = 0
+    return consumed
+  }, [])
+
+  const mergeReplayMeta = useCallback(
+    (base: KeystrokeReplayMeta, incoming?: KeystrokeReplayMeta): KeystrokeReplayMeta => ({
+      keyRaw: incoming?.keyRaw ?? base.keyRaw,
+      keyDisplay: incoming?.keyDisplay ?? base.keyDisplay,
+      modeBefore: incoming?.modeBefore ?? base.modeBefore,
+      modeAfter: incoming?.modeAfter ?? base.modeAfter,
+      cursorOffset: incoming?.cursorOffset ?? base.cursorOffset,
+      cursorLine: incoming?.cursorLine ?? base.cursorLine,
+      cursorCol: incoming?.cursorCol ?? base.cursorCol,
+      bufferLineCount: incoming?.bufferLineCount ?? base.bufferLineCount,
+      viewportTopLine: incoming?.viewportTopLine ?? base.viewportTopLine,
+      viewportHeight: incoming?.viewportHeight ?? base.viewportHeight,
+    }),
+    []
+  )
+
+  const recordReceivedKeystroke = useCallback((delta: BufferDelta, cursor?: number, replay?: KeystrokeReplayMeta) => {
     if (viewStateRef.current !== 'playing') return
+
+    const fallbackMeta: KeystrokeReplayMeta = {
+      keyRaw: replay?.keyRaw,
+      keyDisplay: replay?.keyDisplay ?? replayKeyDisplayLabel(replay?.keyRaw, 'sync'),
+      modeBefore: replay?.modeBefore,
+      modeAfter: replay?.modeAfter,
+      cursorOffset: replay?.cursorOffset ?? cursor,
+      cursorLine: replay?.cursorLine,
+      cursorCol: replay?.cursorCol,
+      bufferLineCount: replay?.bufferLineCount,
+      viewportTopLine: replay?.viewportTopLine,
+      viewportHeight: replay?.viewportHeight,
+    }
+
     keystrokesRef.current.received.push({
       ops: delta.ops,
       timestamp: Date.now(),
+      ...mergeReplayMeta(fallbackMeta, replay),
     })
-  }, [])
+  }, [mergeReplayMeta])
 
   const playSound = useCallback((type: 'win' | 'lose') => {
     sounds[type].play()
@@ -228,7 +292,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
         setViewState,
         setStatusText,
         setResultText,
-        setVimMode,
+        setVimMode: setVimModeAndRef,
         setSpectatorCount,
         setGameOverPayload,
         playSound,
@@ -285,6 +349,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
     replaceOpponentContent,
     applyDelta,
     recordReceivedKeystroke,
+    setVimModeAndRef,
     getViewState,
     connect,
     user,
@@ -308,6 +373,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
   useEffect(() => {
     if (viewState === 'playing') {
       keystrokesRef.current = { sent: [], received: [] }
+      pendingInputsRef.current = []
     }
   }, [viewState])
 
@@ -360,15 +426,30 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
     }
   }, [viewState, leftRef])
 
-  const handleContentChange = useCallback((_content: string, changes: any) => {
+  const handleContentChange = useCallback((_content: string, changes: ChangeSet, context: EditorDocChangeContext) => {
     if (viewStateRef.current !== 'playing') return
 
     const delta = changesToDelta(changes)
-    sendBufferUpdate(undefined, delta)
+    const input = consumePendingInput(context.timestamp)
+    const modeAfter = vimModeRef.current
+    const replay: KeystrokeReplayMeta = {
+      keyRaw: input?.keyRaw,
+      keyDisplay: input?.keyDisplay ?? replayKeyDisplayLabel(input?.keyRaw, 'edit'),
+      modeBefore: input?.modeBefore ?? modeAfter,
+      modeAfter,
+      cursorOffset: context.cursorOffset,
+      cursorLine: context.cursorLine,
+      cursorCol: context.cursorCol,
+      bufferLineCount: context.bufferLineCount,
+      viewportTopLine: context.viewportTopLine,
+      viewportHeight: context.viewportHeight,
+    }
+    sendBufferUpdate(undefined, delta, context.cursorOffset, replay)
 
     keystrokesRef.current.sent.push({
       ops: delta.ops,
       timestamp: Date.now(),
+      ...replay,
     })
 
     const content = getPlayerContent()
@@ -381,7 +462,7 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
         playerB: keystrokesRef.current.received,
       })
     }
-  }, [sendBufferUpdate, getPlayerContent, changesToDelta, sendPlayerFinishedWithKeystrokes])
+  }, [sendBufferUpdate, consumePendingInput, getPlayerContent, changesToDelta, sendPlayerFinishedWithKeystrokes])
 
   useEffect(() => {
     if (viewState === 'playing') {
@@ -390,15 +471,24 @@ export default function MatchPage({ mode = 'multiplayer' }: MatchPageProps) {
         {
           pollutedCode: pollutedCodeRef.current,
           onContentChange: handleContentChange,
+          onInputCapture: (input) => {
+            pendingInputsRef.current.push({
+              ...input,
+              modeBefore: vimModeRef.current,
+            })
+            if (pendingInputsRef.current.length > 20) {
+              pendingInputsRef.current.splice(0, pendingInputsRef.current.length - 20)
+            }
+          },
         },
-        setVimMode
+        setVimModeAndRef
       )
     }
 
     if (viewState !== 'finished') {
       cleanupEditors()
     }
-  }, [viewState, setEditors, handleContentChange, cleanupEditors])
+  }, [viewState, setEditors, handleContentChange, cleanupEditors, setVimModeAndRef])
 
   const cancelMatchmaking = () => {
     matchmakingRunRef.current += 1

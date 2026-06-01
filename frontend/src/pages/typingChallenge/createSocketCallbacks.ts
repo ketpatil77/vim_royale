@@ -5,6 +5,7 @@ import type {
   SpectatorCountPayload,
   MatchState,
   BufferDelta,
+  KeystrokeReplayMeta,
 } from './types'
 
 type Setters = {
@@ -30,7 +31,7 @@ export function createSocketCallbacks(
   matchState: { playerId: string },
   replaceOpponentContent: (content: string) => void,
   applyDelta: (delta: BufferDelta) => void,
-  recordReceivedKeystroke: (delta: BufferDelta) => void,
+  recordReceivedKeystroke: (delta: BufferDelta, cursor?: number, replay?: KeystrokeReplayMeta) => void,
   onMatchStart: () => void,
   getViewState: () => string
 ) {
@@ -101,10 +102,15 @@ export function createSocketCallbacks(
       setViewState('countdown')
     },
 
-    onBufferUpdate: (content: string | undefined, delta: BufferDelta | undefined) => {
+    onBufferUpdate: (
+      content: string | undefined,
+      delta: BufferDelta | undefined,
+      cursor: number | undefined,
+      replay: KeystrokeReplayMeta | undefined
+    ) => {
       if (delta) {
         applyDelta(delta)
-        recordReceivedKeystroke(delta)
+        recordReceivedKeystroke(delta, cursor, replay)
       } else if (content) {
         replaceOpponentContent(content)
       }

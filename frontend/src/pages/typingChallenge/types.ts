@@ -66,6 +66,7 @@ export type BufferUpdatePayload = {
   content?: string
   delta?: BufferDelta
   cursor?: number
+  replay?: KeystrokeReplayMeta
   timestamp?: number
 }
 
@@ -111,7 +112,19 @@ export type MatchState = {
 export type KeystrokeEntry = {
   ops: BufferDeltaOp[]
   timestamp: number
+  keyRaw?: string
+  keyDisplay?: string
+  modeBefore?: string
+  modeAfter?: string
+  cursorOffset?: number
+  cursorLine?: number
+  cursorCol?: number
+  bufferLineCount?: number
+  viewportTopLine?: number
+  viewportHeight?: number
 }
+
+export type KeystrokeReplayMeta = Omit<KeystrokeEntry, 'ops' | 'timestamp'>
 
 export type KeystrokesData = {
   playerA: KeystrokeEntry[]
