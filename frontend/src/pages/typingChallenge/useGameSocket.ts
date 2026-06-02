@@ -1,30 +1,30 @@
-import { useRef, useCallback } from 'react'
-import type {
-  Envelope,
-  MatchState,
-  GameStartPayload,
-  BotGameStartPayload,
-  BufferUpdatePayload,
-  GameOverPayload,
-  SpectatorCountPayload,
-  BufferDelta,
-  KeystrokesData,
-  PlayerFinishedPayload,
-  QueueJoinPayload,
-  KeystrokeReplayMeta,
-} from './types'
-import { WS_URL, getOrCreatePlayerId } from './player'
-import {
-  parseHelloAckPayload,
-  parseGameStartPayload,
-  parseBotGameStartPayload,
-  parseBufferUpdatePayload,
-  parseGameOverPayload,
-  parseSpectatorCountPayload,
-  parseErrorPayload,
-} from './messageParser'
+import { useCallback, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useGuest } from '../../contexts/GuestContext'
+import {
+  parseBotGameStartPayload,
+  parseBufferUpdatePayload,
+  parseErrorPayload,
+  parseGameOverPayload,
+  parseGameStartPayload,
+  parseHelloAckPayload,
+  parseSpectatorCountPayload,
+} from './messageParser'
+import { WS_URL, getOrCreatePlayerId } from './player'
+import type {
+  BotGameStartPayload,
+  BufferDelta,
+  BufferUpdatePayload,
+  Envelope,
+  GameOverPayload,
+  GameStartPayload,
+  KeystrokeReplayMeta,
+  KeystrokesData,
+  MatchState,
+  PlayerFinishedPayload,
+  QueueJoinPayload,
+  SpectatorCountPayload,
+} from './types'
 
 type GameSocketCallbacks = {
   onHelloAck: (playerId: string) => void
@@ -65,13 +65,13 @@ export function useGameSocket() {
   const viewStateRef = useRef<'idle' | 'matchmaking' | 'countdown' | 'playing' | 'finished' | 'error'>('idle')
   const matchStateRef = useRef<MatchState>({
     playerId: '',
-      opponentId: '',
-      opponentName: '',
-      opponentAvatar: '',
-      opponentRating: 0,
-      opponentIsBot: false,
-      matchId: '',
-      roundDurationSec: 180,
+    opponentId: '',
+    opponentName: '',
+    opponentAvatar: '',
+    opponentRating: 0,
+    opponentIsBot: false,
+    matchId: '',
+    roundDurationSec: 180,
   })
   const { user } = useAuth()
   const { guest } = useGuest()

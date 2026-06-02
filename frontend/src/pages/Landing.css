@@ -61,7 +61,7 @@
 .vr-ctas {
   display: flex;
   gap: 16px;
-  margin-bottom: 56px;
+  margin-bottom: 18px;
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -105,6 +105,42 @@
   color: var(--green);
   box-shadow: none;
   transform: none;
+}
+
+.vr-launchpad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 48px;
+}
+
+.vr-launchpad-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--amber, #f5a623);
+  opacity: 0.78;
+}
+
+.vr-peerlist-embed {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+  transition: transform 0.12s;
+}
+
+.vr-peerlist-embed:hover {
+  transform: translateY(-1px);
+}
+
+.vr-peerlist-embed img {
+  display: block;
+  width: auto;
+  height: 72px;
+  max-width: min(100%, 360px);
 }
 
 /* ---------- Features Section ---------- */
@@ -194,10 +230,10 @@
 
 .vr-p {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 13px;
   color: var(--green-dim);
   margin: 0;
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 /* ---------- Section Divider ---------- */
@@ -300,10 +336,10 @@
 
 .htp-card-desc {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 12px;
   color: var(--green-dim);
   margin: 0 12px;
-  line-height: 1.7;
+  line-height: 1.6;
   opacity: 0.8;
 }
 
@@ -409,10 +445,10 @@
 
 .feature-box-desc {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 13px;
   color: var(--green-dim);
   margin: 0 14px 16px;
-  line-height: 1.7;
+  line-height: 1.6;
 }
 
 /* ---------- Terminal preview block ---------- */
@@ -481,13 +517,14 @@
 
 /* ---------- Footer ---------- */
 .vr-footer {
-  padding: 36px 32px 32px;
-  border-top: 1px solid var(--border);
+  padding: 40px 32px 36px;
+  border-top: 1px solid rgba(57, 255, 20, 0.22);
+  background: rgba(0, 0, 0, 0.28);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: 18px;
   position: relative;
   z-index: 1;
 }
@@ -495,8 +532,9 @@
 .vr-feedback-form {
   width: 100%;
   max-width: 960px;
-  border: 1px solid rgba(57, 255, 20, 0.18);
-  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 176, 0, 0.32);
+  background: rgba(255, 176, 0, 0.055);
+  box-shadow: 0 0 18px rgba(255, 176, 0, 0.055);
   padding: 16px;
   box-sizing: border-box;
 }
@@ -508,19 +546,19 @@
   gap: 16px;
   margin-bottom: 14px;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(57, 255, 20, 0.12);
+  border-bottom: 1px solid rgba(255, 176, 0, 0.22);
   font-family: var(--mono);
 }
 
 .vr-feedback-title {
-  color: var(--green);
-  font-size: 12px;
+  color: var(--amber, #ffb000);
+  font-size: 13px;
   letter-spacing: 1px;
 }
 
 .vr-feedback-status {
-  color: var(--amber, #f5a623);
-  font-size: 10px;
+  color: var(--green);
+  font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
 }
@@ -535,8 +573,8 @@
   display: block;
   margin-bottom: 12px;
   font-family: var(--mono);
-  font-size: 11px;
-  color: var(--green-dim);
+  font-size: 13px;
+  color: rgba(255, 176, 0, 0.82);
 }
 
 .vr-feedback-field span {
@@ -550,9 +588,9 @@
   box-sizing: border-box;
   resize: vertical;
   min-height: 64px;
-  border: 1px solid rgba(57, 255, 20, 0.18);
-  background: rgba(0, 0, 0, 0.28);
-  color: var(--green);
+  border: 1px solid rgba(255, 176, 0, 0.24);
+  background: rgba(0, 0, 0, 0.36);
+  color: #fff1b8;
   font: inherit;
   line-height: 1.6;
   padding: 10px 12px;
@@ -560,27 +598,27 @@
 }
 
 .vr-feedback-field textarea::placeholder {
-  color: rgba(57, 255, 20, 0.35);
+  color: rgba(255, 176, 0, 0.36);
 }
 
 .vr-feedback-field textarea:focus {
-  border-color: rgba(57, 255, 20, 0.52);
-  box-shadow: 0 0 12px rgba(57, 255, 20, 0.08);
+  border-color: rgba(255, 176, 0, 0.62);
+  box-shadow: 0 0 12px rgba(255, 176, 0, 0.1);
 }
 
 .vr-feedback-submit {
-  border: 1px solid rgba(57, 255, 20, 0.42);
-  background: rgba(57, 255, 20, 0.08);
-  color: var(--green);
+  border: 1px solid rgba(255, 176, 0, 0.55);
+  background: rgba(255, 176, 0, 0.1);
+  color: var(--amber, #ffb000);
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 1.5px;
   padding: 9px 14px;
   cursor: pointer;
 }
 
 .vr-feedback-submit:hover:not(:disabled) {
-  background: var(--green);
+  background: var(--amber, #ffb000);
   color: var(--bg);
 }
 
@@ -592,7 +630,7 @@
 .vr-feedback-message {
   margin: 0 0 12px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
 }
 
@@ -605,7 +643,72 @@
 }
 
 .vr-feedback-message--success {
+  color: var(--amber, #ffb000);
+}
+
+.vr-footer-support {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px;
+  border: 1px solid rgba(234, 74, 170, 0.36);
+  background: rgba(234, 74, 170, 0.08);
+  box-shadow: 0 0 20px rgba(234, 74, 170, 0.08);
+}
+
+.vr-footer-support-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--mono);
+}
+
+.vr-footer-support-kicker {
+  display: block;
+  margin-bottom: 6px;
+  color: #ff7bc1;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.vr-footer-support h2 {
+  margin: 0 0 6px;
   color: var(--green);
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.vr-footer-support-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.vr-bmc-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  transition: transform 0.12s, filter 0.12s;
+}
+
+.vr-bmc-link:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.vr-bmc-link img {
+  display: block;
+  width: auto;
+  height: 42px;
 }
 
 .vr-footer-links {
@@ -614,10 +717,12 @@
   justify-content: center;
   gap: 10px;
   flex-wrap: wrap;
+  width: 100%;
   font-family: var(--display);
-  font-size: 12px;
-  color: var(--green-dim);
+  font-size: 13px;
+  color: rgba(57, 255, 20, 0.74);
   letter-spacing: 1px;
+  padding-top: 6px;
 }
 
 .vr-footer-links a,
@@ -649,20 +754,34 @@
 .vr-sponsor-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  color: #ea4aaa;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 10px 16px;
+  border: 1px solid rgba(234, 74, 170, 0.62);
+  background: rgba(234, 74, 170, 0.14);
+  color: #ff8cca;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
   text-decoration: none;
-  transition: opacity 0.15s;
+  white-space: nowrap;
+  box-shadow: 0 0 16px rgba(234, 74, 170, 0.14);
+  transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.12s;
 }
 
 .vr-sponsor-link:hover {
-  opacity: 0.8;
-  color: #ea4aaa;
+  background: #ea4aaa;
+  border-color: #ff8cca;
+  color: var(--bg);
+  transform: translateY(-1px);
 }
 
 .vr-sponsor-icon {
   flex: 0 0 auto;
-  height: 14px;
+  height: 15px;
 }
 
 /* ---------- Responsive ---------- */
@@ -680,8 +799,55 @@
   .vr-feedback-fields { grid-template-columns: 1fr; }
 }
 
+@media (max-width: 560px) {
+  .vr-footer-support {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .vr-footer-support-copy {
+    flex: none;
+  }
+  .vr-footer-support-actions {
+    flex: none;
+    flex-wrap: nowrap;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .vr-bmc-link {
+    width: auto;
+    min-height: 36px;
+  }
+  .vr-bmc-link img {
+    width: auto;
+    height: 36px;
+    max-width: 100%;
+  }
+  .vr-sponsor-link {
+    min-height: 36px;
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+}
+
 @media (max-width: 480px) {
   .vr-ascii    { font-size: 6.5px; }
   .vr-features { grid-template-columns: 1fr; }
   .htp-grid    { grid-template-columns: 1fr; }
+  .vr-peerlist-embed {
+    width: 100%;
+  }
+  .vr-peerlist-embed img {
+    height: auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .vr-footer-support-actions {
+    flex-wrap: wrap;
+  }
+  .vr-sponsor-link {
+    width: 100%;
+  }
 }
