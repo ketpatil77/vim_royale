@@ -2,6 +2,7 @@ package database
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 	"vim_royale/backend/models"
@@ -9,52 +10,65 @@ import (
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func CreateMatchAndSendRatingDelta(db *gorm.DB, winnerID, loserID, targetCode, pollutedCode string) (matchID string, winnerDelta, loserDelta, winnerNewRating, loserNewRating float64, err error) {
-	winner, err := findUserByPlayerID(db, winnerID)
+	err = db.Transaction(func(tx *gorm.DB) error {
+		usersByPlayerID, lookupErr := lockUsersByPlayerID(tx, winnerID, loserID)
+		if lookupErr != nil {
+			return lookupErr
+		}
+
+		winner := usersByPlayerID[winnerID]
+		loser := usersByPlayerID[loserID]
+		if winner == nil || loser == nil {
+			return gorm.ErrRecordNotFound
+		}
+
+		oldWinnerRating := winner.Rating
+		oldLoserRating := loser.Rating
+		newWinnerRating, newLoserRating := utils.CalculateElo(winner.Rating, loser.Rating, true)
+
+		now := time.Now().UTC()
+		match := &models.Match{
+			MatchID:      uuid.New(),
+			PlayerAID:    &winner.ID,
+			PlayerBID:    &loser.ID,
+			TargetCode:   targetCode,
+			PollutedCode: pollutedCode,
+			WinnerID:     winner.ID,
+			Outcome:      "decisive",
+			CreatedAt:    now,
+			UpdatedAt:    now,
+			FinishedAt:   now,
+		}
+		if err := tx.Create(match).Error; err != nil {
+			return err
+		}
+
+		winner.Rating = newWinnerRating
+		loser.Rating = newLoserRating
+
+		if err := UpdateUserStats(tx, winner, true); err != nil {
+			return err
+		}
+		if err := UpdateUserStats(tx, loser, false); err != nil {
+			return err
+		}
+
+		matchID = match.MatchID.String()
+		winnerDelta = winner.Rating - oldWinnerRating
+		loserDelta = loser.Rating - oldLoserRating
+		winnerNewRating = winner.Rating
+		loserNewRating = loser.Rating
+		return nil
+	})
 	if err != nil {
 		return "", 0, 0, 0, 0, err
 	}
-	loser, err := findUserByPlayerID(db, loserID)
-	if err != nil {
-		return "", 0, 0, 0, 0, err
-	}
 
-	oldWinnerRating := winner.Rating
-	oldLoserRating := loser.Rating
-
-	match := &models.Match{
-		MatchID:      uuid.New(),
-		PlayerAID:    &winner.ID,
-		PlayerBID:    &loser.ID,
-		PlayerA:      winner,
-		PlayerB:      loser,
-		TargetCode:   targetCode,
-		PollutedCode: pollutedCode,
-		WinnerID:     winner.ID,
-		Outcome:      "decisive",
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
-		FinishedAt:   time.Now(),
-	}
-	if err := db.Create(match).Error; err != nil {
-		return "", 0, 0, 0, 0, err
-	}
-
-	newWinnerRating, newLoserRating := utils.CalculateElo(winner.Rating, loser.Rating, true)
-
-	winner.Rating = newWinnerRating
-	loser.Rating = newLoserRating
-
-	if err := UpdateUserStats(db, winner, true); err != nil {
-		return "", 0, 0, 0, 0, err
-	}
-	if err := UpdateUserStats(db, loser, false); err != nil {
-		return "", 0, 0, 0, 0, err
-	}
-
-	return match.MatchID.String(), winner.Rating - oldWinnerRating, loser.Rating - oldLoserRating, winner.Rating, loser.Rating, nil
+	return matchID, winnerDelta, loserDelta, winnerNewRating, loserNewRating, nil
 }
 
 func ApplyMixedMatchRatingDelta(db *gorm.DB, playerID string, opponentRating float64, didWin bool) (playerDelta float64, playerNewRating float64, err error) {
@@ -129,6 +143,31 @@ func findUserByPlayerID(db *gorm.DB, playerID string) (*models.User, error) {
 		return nil, result.Error
 	}
 	return &user, nil
+}
+
+func lockUsersByPlayerID(tx *gorm.DB, playerIDs ...string) (map[string]*models.User, error) {
+	var users []models.User
+	if err := tx.
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("CONCAT(provider, ':', provider_id) IN ?", playerIDs).
+		Order("id ASC").
+		Find(&users).Error; err != nil {
+		return nil, err
+	}
+
+	usersByPlayerID := make(map[string]*models.User, len(users))
+	for i := range users {
+		user := &users[i]
+		usersByPlayerID[user.Provider+":"+user.ProviderID] = user
+	}
+
+	for _, playerID := range playerIDs {
+		if usersByPlayerID[playerID] == nil {
+			return nil, fmt.Errorf("player not found for id %s: %w", playerID, gorm.ErrRecordNotFound)
+		}
+	}
+
+	return usersByPlayerID, nil
 }
 
 func SaveMatchKeystrokes(db *gorm.DB, matchID string, playerID string, sent json.RawMessage, received json.RawMessage) error {

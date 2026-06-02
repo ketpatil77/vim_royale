@@ -12,6 +12,10 @@ import '../components/AerialUpdateBanner/AerialUpdateBanner.css'
 
 const RELEASE_BANNER_MESSAGE = 'v0.4.0: Mini games, Custom keybindings, Guest sessions!'
 const JOB_BANNER_MESSAGE = 'open for work btw, socials in the footer'
+const PEERLIST_PROJECT_URL = 'https://peerlist.io/jitesh117/project/vim-royale'
+const PEERLIST_EMBED_URL = 'https://peerlist.io/api/v1/projects/embed/PRJHKKD9N7D9OAEPGIDJE68EPMLNAN?showUpvote=true&theme=dark'
+const BUY_ME_A_COFFEE_URL = 'https://www.buymeacoffee.com/jitesh117'
+const BUY_ME_A_COFFEE_EMBED_URL = 'https://img.buymeacoffee.com/button-api/?text=Support Vim Royale!&emoji=%F0%9F%8E%B2&slug=jitesh117&button_colour=BD5FFF&font_colour=ffffff&font_family=Poppins&outline_colour=000000&coffee_colour=FFDD00'
 
 const GAME_MODES = [
   { cmd: ':vs',       title: '1V1',           desc: '2 Players, Split Screen' },
@@ -182,6 +186,12 @@ export default function Landing() {
             message={JOB_BANNER_MESSAGE}
             ariaLabel="Availability update"
           />
+
+          <div className="vr-launchpad" aria-label="Vim Royale on Peerlist">
+            <a className="vr-peerlist-embed" href={PEERLIST_PROJECT_URL} target="_blank" rel="noreferrer">
+              <img src={PEERLIST_EMBED_URL} alt="Vim Royale on Peerlist" />
+            </a>
+          </div>
           <VimRoyaleHero />
           <p className="vr-tagline">&gt; one shall lose, one shall vim</p>
           <div className="vr-ctas">
@@ -278,6 +288,36 @@ export default function Landing() {
             </button>
           </form>
 
+          <div className="vr-footer-support">
+            <div className="vr-footer-support-copy">
+              <span className="vr-footer-support-kicker">:support</span>
+              <h2>Keep Vim Royale shipping</h2>
+            </div>
+            <div className="vr-footer-support-actions">
+              <a
+                className="vr-bmc-link"
+                href={BUY_ME_A_COFFEE_URL}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Support Vim Royale on Buy Me a Coffee"
+              >
+                <img src={BUY_ME_A_COFFEE_EMBED_URL} alt="Support Vim Royale on Buy Me a Coffee" />
+              </a>
+              <a
+                className="vr-sponsor-link"
+                href="https://github.com/sponsors/Jitesh117"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Sponsor Jitesh117"
+              >
+                <svg className="vr-sponsor-icon" viewBox="0 0 24 24" height="14" fill="currentColor">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+                Sponsor
+              </a>
+            </div>
+          </div>
+
           <div className="vr-footer-links">
             <span>built with &lt;3 by</span>
             <a className="vr-social-link" href="https://github.com/Jitesh117" target="_blank" rel="noreferrer" aria-label="Jitesh on GitHub">
@@ -304,19 +344,6 @@ export default function Landing() {
             >
               <LinkedInIcon />
               linkedin
-            </a>
-            <span className="vr-footer-sep">/</span>
-            <a
-              className="vr-sponsor-link"
-              href="https://github.com/sponsors/Jitesh117"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Sponsor Jitesh117"
-            >
-              <svg className="vr-sponsor-icon" viewBox="0 0 24 24" height="14" fill="currentColor">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-              </svg>
-              Sponsor
             </a>
           </div>
         </footer>
