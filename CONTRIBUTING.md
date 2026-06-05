@@ -47,9 +47,9 @@ The issues should have steps to reproduce the bug, if it's a bug.
 
 The PRs should have a clear description of the changes made and should follow the Conventional Commits naming guidelines.
 
-UI changes should be minimal and should not affect the user experience. It should be responsive and should work on all devices. And a screenshot should be added to demonstrate the before/after changes.
-
+UI changes should be minimal and should not affect the user experience. It should be responsive and should work on all devices. Add a screenshot should be added to demonstrate the before/after changes.
 
 ### Questions
 
-If you have any questions, feel free to open an issue or a discussion.
+If you have any questions, feel free to open an [issue](https://github.com/Jitesh117/vim_royale/issues) or a [discussion thread](https://github.com/Jitesh117/vim_royale/discussions).
+

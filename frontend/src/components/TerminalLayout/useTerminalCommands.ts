@@ -47,6 +47,18 @@ export function useTerminalCommands({
         navigate("/walkthrough");
         clearCommand();
       },
+      security: () => {
+        navigate("/report-vulnerability");
+        clearCommand();
+      },
+      report: () => {
+        navigate("/report-vulnerability");
+        clearCommand();
+      },
+      vulnerability: () => {
+        navigate("/report-vulnerability");
+        clearCommand();
+      },
       walkthrough: () => {
         navigate("/walkthrough");
         clearCommand();

@@ -286,6 +286,13 @@ export default function Landing() {
             <button className="vr-feedback-submit" type="submit" disabled={feedbackStatus === 'submitting'}>
               {feedbackStatus === 'submitting' ? 'SENDING...' : 'SEND FEEDBACK'}
             </button>
+            <button
+              className="vr-feedback-link"
+              type="button"
+              onClick={() => navigate('/report-vulnerability')}
+            >
+              REPORT SECURITY ISSUE
+            </button>
           </form>
 
           <div className="vr-footer-support">
@@ -345,6 +352,10 @@ export default function Landing() {
               <LinkedInIcon />
               linkedin
             </a>
+            <span className="vr-footer-sep">/</span>
+            <button className="vr-footer-link-button" type="button" onClick={() => navigate('/report-vulnerability')}>
+              report vulnerability
+            </button>
           </div>
         </footer>
       </main>
