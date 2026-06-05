@@ -19,8 +19,8 @@ I already have created some starter issues you can pick up.
 
 Below is a set of general guidelines for different types of changes.
 
-Pull Request Naming Guidelines
-We use Conventional Commits for our pull request titles (and commit messages on the master branch) and also include the author name at the end inside parenthesis. Please follow the guidelines below when naming pull requests.
+## Pull Request Naming Guidelines
+Please use Conventional Commits for our pull request titles (and commit messages on the master branch) and also include the author name at the end inside parenthesis. Please follow the guidelines below when naming pull requests.
 
 For types, we use the following:
 
@@ -36,12 +36,6 @@ For types, we use the following:
 - `ci`: Changes to our CI configuration files and scripts (example scopes: GitHub Workflows)
 - `revert`: Reverts a previous commit
 - `chore`: Other changes that don't apply to any of the above
-
-Examples:
-
-- `feat`: add new feature (@github_username)
-- `impr(quotes)`: add english quotes (@username)
-- `fix(leaderboard)`: show user rank correctly (@user1, @user2, @user3)
 
 The issues should have steps to reproduce the bug, if it's a bug.
 
