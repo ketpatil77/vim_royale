@@ -41,13 +41,50 @@ Refer to [SECURITY.md](./SECURITY.md)
 
 ## Running Locally
 
+### Prerequisites
+
+- Docker Desktop or Docker Engine with Compose support
+- Node.js and npm for the frontend dev server
+- Google or GitHub OAuth credentials if you want to test sign-in flows
+
+### Backend
+
+Start PostgreSQL and the Go API from the backend directory:
+
 ```bash
 cd backend && docker compose -f docker-compose.dev.yml up --build   
 ```
 
+The development compose file publishes the backend on `http://localhost:8080`.
+
+### Frontend
+
+In a second terminal, start the Vite app:
+
 ```bash
 cd frontend && npm install && npm run dev
 ```
+
+By default the frontend runs on Vite's local URL, typically `http://localhost:5173`.
+
+### Environment variables
+
+The backend reads these OAuth-related variables:
+
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GITHUB_CLIENT_ID`
+- `GITHUB_CLIENT_SECRET`
+- `GOOGLE_REDIRECT_URL`
+
+If you only want to work on gameplay or UI, you can skip OAuth and focus on the
+local backend plus frontend stack first.
+
+### Troubleshooting
+
+- If port `8080` is already in use, stop the conflicting process before starting the backend compose stack.
+- If the frontend cannot reach the API, check your `VITE_API_URL`, `VITE_WS_URL`, and `VITE_WS_PUBLIC_URL` values in the frontend environment.
+- If sign-in fails locally, confirm your OAuth redirect URLs match the local host and port you are using.
 
 ## Support
 
