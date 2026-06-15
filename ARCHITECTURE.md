@@ -22,6 +22,16 @@ Go backend
 PostgreSQL
 ```
 
+## System Context Diagram
+
+```mermaid
+flowchart TD
+    Browser["Browser client<br/>React + CodeMirror"] -->|HTTP| Backend["Go backend<br/>Gin handlers"]
+    Browser -->|WebSocket| Backend
+    Backend -->|GORM / SQL| Postgres[(PostgreSQL)]
+    Backend --> Bots["Bot definitions<br/>and replay data"]
+```
+
 The backend is intentionally split between durable state and live state:
 
 - Durable state lives in PostgreSQL: users, ratings, matches, match keystrokes, timed score runs, guest sessions, tournaments, participants, and bracket matches.
@@ -48,6 +58,25 @@ The architecture does not currently optimize for:
 - Large-scale matchmaking across distributed queues.
 
 Those are valid future directions, but the current design keeps the first public version approachable.
+
+## Request / Match Lifecycle Diagram
+
+```mermaid
+sequenceDiagram
+    participant Player as Browser player
+    participant API as Go backend
+    participant Hub as Realtime hub
+    participant DB as PostgreSQL
+
+    Player->>API: HTTP auth / profile / tournament request
+    API->>DB: Read or persist durable state
+    Player->>API: WebSocket connect
+    API->>Hub: Register client
+    Player->>Hub: HELLO / QUEUE_JOIN / BUFFER_UPDATE
+    Hub->>Hub: Matchmake and relay live events
+    Hub->>Player: GAME_START / BUFFER_UPDATE / GAME_OVER
+    Hub->>DB: Persist match outcome and replay metadata
+```
 
 ## Repository Layout
 
